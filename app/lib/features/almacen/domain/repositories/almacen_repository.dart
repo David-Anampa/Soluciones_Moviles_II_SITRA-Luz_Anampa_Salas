@@ -47,6 +47,15 @@ abstract class AlmacenRepository {
     bool activo = true,
   });
 
+  /// Registra una nueva solicitud de abastecimiento (RF-029)
+  Future<PedidoAbastecimientoEntity> crearPedidoAbastecimiento({
+    required String areaDestino,
+    required String turno,
+    required String justificacion,
+    required String notas,
+    required Map<String, int> items,
+  });
+
   /// Registra un ingreso de lote y agrega el stock correspondiente en Almacén
   Future<LoteEntity> registrarIngresoLote({
     required String medicamentoId,
@@ -75,7 +84,46 @@ abstract class AlmacenRepository {
   /// Obtiene la lista de solicitudes de abastecimiento enviadas por Farmacia (RF-031)
   Future<List<PedidoAbastecimientoEntity>> getSolicitudesAbastecimiento();
 
-  /// Marca una solicitud de abastecimiento como atendida/despachada (RF-031)
+  /// Pasa el estado a EN_PREPARACION (Almacén toma el pedido)
+  Future<void> tomarPedidoAbastecimiento(String pedidoId);
+
+  /// Pasa el estado a LISTO y define la modalidad de entrega
+  Future<void> marcarPedidoListo(String pedidoId, String modalidad);
+
+  /// Confirma la entrega por parte de Almacén y verifica si se completa
+  Future<void> marcarConfirmacionAlmacen(String pedidoId);
+
+  /// RF-030: Atiende y despacha la solicitud ajustando cantidades y realizando transferencia atómica de stock
+  Future<void> despacharPedidoAbastecimiento({
+    required String pedidoId,
+    required Map<String, int> cantidadesDespachadas,
+    required String modalidadEntrega,
+    String? notasDespacho,
+  });
+
+  /// Farmacia cancela su propia solicitud mientras esté en estado PENDIENTE
+  Future<void> cancelarPedidoAbastecimiento({
+    required String pedidoId,
+    required String motivo,
+  });
+
+  /// Almacén rechaza una solicitud (ej. quiebre de stock total)
+  Future<void> rechazarPedidoAbastecimiento({
+    required String pedidoId,
+    required String motivo,
+  });
+
+  /// Farmacia confirma la recepción física y cierra el ciclo (COMPLETADO)
+  Future<void> marcarConfirmacionFarmacia(String pedidoId);
+
+  /// Farmacia confirma recepción física con observación / devolución inmediata de exceso
+  Future<void> confirmarRecepcionConAjuste({
+    required String pedidoId,
+    required Map<String, int> cantidadesAceptadas,
+    required String motivoObservacion,
+  });
+
+  /// Marca una solicitud de abastecimiento como atendida/despachada (Viejo flujo)
   Future<void> atenderSolicitudAbastecimiento({
     required String pedidoId,
     String? notasDespacho,

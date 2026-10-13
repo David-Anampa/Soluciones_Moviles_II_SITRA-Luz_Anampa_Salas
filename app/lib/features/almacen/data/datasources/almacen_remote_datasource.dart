@@ -22,7 +22,77 @@ class AlmacenRemoteDataSource {
 
   SupabaseClient get _supabase => _customClient ?? Supabase.instance.client;
 
+  /// Registra una nueva solicitud de abastecimiento (RF-029)
+  Future<PedidoAbastecimientoModel> crearPedidoAbastecimiento({
+    required String areaDestino,
+    required String turno,
+    required String justificacion,
+    required String notas,
+    required Map<String, int> items, // medicamentoId : cantidadSolicitada
+  }) async {
+    try {
+      String? currentUserId = _supabase.auth.currentUser?.id;
+      if (currentUserId == null) {
+        final profile = await _supabase
+            .from('profiles')
+            .select('id')
+            .limit(1)
+            .maybeSingle();
+        currentUserId = profile?['id'] as String?;
+      }
+
+      // 1. Crear la cabecera del pedido
+      final response = await _supabase
+          .from('pedidos_abastecimiento')
+          .insert({
+            'codigo': 'REQ-${DateTime.now().millisecondsSinceEpoch}',
+            'area_origen': 'FARMACIA', // Desde donde se pide
+            'area_destino': areaDestino, // A donde se pide (Almacen)
+            'solicitante_id': currentUserId,
+            'estado': 'PENDIENTE',
+            'turno': turno,
+            'justificacion': justificacion,
+            'notas': notas.isEmpty ? null : notas,
+          })
+          .select()
+          .single();
+
+      final pedidoId = response['id'];
+
+      // 2. Insertar los ítems
+      final itemsToInsert = items.entries.map((entry) {
+        return {
+          'pedido_id': pedidoId,
+          'medicamento_id': entry.key,
+          'cantidad_solicitada': entry.value,
+        };
+      }).toList();
+
+      await _supabase
+          .from('pedidos_abastecimiento_items')
+          .insert(itemsToInsert);
+
+      // 3. Auditoría del pedido creado
+      await _supabase.from('auditoria_trazabilidad').insert({
+        'tipo_evento': 'CREACION_PEDIDO',
+        'entidad_referencia_id': pedidoId,
+        'tabla_referencia': 'pedidos_abastecimiento',
+        'usuario_id': currentUserId,
+        'area_origen': 'FARMACIA',
+        'area_destino': areaDestino,
+        'descripcion':
+            'Se ha creado un pedido de abastecimiento ($turno) con ${items.length} ítems. Justificación: $justificacion',
+      });
+
+      return PedidoAbastecimientoModel.fromMap(response);
+    } catch (e) {
+      debugPrint('⚠️ Error al crear pedido de abastecimiento: $e');
+      throw AlmacenException('Error al crear la solicitud: $e');
+    }
+  }
+
   /// Obtiene el stock disponible en Almacén General con sus lotes y medicamentos asociados
+
   Future<List<StockAlmacenModel>> getInventarioAlmacen() async {
     try {
       final response = await _supabase
@@ -33,10 +103,14 @@ class AlmacenRemoteDataSource {
 
       final List<dynamic> data = response as List<dynamic>;
       return data
-          .map((item) => StockAlmacenModel.fromMap(item as Map<String, dynamic>))
+          .map(
+            (item) => StockAlmacenModel.fromMap(item as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
-      debugPrint('⚠️ Error al consultar inventario en Supabase: $e. Retornando datos base de contingencia.');
+      debugPrint(
+        '⚠️ Error al consultar inventario en Supabase: $e. Retornando datos base de contingencia.',
+      );
       return _getMockInventario();
     }
   }
@@ -55,7 +129,9 @@ class AlmacenRemoteDataSource {
           .map((item) => MedicamentoModel.fromMap(item as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      debugPrint('⚠️ Error al consultar catálogo de medicamentos: $e. Usando catálogo de contingencia.');
+      debugPrint(
+        '⚠️ Error al consultar catálogo de medicamentos: $e. Usando catálogo de contingencia.',
+      );
       return _getMockMedicamentos();
     }
   }
@@ -69,13 +145,19 @@ class AlmacenRemoteDataSource {
           .select()
           .single();
 
-      debugPrint('✅ Medicamento registrado exitosamente en Supabase: ${response['nombre_comercial']}');
+      debugPrint(
+        '✅ Medicamento registrado exitosamente en Supabase: ${response['nombre_comercial']}',
+      );
       return MedicamentoModel.fromMap(response);
     } on PostgrestException catch (e) {
       if (e.message.contains('gtin') || e.code == '23505') {
-        throw const AlmacenException('Ya existe un medicamento registrado con ese código de barras / GTIN.');
+        throw const AlmacenException(
+          'Ya existe un medicamento registrado con ese código de barras / GTIN.',
+        );
       }
-      throw AlmacenException('Error al guardar en la base de datos: ${e.message}');
+      throw AlmacenException(
+        'Error al guardar en la base de datos: ${e.message}',
+      );
     } catch (e) {
       if (e is AlmacenException) rethrow;
       throw AlmacenException('No se pudo registrar el medicamento: $e');
@@ -83,7 +165,9 @@ class AlmacenRemoteDataSource {
   }
 
   /// Actualiza los datos técnicos de un medicamento existente en el catálogo (RF-016)
-  Future<MedicamentoModel> editarMedicamento(MedicamentoModel medicamento) async {
+  Future<MedicamentoModel> editarMedicamento(
+    MedicamentoModel medicamento,
+  ) async {
     try {
       final response = await _supabase
           .from('medicamentos')
@@ -92,13 +176,19 @@ class AlmacenRemoteDataSource {
           .select()
           .single();
 
-      debugPrint('✅ Medicamento actualizado exitosamente en Supabase: ${response['nombre_comercial']}');
+      debugPrint(
+        '✅ Medicamento actualizado exitosamente en Supabase: ${response['nombre_comercial']}',
+      );
       return MedicamentoModel.fromMap(response);
     } on PostgrestException catch (e) {
       if (e.message.contains('gtin') || e.code == '23505') {
-        throw const AlmacenException('El código GTIN ya pertenece a otro medicamento registrado.');
+        throw const AlmacenException(
+          'El código GTIN ya pertenece a otro medicamento registrado.',
+        );
       }
-      throw AlmacenException('Error al actualizar en la base de datos: ${e.message}');
+      throw AlmacenException(
+        'Error al actualizar en la base de datos: ${e.message}',
+      );
     } catch (e) {
       if (e is AlmacenException) rethrow;
       throw AlmacenException('No se pudo actualizar el medicamento: $e');
@@ -127,16 +217,24 @@ class AlmacenRemoteDataSource {
         'medicamento_id': medicamentoId,
         'numero_lote': numeroLote.trim().toUpperCase(),
         if (fechaFabricacion != null)
-          'fecha_fabricacion': fechaFabricacion.toIso8601String().split('T').first,
-        'fecha_vencimiento': fechaVencimiento.toIso8601String().split('T').first,
+          'fecha_fabricacion': fechaFabricacion
+              .toIso8601String()
+              .split('T')
+              .first,
+        'fecha_vencimiento': fechaVencimiento
+            .toIso8601String()
+            .split('T')
+            .first,
         if (laboratorio != null && laboratorio.isNotEmpty)
           'laboratorio': laboratorio.trim(),
         if (proveedor != null && proveedor.isNotEmpty)
           'proveedor': proveedor.trim(),
         if (precioCompra != null) 'precio_compra': precioCompra,
         if (precioVenta != null) 'precio_venta': precioVenta,
-        if (numBoleta != null && numBoleta.isNotEmpty) 'num_boleta': numBoleta.trim(),
-        if (justificacion != null && justificacion.isNotEmpty) 'justificacion': justificacion.trim(),
+        if (numBoleta != null && numBoleta.isNotEmpty)
+          'num_boleta': numBoleta.trim(),
+        if (justificacion != null && justificacion.isNotEmpty)
+          'justificacion': justificacion.trim(),
         if (temperaturaRecepcion != null)
           'temperatura_recepcion': temperaturaRecepcion,
         if (observaciones != null && observaciones.isNotEmpty)
@@ -168,14 +266,19 @@ class AlmacenRemoteDataSource {
         'usuario_id': currentUserId,
         'area_destino': 'ALMACEN',
         'cantidad': cantidadInicial,
-        'descripcion': 'Ingreso de mercadería: Lote ${loteModel.numeroLote} con $cantidadInicial unidades. Proveedor: ${proveedor ?? "Directo"}',
+        'descripcion':
+            'Ingreso de mercadería: Lote ${loteModel.numeroLote} con $cantidadInicial unidades. Proveedor: ${proveedor ?? "Directo"}',
       });
 
-      debugPrint('✅ Ingreso de lote registrado exitosamente: ${loteModel.numeroLote}');
+      debugPrint(
+        '✅ Ingreso de lote registrado exitosamente: ${loteModel.numeroLote}',
+      );
       return loteModel;
     } on PostgrestException catch (e) {
       if (e.message.contains('numero_lote') || e.code == '23505') {
-        throw const AlmacenException('Ese número de lote ya se encuentra registrado para este medicamento.');
+        throw const AlmacenException(
+          'Ese número de lote ya se encuentra registrado para este medicamento.',
+        );
       }
       throw AlmacenException('Error al registrar el lote: ${e.message}');
     } catch (e) {
@@ -201,12 +304,16 @@ class AlmacenRemoteDataSource {
           .maybeSingle();
 
       if (stockAlmacenResp == null) {
-        throw const AlmacenException('No se encontró stock registrado para este lote en Almacén.');
+        throw const AlmacenException(
+          'No se encontró stock registrado para este lote en Almacén.',
+        );
       }
 
       final int stockActual = stockAlmacenResp['cantidad'] as int? ?? 0;
       if (stockActual < cantidad) {
-        throw AlmacenException('Stock insuficiente en Almacén. Disponible: $stockActual, solicitado: $cantidad.');
+        throw AlmacenException(
+          'Stock insuficiente en Almacén. Disponible: $stockActual, solicitado: $cantidad.',
+        );
       }
 
       // 2. Decrementar stock en Almacén
@@ -228,7 +335,8 @@ class AlmacenRemoteDataSource {
           .maybeSingle();
 
       if (stockFarmaciaResp != null) {
-        final int stockFarmaciaActual = stockFarmaciaResp['cantidad'] as int? ?? 0;
+        final int stockFarmaciaActual =
+            stockFarmaciaResp['cantidad'] as int? ?? 0;
         await _supabase
             .from('inventario_stock')
             .update({
@@ -258,9 +366,13 @@ class AlmacenRemoteDataSource {
             'Transferencia de $cantidad unidades hacia Farmacia Central. ${motivo != null && motivo.isNotEmpty ? "Motivo: $motivo" : ""}',
       });
 
-      debugPrint('✅ Transferencia a Farmacia completada exitosamente: $cantidad unidades.');
+      debugPrint(
+        '✅ Transferencia a Farmacia completada exitosamente: $cantidad unidades.',
+      );
     } on PostgrestException catch (e) {
-      throw AlmacenException('Error al transferir stock en Supabase: ${e.message}');
+      throw AlmacenException(
+        'Error al transferir stock en Supabase: ${e.message}',
+      );
     } catch (e) {
       if (e is AlmacenException) rethrow;
       throw AlmacenException('Error al procesar la transferencia de stock: $e');
@@ -273,56 +385,111 @@ class AlmacenRemoteDataSource {
       final response = await _supabase
           .from('pedidos_abastecimiento')
           .select(
-            '*, solicitante:profiles(nombre, rol), items:pedidos_abastecimiento_items(*, medicamento:medicamentos(*))',
+            '*, solicitante:profiles!pedidos_abastecimiento_solicitante_id_fkey(nombre, rol), cancelado_por_perfil:profiles!pedidos_abastecimiento_cancelado_por_fkey(nombre), rechazado_por_perfil:profiles!pedidos_abastecimiento_rechazado_por_fkey(nombre), items:pedidos_abastecimiento_items(*, medicamento:medicamentos(*))',
           )
           .order('fecha_solicitud', ascending: false);
 
       final List<dynamic> data = response as List<dynamic>;
-      if (data.isEmpty) {
-        return _getMockSolicitudes();
-      }
       return data
-          .map((item) => PedidoAbastecimientoModel.fromMap(item as Map<String, dynamic>))
+          .map(
+            (item) =>
+                PedidoAbastecimientoModel.fromMap(item as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
-      debugPrint('⚠️ Error al consultar solicitudes de abastecimiento: $e. Retornando datos demo.');
-      return _getMockSolicitudes();
+      throw AlmacenException('No se pudieron consultar las solicitudes: $e');
     }
   }
 
-  /// Marca una solicitud como despachada / atendida por el personal de Almacén (RF-031)
+  /// Cada acción valida rol y estado, bloquea el pedido y registra su auditoría.
+  Future<void> _accionPedido(
+    String pedidoId,
+    String accion, {
+    String? motivo,
+    Map<String, int>? cantidades,
+    String? modalidad,
+    String? notas,
+  }) async {
+    try {
+      await _supabase.rpc(
+        'procesar_pedido_abastecimiento',
+        params: {
+          'p_pedido_id': pedidoId,
+          'p_accion': accion,
+          'p_motivo': motivo,
+          'p_cantidades': cantidades ?? <String, int>{},
+          'p_modalidad': modalidad,
+          'p_notas': notas,
+        },
+      );
+    } on PostgrestException catch (e) {
+      throw AlmacenException(e.message);
+    } catch (e) {
+      throw AlmacenException('No se pudo procesar el pedido: $e');
+    }
+  }
+
+  Future<void> tomarPedidoAbastecimiento(String pedidoId) =>
+      _accionPedido(pedidoId, 'TOMAR');
+
+  // Se conserva la interfaz antigua, pero LISTO requiere despacho real de stock.
+  Future<void> marcarPedidoListo(String pedidoId, String modalidad) async {
+    throw const AlmacenException(
+      'Utiliza Atender y Despachar para marcar el pedido como listo.',
+    );
+  }
+
+  Future<void> marcarConfirmacionAlmacen(String pedidoId) async {
+    throw const AlmacenException(
+      'Almacén confirma al despachar; Farmacia confirma la recepción.',
+    );
+  }
+
+  Future<void> despacharPedidoAbastecimiento({
+    required String pedidoId,
+    required Map<String, int> cantidadesDespachadas,
+    required String modalidadEntrega,
+    String? notasDespacho,
+  }) => _accionPedido(
+    pedidoId,
+    'DESPACHAR',
+    cantidades: cantidadesDespachadas,
+    modalidad: modalidadEntrega,
+    notas: notasDespacho,
+  );
+
+  Future<void> cancelarPedidoAbastecimiento({
+    required String pedidoId,
+    required String motivo,
+  }) => _accionPedido(pedidoId, 'CANCELAR', motivo: motivo);
+
+  Future<void> rechazarPedidoAbastecimiento({
+    required String pedidoId,
+    required String motivo,
+  }) => _accionPedido(pedidoId, 'RECHAZAR', motivo: motivo);
+
+  Future<void> marcarConfirmacionFarmacia(String pedidoId) =>
+      _accionPedido(pedidoId, 'RECIBIR');
+
+  Future<void> confirmarRecepcionConAjuste({
+    required String pedidoId,
+    required Map<String, int> cantidadesAceptadas,
+    required String motivoObservacion,
+  }) => _accionPedido(
+    pedidoId,
+    'RECIBIR',
+    cantidades: cantidadesAceptadas,
+    motivo: motivoObservacion,
+  );
+
+  /// Compatibilidad: un despacho necesita cantidades y modalidad explícitas.
   Future<void> atenderSolicitudAbastecimiento({
     required String pedidoId,
     String? notasDespacho,
   }) async {
-    try {
-      await _supabase
-          .from('pedidos_abastecimiento')
-          .update({
-            'estado': 'DESPACHADO',
-            'fecha_despacho': DateTime.now().toIso8601String(),
-            if (notasDespacho != null && notasDespacho.isNotEmpty)
-              'notas': notasDespacho,
-          })
-          .eq('id', pedidoId);
-
-      final currentUserId = _supabase.auth.currentUser?.id;
-      await _supabase.from('auditoria_trazabilidad').insert({
-        'tipo_evento': 'TRANSFERENCIA_FARMACIA',
-        'usuario_id': currentUserId,
-        'area_origen': 'ALMACEN',
-        'area_destino': 'FARMACIA',
-        'descripcion':
-            'Atención de pedido de abastecimiento ($pedidoId). Estado actualizado a DESPACHADO.',
-      });
-
-      debugPrint('✅ Solicitud de abastecimiento atendida exitosamente: $pedidoId');
-    } on PostgrestException catch (e) {
-      throw AlmacenException('Error al actualizar la solicitud en Supabase: ${e.message}');
-    } catch (e) {
-      if (e is AlmacenException) rethrow;
-      throw AlmacenException('No se pudo atender la solicitud: $e');
-    }
+    throw const AlmacenException(
+      'Utiliza Atender y Despachar para seleccionar cantidades y modalidad.',
+    );
   }
 
   // --- Datos de contingencia / offline ---
@@ -414,7 +581,9 @@ class AlmacenRemoteDataSource {
           id: 'mock-lote-2',
           medicamentoId: meds[1].id,
           numeroLote: 'L2025-P02',
-          fechaVencimiento: hoy.add(const Duration(days: 20)), // Crítico < 30 días
+          fechaVencimiento: hoy.add(
+            const Duration(days: 20),
+          ), // Crítico < 30 días
           proveedor: 'Laboratorios Roche / Perú',
           activo: true,
         ),
@@ -435,64 +604,6 @@ class AlmacenRemoteDataSource {
           temperaturaRecepcion: 4.1,
           activo: true,
         ),
-      ),
-    ];
-  }
-
-  List<PedidoAbastecimientoModel> _getMockSolicitudes() {
-    final meds = _getMockMedicamentos();
-    final ahora = DateTime.now();
-
-    return [
-      PedidoAbastecimientoModel(
-        id: 'mock-ped-001',
-        codigo: 'PED-2026-001',
-        solicitanteNombre: 'Lic. Carmen Valdivia (Farmacia Turno Mañana)',
-        areaOrigen: 'FARMACIA',
-        areaDestino: 'ALMACEN',
-        estado: 'PENDIENTE',
-        notas: 'Reposición urgente por alta afluencia en Emergencia y UCI',
-        fechaSolicitud: ahora.subtract(const Duration(minutes: 40)),
-        items: [
-          PedidoAbastecimientoItemModel(
-            id: 'mock-item-1',
-            pedidoId: 'mock-ped-001',
-            medicamentoId: meds[0].id,
-            nombreMedicamento: meds[0].nombreComercial,
-            formaFarmaceutica: meds[0].presentacion,
-            cantidadSolicitada: 30,
-          ),
-          PedidoAbastecimientoItemModel(
-            id: 'mock-item-2',
-            pedidoId: 'mock-ped-001',
-            medicamentoId: meds[2].id,
-            nombreMedicamento: meds[2].nombreComercial,
-            formaFarmaceutica: meds[2].presentacion,
-            cantidadSolicitada: 10,
-          ),
-        ],
-      ),
-      PedidoAbastecimientoModel(
-        id: 'mock-ped-002',
-        codigo: 'PED-2026-002',
-        solicitanteNombre: 'Q.F. Manuel Rodríguez (Farmacia Central)',
-        areaOrigen: 'FARMACIA',
-        areaDestino: 'ALMACEN',
-        estado: 'DESPACHADO',
-        notas: 'Abastecimiento de turno nocturno',
-        fechaSolicitud: ahora.subtract(const Duration(hours: 4)),
-        fechaDespacho: ahora.subtract(const Duration(hours: 3)),
-        items: [
-          PedidoAbastecimientoItemModel(
-            id: 'mock-item-3',
-            pedidoId: 'mock-ped-002',
-            medicamentoId: meds[1].id,
-            nombreMedicamento: meds[1].nombreComercial,
-            formaFarmaceutica: meds[1].presentacion,
-            cantidadSolicitada: 20,
-            cantidadDespachada: 20,
-          ),
-        ],
       ),
     ];
   }

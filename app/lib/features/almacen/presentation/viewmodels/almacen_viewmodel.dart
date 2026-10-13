@@ -220,6 +220,39 @@ class AlmacenViewModel extends ChangeNotifier {
     }
   }
 
+  /// Registra una nueva solicitud de abastecimiento desde Farmacia hacia Almacén (RF-029)
+  Future<bool> crearPedidoAbastecimiento({
+    required String areaDestino,
+    required String turno,
+    required String justificacion,
+    required String notas,
+    required Map<String, int> items,
+  }) async {
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _repository.crearPedidoAbastecimiento(
+        areaDestino: areaDestino,
+        turno: turno,
+        justificacion: justificacion,
+        notas: notas,
+        items: items,
+      );
+
+      // Recargar para tener el nuevo pedido
+      await cargarInventario();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
   /// Transfiere stock físico de un lote desde Almacén hacia Farmacia Central (RF-025)
   Future<bool> transferirStockAFarmacia({
     required String loteId,
@@ -250,7 +283,189 @@ class AlmacenViewModel extends ChangeNotifier {
     }
   }
 
-  /// Marca una solicitud de abastecimiento como despachada / atendida (RF-031)
+  /// Pasa el estado a EN_PREPARACION (Almacén toma el pedido)
+  Future<bool> tomarPedidoAbastecimiento(String pedidoId) async {
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _repository.tomarPedidoAbastecimiento(pedidoId);
+      await cargarInventario();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  /// Pasa el estado a LISTO y define la modalidad de entrega
+  Future<bool> marcarPedidoListo(String pedidoId, String modalidad) async {
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _repository.marcarPedidoListo(pedidoId, modalidad);
+      await cargarInventario();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  /// Confirma la entrega por parte de Almacén y verifica si se completa
+  Future<bool> marcarConfirmacionAlmacen(String pedidoId) async {
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _repository.marcarConfirmacionAlmacen(pedidoId);
+      await cargarInventario();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  /// RF-030: Atiende y despacha la solicitud ajustando cantidades y realizando transferencia atómica de stock
+  Future<bool> despacharPedidoAbastecimiento({
+    required String pedidoId,
+    required Map<String, int> cantidadesDespachadas,
+    required String modalidadEntrega,
+    String? notasDespacho,
+  }) async {
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _repository.despacharPedidoAbastecimiento(
+        pedidoId: pedidoId,
+        cantidadesDespachadas: cantidadesDespachadas,
+        modalidadEntrega: modalidadEntrega,
+        notasDespacho: notasDespacho,
+      );
+      await cargarInventario();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  /// Farmacia confirma la recepción física de la mercadería (COMPLETADO)
+  Future<bool> marcarConfirmacionFarmacia(String pedidoId) async {
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _repository.marcarConfirmacionFarmacia(pedidoId);
+      await cargarInventario();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  /// Farmacia cancela su propia solicitud mientras esté en estado PENDIENTE
+  Future<bool> cancelarPedidoAbastecimiento({
+    required String pedidoId,
+    required String motivo,
+  }) async {
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _repository.cancelarPedidoAbastecimiento(
+        pedidoId: pedidoId,
+        motivo: motivo,
+      );
+      await cargarInventario();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  /// Almacén rechaza una solicitud (ej. quiebre de stock total)
+  Future<bool> rechazarPedidoAbastecimiento({
+    required String pedidoId,
+    required String motivo,
+  }) async {
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _repository.rechazarPedidoAbastecimiento(
+        pedidoId: pedidoId,
+        motivo: motivo,
+      );
+      await cargarInventario();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  /// Farmacia confirma recepción física con observación / devolución de exceso inmediata
+  Future<bool> confirmarRecepcionConAjuste({
+    required String pedidoId,
+    required Map<String, int> cantidadesAceptadas,
+    required String motivoObservacion,
+  }) async {
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _repository.confirmarRecepcionConAjuste(
+        pedidoId: pedidoId,
+        cantidadesAceptadas: cantidadesAceptadas,
+        motivoObservacion: motivoObservacion,
+      );
+      await cargarInventario();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  /// Marca una solicitud de abastecimiento como despachada / atendida (Viejo Flujo)
   Future<bool> atenderSolicitudAbastecimiento({
     required String pedidoId,
     String? notasDespacho,

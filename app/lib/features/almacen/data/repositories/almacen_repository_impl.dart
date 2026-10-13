@@ -145,8 +145,95 @@ class AlmacenRepositoryImpl implements AlmacenRepository {
   }
 
   @override
+  Future<PedidoAbastecimientoEntity> crearPedidoAbastecimiento({
+    required String areaDestino,
+    required String turno,
+    required String justificacion,
+    required String notas,
+    required Map<String, int> items,
+  }) async {
+    return await _dataSource.crearPedidoAbastecimiento(
+      areaDestino: areaDestino,
+      turno: turno,
+      justificacion: justificacion,
+      notas: notas,
+      items: items,
+    );
+  }
+
+  @override
   Future<List<PedidoAbastecimientoEntity>> getSolicitudesAbastecimiento() async {
     return await _dataSource.getSolicitudesAbastecimiento();
+  }
+
+  @override
+  Future<void> tomarPedidoAbastecimiento(String pedidoId) async {
+    await _dataSource.tomarPedidoAbastecimiento(pedidoId);
+  }
+
+  @override
+  Future<void> marcarPedidoListo(String pedidoId, String modalidad) async {
+    await _dataSource.marcarPedidoListo(pedidoId, modalidad);
+  }
+
+  @override
+  Future<void> marcarConfirmacionAlmacen(String pedidoId) async {
+    await _dataSource.marcarConfirmacionAlmacen(pedidoId);
+  }
+
+  @override
+  Future<void> despacharPedidoAbastecimiento({
+    required String pedidoId,
+    required Map<String, int> cantidadesDespachadas,
+    required String modalidadEntrega,
+    String? notasDespacho,
+  }) async {
+    await _dataSource.despacharPedidoAbastecimiento(
+      pedidoId: pedidoId,
+      cantidadesDespachadas: cantidadesDespachadas,
+      modalidadEntrega: modalidadEntrega,
+      notasDespacho: notasDespacho,
+    );
+  }
+
+  @override
+  Future<void> cancelarPedidoAbastecimiento({
+    required String pedidoId,
+    required String motivo,
+  }) async {
+    await _dataSource.cancelarPedidoAbastecimiento(
+      pedidoId: pedidoId,
+      motivo: motivo,
+    );
+  }
+
+  @override
+  Future<void> rechazarPedidoAbastecimiento({
+    required String pedidoId,
+    required String motivo,
+  }) async {
+    await _dataSource.rechazarPedidoAbastecimiento(
+      pedidoId: pedidoId,
+      motivo: motivo,
+    );
+  }
+
+  @override
+  Future<void> marcarConfirmacionFarmacia(String pedidoId) async {
+    await _dataSource.marcarConfirmacionFarmacia(pedidoId);
+  }
+
+  @override
+  Future<void> confirmarRecepcionConAjuste({
+    required String pedidoId,
+    required Map<String, int> cantidadesAceptadas,
+    required String motivoObservacion,
+  }) async {
+    await _dataSource.confirmarRecepcionConAjuste(
+      pedidoId: pedidoId,
+      cantidadesAceptadas: cantidadesAceptadas,
+      motivoObservacion: motivoObservacion,
+    );
   }
 
   @override
