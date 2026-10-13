@@ -184,7 +184,7 @@ class AdminDashboardView extends StatelessWidget {
             _buildModuleTile(
               icon: Icons.manage_accounts_rounded,
               title: 'Gestión de Usuarios y Roles',
-              subtitle: 'Crear, asignar roles (RF-002) y habilitar áreas de trabajo.',
+              subtitle: 'Crear usuarios, asignar roles y habilitar áreas de trabajo.',
               color: AppColors.adminColor,
               onTap: () => _showActionSnackbar(context, 'Módulo Gestión de Usuarios'),
             ),

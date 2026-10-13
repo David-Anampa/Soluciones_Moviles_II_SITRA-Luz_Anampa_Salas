@@ -9,7 +9,7 @@ import '../../domain/entities/medicamento_extraccion_ia.dart';
 import 'registro_medicamento_view.dart';
 
 /// Pantalla de Escaneo de Código GTIN/GS1 mediante Cámara con ML Kit
-/// y captura opcional de imagen de la caja para extracción asistida con IA (RF-014).
+/// y captura opcional de imagen de la caja para extracción asistida con IA (HU-014).
 class EscanerGtinView extends StatefulWidget {
   const EscanerGtinView({super.key});
 
@@ -126,7 +126,7 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
 
       if (!mounted) return;
 
-      // Navegar a la pantalla de revisión (RF-015)
+      // HU-015: Navegar a la pantalla de revisión.
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => RegistroMedicamentoView(datosIniciales: resultado),
@@ -536,7 +536,7 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
             ),
             const SizedBox(height: 14),
 
-            // Foto de la caja opcional (RF-014 / HU02)
+            // HU-014: Foto opcional de la caja.
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -572,7 +572,7 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Foto de la caja (Opcional - RF-014)',
+                          'Foto de la caja (opcional)',
                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                         Text(
@@ -619,7 +619,7 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
             ),
             const SizedBox(height: 16),
 
-            // Botón principal: Continuar a pantalla de revisión (RF-015)
+            // HU-015: Continuar a la pantalla de revisión.
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(

@@ -5,7 +5,7 @@ import '../../domain/entities/medicamento_entity.dart';
 import '../viewmodels/almacen_viewmodel.dart';
 import '../states/almacen_state.dart';
 
-/// Pantalla para la edición técnica de un medicamento registrado en el catálogo (RF-016).
+/// HU-016: Edición técnica de un medicamento registrado en el catálogo.
 /// Permite actualizar nombre, principio activo, forma, concentración, GTIN, registro sanitario y cadena de frío.
 class EditarMedicamentoView extends StatefulWidget {
   final MedicamentoEntity medicamento;
@@ -167,7 +167,7 @@ class _EditarMedicamentoViewState extends State<EditarMedicamentoView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Editar Medicamento', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text('Ficha técnica y trazabilidad clínica (RF-016)', style: TextStyle(fontSize: 11, color: Colors.white70)),
+            Text('Ficha técnica y trazabilidad clínica', style: TextStyle(fontSize: 11, color: Colors.white70)),
           ],
         ),
         backgroundColor: AppColors.almacenColor,
@@ -509,7 +509,7 @@ class _EditarMedicamentoViewState extends State<EditarMedicamentoView> {
 
               const SizedBox(height: 20),
 
-              // SECCIÓN 3: CONTROL TÉRMICO Y CADENA DE FRÍO (RF-014)
+              // HU-016: Control térmico y cadena de frío.
               const Text(
                 'Control Térmico y Cadena de Frío',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),

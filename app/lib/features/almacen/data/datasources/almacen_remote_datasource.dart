@@ -22,7 +22,7 @@ class AlmacenRemoteDataSource {
 
   SupabaseClient get _supabase => _customClient ?? Supabase.instance.client;
 
-  /// Registra una nueva solicitud de abastecimiento (RF-029)
+  /// HU-029: Registra una nueva solicitud de abastecimiento.
   Future<PedidoAbastecimientoModel> crearPedidoAbastecimiento({
     required String areaDestino,
     required String turno,
@@ -164,7 +164,7 @@ class AlmacenRemoteDataSource {
     }
   }
 
-  /// Actualiza los datos técnicos de un medicamento existente en el catálogo (RF-016)
+  /// HU-016: Actualiza los datos técnicos de un medicamento existente en el catálogo.
   Future<MedicamentoModel> editarMedicamento(
     MedicamentoModel medicamento,
   ) async {
@@ -287,7 +287,7 @@ class AlmacenRemoteDataSource {
     }
   }
 
-  /// Transfiere stock de un lote específico desde Almacén hacia Farmacia Central (RF-025)
+  /// Transfiere stock de un lote específico desde Almacén hacia Farmacia Central.
   Future<void> transferirStockAFarmacia({
     required String loteId,
     required String medicamentoId,
@@ -379,7 +379,7 @@ class AlmacenRemoteDataSource {
     }
   }
 
-  /// Obtiene la lista de solicitudes de abastecimiento enviadas por Farmacia (RF-031)
+  /// HU-030: Obtiene la lista de solicitudes de abastecimiento enviadas por Farmacia.
   Future<List<PedidoAbastecimientoModel>> getSolicitudesAbastecimiento() async {
     try {
       final response = await _supabase

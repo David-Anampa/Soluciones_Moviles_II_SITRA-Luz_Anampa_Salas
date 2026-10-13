@@ -119,7 +119,7 @@ class AlmacenViewModel extends ChangeNotifier {
     }
   }
 
-  /// Actualiza los datos técnicos de un medicamento existente en el catálogo (RF-016)
+  /// HU-016: Actualiza los datos técnicos de un medicamento existente en el catálogo.
   Future<bool> editarMedicamento({
     required String id,
     required String gtin,
@@ -220,7 +220,7 @@ class AlmacenViewModel extends ChangeNotifier {
     }
   }
 
-  /// Registra una nueva solicitud de abastecimiento desde Farmacia hacia Almacén (RF-029)
+  /// HU-029: Registra una nueva solicitud de abastecimiento desde Farmacia hacia Almacén.
   Future<bool> crearPedidoAbastecimiento({
     required String areaDestino,
     required String turno,
@@ -253,7 +253,7 @@ class AlmacenViewModel extends ChangeNotifier {
     }
   }
 
-  /// Transfiere stock físico de un lote desde Almacén hacia Farmacia Central (RF-025)
+  /// Transfiere stock físico de un lote desde Almacén hacia Farmacia Central.
   Future<bool> transferirStockAFarmacia({
     required String loteId,
     required String medicamentoId,
@@ -340,7 +340,7 @@ class AlmacenViewModel extends ChangeNotifier {
     }
   }
 
-  /// RF-030: Atiende y despacha la solicitud ajustando cantidades y realizando transferencia atómica de stock
+  /// HU-030: Atiende y despacha la solicitud ajustando cantidades y transfiriendo stock.
   Future<bool> despacharPedidoAbastecimiento({
     required String pedidoId,
     required Map<String, int> cantidadesDespachadas,

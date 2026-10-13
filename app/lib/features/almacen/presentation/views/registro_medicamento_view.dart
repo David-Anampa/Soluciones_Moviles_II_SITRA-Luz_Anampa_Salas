@@ -11,7 +11,7 @@ import '../states/almacen_state.dart';
 import 'escaner_gtin_view.dart';
 
 /// Formulario para registrar un nuevo medicamento y dar entrada a su primer lote en Almacén.
-/// Soporta precarga de datos extraídos por IA / Cámara (RF-014 y RF-015).
+/// HU-014 / HU-015: Soporta precarga de datos extraídos por IA y cámara.
 class RegistroMedicamentoView extends StatefulWidget {
   final MedicamentoExtraccionIA? datosIniciales;
 
@@ -251,7 +251,7 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Banner de revisión de IA si viene del escáner (RF-015)
+              // HU-015: Revisión de IA si viene del escáner.
               if (widget.datosIniciales != null) ...[
                 Container(
                   margin: const EdgeInsets.only(bottom: 16),
@@ -270,7 +270,7 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Revisión de Datos Extraídos por IA (RF-015)',
+                              'Revisión de datos extraídos por IA',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
@@ -540,7 +540,7 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
 
                     const SizedBox(height: 14),
 
-                    // Foto de la Caja (Opcional - RF-014)
+                    // HU-014: Foto opcional de la caja.
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -579,7 +579,7 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
-                                  'Foto de Caja / Empaque (Opcional - RF-014)',
+                                  'Foto de caja / empaque (opcional)',
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,

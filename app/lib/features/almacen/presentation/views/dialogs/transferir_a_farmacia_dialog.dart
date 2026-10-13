@@ -5,7 +5,7 @@ import '../../../domain/entities/lote_entity.dart';
 import '../../../domain/entities/stock_almacen_entity.dart';
 import '../../viewmodels/almacen_viewmodel.dart';
 
-/// Diálogo para transferir stock de Almacén General a Farmacia Central (RF-025)
+/// Diálogo para transferir stock de Almacén General a Farmacia Central.
 class TransferirAFarmaciaDialog extends StatefulWidget {
   final List<StockAlmacenEntity> inventario;
   final StockAlmacenEntity? itemInicial;
@@ -132,7 +132,7 @@ class _TransferirAFarmaciaDialogState extends State<TransferirAFarmaciaDialog> {
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  'Movimiento físico entre depósitos (RF-025)',
+                  'Movimiento físico entre depósitos',
                   style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
                 ),
               ],

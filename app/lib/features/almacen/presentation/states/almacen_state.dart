@@ -32,7 +32,7 @@ class AlmacenLoaded extends AlmacenState {
   /// Total de unidades físicas en stock
   int get totalUnidades => inventario.fold(0, (sum, item) => sum + item.cantidad);
 
-  /// Cantidad de solicitudes de abastecimiento pendientes por atender (RF-031)
+  /// HU-030: Cantidad de solicitudes de abastecimiento pendientes por atender.
   int get solicitudesPendientes {
     try {
       return (solicitudes).where((s) => s.esPendiente).length;

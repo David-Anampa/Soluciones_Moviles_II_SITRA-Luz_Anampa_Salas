@@ -188,7 +188,7 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Atención de recetas hospitalarias y reposición a servicios de hospitalización.',
+                      'Gestión de pedidos de medicamentos e insumos y abastecimiento entre áreas.',
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.white.withOpacity(0.9),
@@ -271,7 +271,7 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
 
               // Métricas de atención
               const Text(
-                'Cola de Trabajo de Farmacia',
+                'Abastecimiento de Farmacia',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -284,49 +284,21 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                 children: [
                   Expanded(
                     child: _buildMetricCard(
-                      title: 'Recetas Pendientes',
-                      value: '7',
-                      subtitle: 'Pacientes en espera',
-                      icon: Icons.receipt_long_rounded,
+                      title: 'Solicitudes activas',
+                      value: '$transferenciasActivas',
+                      subtitle: 'Pedidos a Almacén',
+                      icon: Icons.move_to_inbox_rounded,
                       color: AppColors.farmaciaColor,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildMetricCard(
-                      title: 'Pedidos de Piso',
-                      value: '4',
-                      subtitle: 'UCI / Emergencia',
-                      icon: Icons.shopping_bag_outlined,
+                      title: 'Listos para recibir',
+                      value: '$listasParaRecepcion',
+                      subtitle: 'Confirmar recepción física',
+                      icon: Icons.local_shipping_outlined,
                       color: AppColors.warning,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildMetricCard(
-                      title: 'Dispensadas Hoy',
-                      value: '46',
-                      subtitle: 'Recetas completadas',
-                      icon: Icons.task_alt_rounded,
-                      color: AppColors.success,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: InkWell(
-                      onTap: _abrirMisSolicitudes,
-                      borderRadius: BorderRadius.circular(14),
-                      child: _buildMetricCard(
-                        title: 'Transferencias',
-                        value: '$transferenciasActivas',
-                        subtitle: 'En proceso / Almacén',
-                        icon: Icons.move_to_inbox_rounded,
-                        color: AppColors.primary,
-                      ),
                     ),
                   ),
                 ],
@@ -345,10 +317,10 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
               ),
               const SizedBox(height: 12),
 
-              // RF-029: SOLICITAR ABASTECIMIENTO A ALMACÉN (Destacado Principal)
+              // HU-029: Solicitar abastecimiento a Almacén.
               _buildModuleTile(
                 icon: Icons.add_shopping_cart_rounded,
-                title: 'Solicitar Abastecimiento a Almacén (RF-029)',
+                title: 'Solicitar Abastecimiento a Almacén',
                 subtitle:
                     'Crear solicitud de reposición por faltantes de guardia o stock crítico.',
                 color: AppColors.primary,
@@ -364,16 +336,6 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                     'Monitorear estado de pedidos y confirmar recepción de lotes despachados.',
                 color: AppColors.secondary,
                 onTap: _abrirMisSolicitudes,
-              ),
-              const SizedBox(height: 10),
-
-              _buildModuleTile(
-                icon: Icons.qr_code_scanner_rounded,
-                title: 'Dispensar Receta Médica',
-                subtitle:
-                    'Validar prescripción médica, escanear lote FEFO y registrar entrega.',
-                color: AppColors.farmaciaColor,
-                onTap: () => _showActionSnackbar(context, 'Dispensación con Escáner'),
               ),
               const SizedBox(height: 10),
 
@@ -396,33 +358,6 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                 onTap: () => _showActionSnackbar(context, 'Kardex de Farmacia'),
               ),
 
-              const SizedBox(height: 24),
-
-              // Cola de recetas en espera
-              const Text(
-                'Próximas Recetas por Atender',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              _buildPendingItem(
-                code: 'REC-2026-089',
-                patient: 'García Flores, Rosa • Cama 204 (Hosp)',
-                meds: 'Omeprazol 40mg EV (x1), Paracetamol 1g (x2)',
-                status: 'Urgente',
-                statusColor: AppColors.error,
-              ),
-              _buildPendingItem(
-                code: 'PED-UCI-014',
-                patient: 'Servicio UCI Adultos • Botiquín Coche #2',
-                meds: 'Fentanilo 0.5mg/10ml (x5), Midazolam 50mg (x3)',
-                status: 'En preparación',
-                statusColor: AppColors.warning,
-              ),
               const SizedBox(height: 40),
             ],
           ),
@@ -555,74 +490,6 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildPendingItem({
-    required String code,
-    required String patient,
-    required String meds,
-    required String status,
-    required Color statusColor,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.surfaceVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                code,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  status,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: statusColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            patient,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            meds,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
       ),
     );
   }

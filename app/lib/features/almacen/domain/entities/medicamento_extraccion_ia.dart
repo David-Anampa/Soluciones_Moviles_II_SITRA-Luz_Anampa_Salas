@@ -1,6 +1,6 @@
 /// Modelo de datos que contiene la información extraída automáticamente
 /// mediante el escaneo GTIN (ML Kit) y la captura de foto de la caja (IA Gemini / OCR)
-/// correspondiente a los requerimientos RF-014 y RF-015.
+/// correspondiente a las historias de usuario HU-014 y HU-015.
 class MedicamentoExtraccionIA {
   final String gtin;
   final String? nombreComercial;

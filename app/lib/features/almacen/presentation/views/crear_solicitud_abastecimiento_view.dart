@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/medicamento_entity.dart';
 import '../states/almacen_state.dart';
 import '../viewmodels/almacen_viewmodel.dart';
 
-/// RF-029: Registrar solicitud de abastecimiento por faltantes de guardia
+/// HU-029: Registrar solicitud de abastecimiento por faltantes de guardia.
 /// Vista para que Farmacia genere un nuevo pedido de reposición a Almacén.
 class CrearSolicitudAbastecimientoView extends StatefulWidget {
   const CrearSolicitudAbastecimientoView({super.key});
@@ -25,6 +26,7 @@ class _CrearSolicitudAbastecimientoViewState
 
   // Ítems seleccionados (Medicamento : Cantidad a pedir)
   final Map<MedicamentoEntity, int> _itemsSeleccionados = {};
+  final Map<String, TextEditingController> _cantidadControllers = {};
 
   // Filtro de búsqueda dinámico
   List<MedicamentoEntity> _resultadosBusqueda = [];
@@ -43,6 +45,9 @@ class _CrearSolicitudAbastecimientoViewState
   void dispose() {
     _searchController.dispose();
     _notasController.dispose();
+    for (final controller in _cantidadControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -75,6 +80,15 @@ class _CrearSolicitudAbastecimientoViewState
         _itemsSeleccionados[medicamento] =
             _itemsSeleccionados[medicamento]! + 1;
       }
+      final cantidad = _itemsSeleccionados[medicamento]!;
+      final controller = _cantidadControllers.putIfAbsent(
+        medicamento.id,
+        () => TextEditingController(text: cantidad.toString()),
+      );
+      controller.value = TextEditingValue(
+        text: cantidad.toString(),
+        selection: TextSelection.collapsed(offset: cantidad.toString().length),
+      );
       // Limpiar buscador tras agregar
       _searchController.clear();
       _mostrarResultados = false;
@@ -88,8 +102,17 @@ class _CrearSolicitudAbastecimientoViewState
       final nueva = actual + delta;
       if (nueva <= 0) {
         _itemsSeleccionados.remove(medicamento);
+        final controller = _cantidadControllers.remove(medicamento.id);
+        // El campo termina de desmontarse antes de liberar su controlador.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          controller?.dispose();
+        });
       } else {
         _itemsSeleccionados[medicamento] = nueva;
+        _cantidadControllers[medicamento.id]!.value = TextEditingValue(
+          text: nueva.toString(),
+          selection: TextSelection.collapsed(offset: nueva.toString().length),
+        );
       }
     });
   }
@@ -106,6 +129,17 @@ class _CrearSolicitudAbastecimientoViewState
     }
 
     final vm = context.read<AlmacenViewModel>();
+
+    if (_itemsSeleccionados.values.any((cantidad) => cantidad <= 0)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Escribe una cantidad mayor que cero para cada medicamento.'),
+          backgroundColor: Color(0xFFC62828),
+        ),
+      );
+      return;
+    }
+    FocusScope.of(context).unfocus();
 
     // Transformar el mapa de entidades a Map<String, int> para el repositorio
     final Map<String, int> itemsParaBackend = {};
@@ -175,7 +209,11 @@ class _CrearSolicitudAbastecimientoViewState
           children: [
             Text(
               'Nueva Solicitud',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             Text(
               'Abastecimiento Farmacia → Almacén',
@@ -185,6 +223,7 @@ class _CrearSolicitudAbastecimientoViewState
         ),
         backgroundColor: brandRed,
         foregroundColor: brandWhite,
+        iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
       ),
       body: state is AlmacenLoaded
@@ -585,6 +624,10 @@ class _CrearSolicitudAbastecimientoViewState
     Color brandWhite,
     Color brandRed,
   ) {
+    final cantidadController = _cantidadControllers.putIfAbsent(
+      med.id,
+      () => TextEditingController(text: cantidad.toString()),
+    );
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -648,15 +691,44 @@ class _CrearSolicitudAbastecimientoViewState
                     ),
                   ),
                 ),
-                Container(
-                  width: 40,
-                  alignment: Alignment.center,
-                  child: Text(
-                    cantidad.toString(),
+                SizedBox(
+                  width: 52,
+                  child: TextField(
+                    controller: cantidadController,
+                    enabled: !context.read<AlmacenViewModel>().isSaving,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: false,
+                      signed: false,
+                    ),
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    textInputAction: TextInputAction.done,
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
+                      color: AppColors.textSecondary,
                     ),
+                    cursorColor: brandRed,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      filled: false,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 10,
+                      ),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      hintText: '1',
+                    ),
+                    onChanged: (texto) {
+                      setState(() {
+                        _itemsSeleccionados[med] = int.tryParse(texto) ?? 0;
+                      });
+                    },
+                    onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                    onTapOutside: (_) => FocusScope.of(context).unfocus(),
                   ),
                 ),
                 InkWell(

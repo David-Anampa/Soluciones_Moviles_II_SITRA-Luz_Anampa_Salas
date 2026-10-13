@@ -85,7 +85,7 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Elige el método de captura según el protocolo de Almacén (RF-014):',
+                'Elige el método de captura para registrar el medicamento:',
                 style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 16),
@@ -310,7 +310,7 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                 ),
               ),
 
-              // BANNER INTERACTIVO DE SOLICITUDES PENDIENTES DE FARMACIA (RF-031)
+              // HU-030: Solicitudes pendientes de Farmacia.
               if (state is AlmacenLoaded && state.solicitudesPendientes > 0) ...[
                 const SizedBox(height: 14),
                 Material(
@@ -357,7 +357,7 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                                 ),
                                 const SizedBox(height: 2),
                                 const Text(
-                                  'Farmacia Central requiere abastecimiento de stock (RF-031). Toca para revisar y despachar.',
+                                  'Farmacia Central requiere abastecimiento de stock. Toca para revisar y despachar.',
                                   style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
                                 ),
                               ],
@@ -539,7 +539,7 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
 
               const SizedBox(height: 24),
 
-              // 4. LISTADO DE INVENTARIO FÍSICO CON BÚSQUEDA Y FILTROS (RF-013 / RF-023)
+              // HU-013 / HU-023: Inventario físico con búsqueda y filtros.
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -871,7 +871,7 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
 
           const SizedBox(height: 10),
 
-          // Botones de acción del ítem (RF-016 y RF-025)
+          // HU-016: Edición del ítem; acceso a transferencia física de stock.
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [

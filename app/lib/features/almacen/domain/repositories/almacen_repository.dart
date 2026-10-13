@@ -28,7 +28,7 @@ abstract class AlmacenRepository {
     double temperaturaMax = 8.0,
   });
 
-  /// Actualiza los datos técnicos de un medicamento existente en el catálogo (RF-016)
+  /// HU-016: Actualiza los datos técnicos de un medicamento existente en el catálogo.
   Future<MedicamentoEntity> editarMedicamento({
     required String id,
     required String gtin,
@@ -47,7 +47,7 @@ abstract class AlmacenRepository {
     bool activo = true,
   });
 
-  /// Registra una nueva solicitud de abastecimiento (RF-029)
+  /// HU-029: Registra una nueva solicitud de abastecimiento.
   Future<PedidoAbastecimientoEntity> crearPedidoAbastecimiento({
     required String areaDestino,
     required String turno,
@@ -73,7 +73,7 @@ abstract class AlmacenRepository {
     required int cantidadInicial,
   });
 
-  /// Transfiere stock de un lote específico desde Almacén hacia Farmacia Central (RF-025)
+  /// Transfiere stock de un lote específico desde Almacén hacia Farmacia Central.
   Future<void> transferirStockAFarmacia({
     required String loteId,
     required String medicamentoId,
@@ -81,7 +81,7 @@ abstract class AlmacenRepository {
     String? motivo,
   });
 
-  /// Obtiene la lista de solicitudes de abastecimiento enviadas por Farmacia (RF-031)
+  /// HU-030: Obtiene la lista de solicitudes de abastecimiento enviadas por Farmacia.
   Future<List<PedidoAbastecimientoEntity>> getSolicitudesAbastecimiento();
 
   /// Pasa el estado a EN_PREPARACION (Almacén toma el pedido)
@@ -93,7 +93,7 @@ abstract class AlmacenRepository {
   /// Confirma la entrega por parte de Almacén y verifica si se completa
   Future<void> marcarConfirmacionAlmacen(String pedidoId);
 
-  /// RF-030: Atiende y despacha la solicitud ajustando cantidades y realizando transferencia atómica de stock
+  /// HU-030: Atiende y despacha la solicitud ajustando cantidades y transfiriendo stock.
   Future<void> despacharPedidoAbastecimiento({
     required String pedidoId,
     required Map<String, int> cantidadesDespachadas,

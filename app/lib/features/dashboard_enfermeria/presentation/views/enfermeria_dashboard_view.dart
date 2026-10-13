@@ -18,7 +18,7 @@ class EnfermeriaDashboardView extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: const SitraAppBar(
         title: 'Enfermería & Pisos',
-        subtitle: 'Botiquín de Servicio y Administración',
+        subtitle: 'Pedidos y stock del servicio',
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -103,7 +103,7 @@ class EnfermeriaDashboardView extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Gestión de botiquín de piso, administración de dosis seguras y trazabilidad del paciente.',
+                    'Solicitud de medicamentos e insumos a Farmacia y seguimiento del stock del área.',
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.white.withOpacity(0.9),
@@ -150,28 +150,15 @@ class EnfermeriaDashboardView extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildMetricCard(
-                    title: 'Dosis Administradas',
-                    value: '19',
-                    subtitle: 'Turno mañana',
-                    icon: Icons.check_circle_outline_rounded,
-                    color: AppColors.success,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildMetricCard(
+            SizedBox(
+              width: double.infinity,
+              child: _buildMetricCard(
                     title: 'Stock Crítico',
                     value: '2',
                     subtitle: 'Atropina y Midazolam',
                     icon: Icons.error_outline_rounded,
                     color: AppColors.error,
-                  ),
-                ),
-              ],
+              ),
             ),
 
             const SizedBox(height: 24),
@@ -211,14 +198,6 @@ class EnfermeriaDashboardView extends StatelessWidget {
             const SizedBox(height: 12),
 
             _buildModuleTile(
-              icon: Icons.vaccines_rounded,
-              title: 'Registrar Administración a Paciente',
-              subtitle: 'Escanear pulsera del paciente, confirmar dosis y lote aplicado.',
-              color: AppColors.enfermeriaColor,
-              onTap: () => _showActionSnackbar(context, 'Registro de Administración'),
-            ),
-            const SizedBox(height: 10),
-            _buildModuleTile(
               icon: Icons.medication_liquid_rounded,
               title: 'Kardex y Stock del Coche de Paro',
               subtitle: 'Revisión periódica de ampollas, jeringas y fármacos de emergencia.',
@@ -229,38 +208,12 @@ class EnfermeriaDashboardView extends StatelessWidget {
             _buildModuleTile(
               icon: Icons.reply_all_rounded,
               title: 'Devolución de Sobrantes / Mermas',
-              subtitle: 'Retornar a farmacia medicamentos no administrados por alta o cambio de indicación.',
+              subtitle: 'Coordinar el retorno de medicamentos e insumos no utilizados por el servicio.',
               color: AppColors.secondary,
               onTap: () => _showActionSnackbar(context, 'Devolución de Sobrantes'),
             ),
 
             const SizedBox(height: 24),
-
-            // Pacientes con medicación programada
-            const Text(
-              'Dosis Programadas Próximas',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            _buildScheduleItem(
-              time: '08:00 AM',
-              patient: 'Cama 03 • Mamani Quispe, Juan',
-              prescription: 'Meropenem 1g EV • Indicación: UCI-Infec',
-              status: 'Pendiente',
-              statusColor: AppColors.warning,
-            ),
-            _buildScheduleItem(
-              time: '08:30 AM',
-              patient: 'Cama 05 • Choque Delgado, Carmen',
-              prescription: 'Enoxaparina 60mg SC • Anticoagulación',
-              status: 'Listo para aplicar',
-              statusColor: AppColors.success,
-            ),
           ],
         ),
       ),
@@ -391,89 +344,6 @@ class EnfermeriaDashboardView extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildScheduleItem({
-    required String time,
-    required String patient,
-    required String prescription,
-    required String status,
-    required Color statusColor,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.surfaceVariant),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              children: [
-                const Icon(Icons.access_time_rounded,
-                    size: 16, color: AppColors.enfermeriaColor),
-                const SizedBox(height: 2),
-                Text(
-                  time,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  patient,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  prescription,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              status,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: statusColor,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

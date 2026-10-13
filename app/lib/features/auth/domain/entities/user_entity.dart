@@ -1,4 +1,4 @@
-/// Roles del sistema SITRA-Luz según requerimiento RF-002
+/// HU-002: Roles del sistema SITRA-Luz y permisos de sesión.
 enum UserRole {
   administrador,
   jefaturaFarmacia,

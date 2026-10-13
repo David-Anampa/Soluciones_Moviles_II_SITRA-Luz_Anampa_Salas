@@ -3,7 +3,7 @@ import '../../domain/entities/medicamento_extraccion_ia.dart';
 
 /// Servicio encargado de la extracción automática de datos y validación cruzada
 /// con Inteligencia Artificial (Gemini / OCR) a partir del código GTIN escaneado
-/// y la fotografía opcional de la caja del medicamento (Requerimiento RF-014).
+/// y la fotografía opcional de la caja del medicamento (HU-014).
 class MedicamentoIaService {
   /// Base de datos de conocimiento farmacéutico pre-cargada para cotejo rápido offline
   static final Map<String, MedicamentoExtraccionIA> _catalogoConocido = {
