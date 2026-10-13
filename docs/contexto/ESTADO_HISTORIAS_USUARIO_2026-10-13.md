@@ -86,7 +86,34 @@ Actualización de planificación: el equipo decidió empezar los próximos cinco
 - La comprobación de referencias y la eliminación deben ser seguras también en la base de datos, sin borrado en cascada de registros operativos ni de auditoría.
 - Desactivar impide nuevas selecciones/asignaciones, pero no oculta el registro de las fichas o movimientos históricos. Si el área tiene stock o pedidos abiertos, definir su tratamiento antes de desactivarla para no dejar operaciones inaccesibles; esta condición sigue pendiente de precisar.
 - Las áreas se utilizan en la asignación de usuarios HU-021/HU-022 y en las fichas HU-003. Mantener contratos estables para desarrollarlas en paralelo y preservar los vínculos al editar nombres o códigos.
-- La ampliación agrega trabajo al Sprint 4: la carga de David se debe revisar dentro de sus 7,5 horas semanales; no se considera una funcionalidad ya implementada ni una ampliación de sus horas disponibles.
+- Reparto confirmado: Walter Salas desarrolla la estructura de las tablas de HU-012 (columnas, tipos y relaciones que correspondan). David Anampa implementa su funcionalidad: listar, crear, editar, activar/desactivar y eliminar con las restricciones acordadas. Mantener una única HU-012 con subtareas y responsables; no declararla Listo al terminar solo la estructura.
+- La carga funcional se concentra en David: debe revisarse dentro de sus 7,5 horas semanales. Las 10 horas de Walter no se convierten automáticamente en horas disponibles de David. Si no cabe, renegociar tareas o alcance del sprint; no afirmar un cierre completo sin evidencia.
+
+### HU-020, HU-021 y HU-022: columnas y nuevo reparto
+
+- David Anampa desarrolla **HU-021 (crear usuario)** y **HU-022 (editar usuario)**.
+- Walter Salas realiza la **estructura de tablas de HU-012**, coordinando con David los campos del catálogo de áreas usado para las asignaciones de usuarios.
+- David Anampa realiza la **funcionalidad restante de HU-012** y **HU-020 (listado y activación/desactivación de usuarios)**. La estructura de HU-012 no equivale a implementar HU-020: son historias distintas.
+
+Columnas previstas para la tabla de gestión de usuarios:
+
+| Columna | Información / acción |
+|---|---|
+| Nombre completo | Identificación del integrante registrado. |
+| Cargo | Cargo laboral; es independiente del rol de permisos del sistema. |
+| Correo de acceso | Correo utilizado para autenticarse. |
+| Rol | Administrador, Jefatura de Farmacia, Farmacia, Almacén o Enfermería/Técnico. |
+| Áreas asignadas | Una o varias áreas provenientes del catálogo HU-012. |
+| Estado | Activo o inactivo. |
+| Acciones | Editar y activar/desactivar con confirmación; crear se ofrece como botón de la pantalla. |
+
+El correo vinculado a Google Drive se muestra en el detalle/formulario, distinguiéndolo del correo de acceso si son diferentes. No mostrar contraseñas, tokens ni claves. No se agrega eliminación de usuarios: se conserva su historial mediante desactivación.
+
+En móvil, presentar los mismos datos en tarjetas: nombre, cargo y estado visibles; rol y áreas debajo; correo y acciones accesibles en el detalle. Evitar una tabla horizontal de siete columnas en la pantalla pequeña. HU-020 puede utilizar tabla en una vista amplia y tarjetas en teléfono.
+
+Verificar al implementar los campos de perfil necesarios para cargo y correo de Drive, porque documentarlos no significa que ya existan en el esquema actual. Todo cambio SQL irá acompañado de migración y actualización del setup.
+
+Para las tablas de HU-012, la estructura propuesta es: áreas con código, nombre, descripción y estado; tipos de financiamiento/seguro con nombre y estado. El identificador y las referencias se conservan en la persistencia. La interfaz añade acciones de editar, activar/desactivar y eliminar; las acciones no son columnas de datos almacenadas. Reutilizar la tabla existente de áreas y acordar los campos definitivos antes de crear otra tabla o cambiar relaciones.
 
 ## 8. Documentos y supervisión
 
@@ -168,7 +195,7 @@ Walter asume principalmente integridad de datos, permisos, IA y stock; David asu
 
 | Semana / sprint | Meta del sprint | Walter Salas — hasta 8 h de desarrollo | David Anampa — hasta 6 h de desarrollo |
 |---|---|---|---|
-| 1 · Sprint 4 · 12–18 oct. | Administrar usuarios, financiamientos, seguros y áreas desde la aplicación. | HU-021 y HU-022: alta y edición seguras de usuarios, roles y asignaciones de áreas. Acordar con David el contrato del catálogo de áreas HU-012. Comprobar requisitos de Gemini y Drive como parte del refinamiento. | HU-020: listado y activación/inhabilitación de usuarios. HU-012: crear, editar, activar/desactivar y eliminar financiamientos, seguros y áreas, con eliminación solo sin asociaciones. Revisar capacidad por el alcance ampliado. |
+| 1 · Sprint 4 · 12–18 oct. | Administrar usuarios, financiamientos, seguros y áreas desde la aplicación. | Estructura de tablas de HU-012: columnas, tipos y relaciones; reutilizar áreas existentes y documentar contratos. Revisar con David permisos e integración, y comprobar requisitos de Gemini/Drive en el refinamiento. | Funcionalidad de HU-012: gestión de financiamientos, seguros y áreas. HU-020, HU-021 y HU-022: gestionar, crear y editar usuarios. Revisar capacidad antes de comprometer el cierre de las cuatro HU. |
 | 2 · Sprint 5 · 19–25 oct. | Contar con stock coherente y plantillas de kits administrables. | HU-023 y HU-024: stock consolidado y entradas atómicas. Ajuste pendiente de HU-029: creación atómica de cabecera, ítems y auditoría, reutilizando las reglas existentes. | HU-017, HU-018 y HU-019: listado, creación y edición de kits. |
 | 3 · Sprint 6 · 26 oct.–1 nov. | Registrar fichas con productos/kits y completar registro asistido por IA. | HU-014 y HU-015 sincronizadas: extracción real, revisión humana y guardado. Preparar con David el contrato de persistencia de HU-003/HU-004/HU-005. | HU-003, HU-004 y HU-005: creación de ficha General/Neonatología, selección con stock y aplicación de kit. |
 | 4 · Sprint 7 · 2–8 nov. | Completar el recorrido de la ficha hasta la entrega física y anulación permitida. | HU-008, HU-009, HU-010 y HU-011: estados, despacho por ítem, confirmación con descuento atómico y anulación auditada. | HU-006 y HU-007: lista con filtros, detalle e historial. Preparar navegación y contrato del Kardex HU-025 cuando estas dos HU estén aceptadas. |
@@ -220,17 +247,17 @@ Meta: crear, editar y gestionar usuarios con permisos correctos, y administrar f
 
 | Integrante | ¿Qué realizó? — objetivo previsto para esta sesión | ¿Algo lo bloquea? |
 |---|---|---|
-| Walter Salas | Avanzar HU-021: servicio seguro de alta en Supabase Auth, perfil y áreas; acordar con David los campos y respuestas de usuarios. | Por confirmar: permisos del servicio de alta y definición de campos obligatorios. |
-| David Anampa | Llevar HU-020 a revisión con listado y estados; empezar HU-012 con gestión de financiamientos, seguros y áreas; acordar con Walter las asignaciones de áreas de usuarios. | Por confirmar: contrato de usuarios, referencias de áreas y carga del alcance ampliado. |
+| Walter Salas | Completar la estructura de tablas de HU-012, acordar columnas/relaciones con David y documentar cómo se consultan áreas y financiamientos. | Por confirmar: referencias y contrato definitivo de datos. |
+| David Anampa | Implementar la funcionalidad de HU-012 sobre la estructura entregada y empezar HU-020 con listado, columnas y estados de usuarios. | Por confirmar: entrega de estructura y capacidad para completar además HU-021/HU-022. |
 
 **5. Estado del tablero al cerrar la sesión — proyección**
 
 | Columna | Historias / ítems | Límite de trabajo en curso | ¿Se respeta? |
 |---|---|---|---|
 | Product Backlog | HU-003 a HU-011, HU-014/HU-015, HU-017 a HU-019, HU-023 a HU-028; ajuste HU-029 programado para Sprint 5. | — | — |
-| Sprint Backlog | HU-022. | — | — |
-| En progreso | HU-021 y HU-012. | 2 | Sí, en la proyección. |
-| En revisión | HU-020. | 3 | Sí, en la proyección. |
+| Sprint Backlog | HU-021 y HU-022. | — | — |
+| En progreso | HU-020, después de pasar la funcionalidad de HU-012 a revisión. | 2 | Sí, en la proyección. |
+| En revisión | HU-012 completa: estructura y funcionalidad; no mover aquí solo por terminar la estructura. | 3 | Sí, en la proyección. |
 | En pruebas | —; incorporar pendientes previas solo si existe capacidad de validación. | 2 | Sí, en la proyección. |
 | Listo | Base aceptada, si corresponde. | — | — |
 
@@ -240,8 +267,8 @@ Meta: crear, editar y gestionar usuarios con permisos correctos, y administrar f
 
 | Integrante | ¿Qué realizó? — objetivo previsto para esta sesión | ¿Algo lo bloquea? |
 |---|---|---|
-| Walter Salas | Completar HU-021/HU-022: crear y editar usuario, rol, áreas y estado sin perder historial. Revisar permisos y trabajo de David. | Por confirmar: resultados de revisión y pruebas manuales de altas/edición. |
-| David Anampa | Completar HU-020/HU-012: usuarios activos/inactivos y gestión de financiamientos, seguros y áreas; bloquear eliminación cuando existan asociaciones. Revisar el flujo de usuarios de Walter. | Por confirmar: validación de permisos, referencias, desactivación de áreas y capacidad real de la semana. |
+| Walter Salas | Ajustar la estructura de HU-012 según integración, mantener migración/setup cuando corresponda y revisar con David referencias, permisos y resultados funcionales. | Por confirmar: resultados de integración y validación manual. |
+| David Anampa | Objetivo sujeto a capacidad: completar funcionalidad de HU-012 y HU-020/HU-021/HU-022, incluyendo alta segura, edición, estados y áreas asignadas. | Por confirmar: carga real de cuatro HU y validación de Supabase Auth/roles. Si no cabe, registrar arrastre y replanificar. |
 
 **5. Estado del tablero al cerrar la sesión — proyección**
 
