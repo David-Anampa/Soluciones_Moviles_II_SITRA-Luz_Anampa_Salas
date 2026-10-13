@@ -47,22 +47,14 @@ extension UserRoleExtension on UserRole {
 
   static UserRole fromSupabase(String value) {
     final norm = value.toUpperCase().trim().replaceAll(' ', '_');
-    if (norm.contains('ADMIN')) {
-      return UserRole.administrador;
-    }
-    if (norm.contains('JEFATURA') || norm.contains('JEFE')) {
-      return UserRole.jefaturaFarmacia;
-    }
-    if (norm.contains('FARMACIA') || norm.contains('FARMA')) {
-      return UserRole.farmacia;
-    }
-    if (norm.contains('ALMACEN')) {
-      return UserRole.almacen;
-    }
-    if (norm.contains('ENFERMERIA') || norm.contains('TECNICO') || norm.contains('ENFERMERA')) {
-      return UserRole.enfermeria;
-    }
-    return UserRole.administrador;
+    return switch (norm) {
+      'ADMINISTRADOR' || 'ADMIN' => UserRole.administrador,
+      'JEFATURA_FARMACIA' || 'JEFATURA' || 'JEFE' => UserRole.jefaturaFarmacia,
+      'FARMACIA' || 'FARMA' => UserRole.farmacia,
+      'ALMACEN' || 'ALMACÉN' => UserRole.almacen,
+      'ENFERMERIA' || 'ENFERMERÍA' || 'TECNICO' || 'TÉCNICO' || 'ENFERMERA' => UserRole.enfermeria,
+      _ => throw const FormatException('El perfil no tiene un rol válido.'),
+    };
   }
 
   static UserRole fromFirestore(String value) => fromSupabase(value);

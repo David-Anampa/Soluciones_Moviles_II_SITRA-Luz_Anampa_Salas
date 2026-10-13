@@ -1,6 +1,7 @@
 -- ============================================================================
 -- SITRA-Luz • Sistema de Trazabilidad — Clínica La Luz (Sede Tacna)
 -- Script de Creación y Configuración Completa de Base de Datos en Supabase (PostgreSQL)
+-- Esquema consultado en Supabase: 13 de octubre de 2026.
 -- ============================================================================
 -- Instrucciones:
 -- 1. Ingresa a tu proyecto en https://supabase.com
@@ -63,7 +64,8 @@ CREATE TABLE IF NOT EXISTS public.medicamentos (
     gtin TEXT UNIQUE, -- Código de barras / GS1 Datamatrix escaneado por ML Kit
     nombre_comercial TEXT NOT NULL,
     principio_activo TEXT NOT NULL,
-    forma_farmaceutica TEXT NOT NULL, -- 'Cápsula', 'Ampolla', 'Frasco Jarabe', 'Comprimido'
+    presentacion TEXT NOT NULL, -- 'Cápsula', 'Ampolla', 'Frasco Jarabe', 'Comprimido'
+    laboratorio TEXT, -- Fabricante del medicamento; también puede registrarse por lote
     cod_art TEXT, -- Código de artículo interno
     registro_sanitario TEXT, -- Ej: 'RS-12345'
     unidad_presentacion TEXT NOT NULL DEFAULT 'unidades',
@@ -87,6 +89,7 @@ CREATE TABLE IF NOT EXISTS public.lotes (
     numero_lote TEXT NOT NULL,
     fecha_fabricacion DATE,
     fecha_vencimiento DATE NOT NULL,
+    laboratorio TEXT,
     proveedor TEXT,
     precio_compra NUMERIC(10, 2),
     precio_venta NUMERIC(10, 2),
@@ -120,7 +123,7 @@ CREATE TABLE IF NOT EXISTS public.pedidos_abastecimiento (
     codigo TEXT UNIQUE NOT NULL, -- Correlativo automático. Ej: 'PED-2026-001'
 
     -- ¿Quién pidió? (personal de farmacia que genera la solicitud)
-    solicitante_id UUID NOT NULL REFERENCES public.profiles(id),
+    solicitante_id UUID REFERENCES public.profiles(id), -- La política de creación exige auth.uid()
 
     -- Áreas involucradas (FK a tabla maestra de áreas para escalabilidad)
     area_origen TEXT NOT NULL DEFAULT 'FARMACIA' REFERENCES public.areas(codigo) ON UPDATE CASCADE,
@@ -168,6 +171,7 @@ CREATE TABLE IF NOT EXISTS public.pedidos_abastecimiento (
     fecha_solicitud TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     fecha_toma TIMESTAMPTZ,        -- Cuándo almacén presionó "Tomar Pedido"
     fecha_despacho TIMESTAMPTZ,
+    fecha_recepcion TIMESTAMPTZ,   -- Campo existente conservado; la RPC usa fecha_confirmacion_farmacia
     fecha_listo TIMESTAMPTZ,       -- Cuándo almacén presionó "Listo"
     fecha_confirmacion_almacen TIMESTAMPTZ,   -- Cuándo almacén marcó realizado
     fecha_confirmacion_farmacia TIMESTAMPTZ,  -- Cuándo farmacia marcó recibido
@@ -182,7 +186,7 @@ CREATE TABLE IF NOT EXISTS public.pedidos_abastecimiento_items (
     medicamento_id UUID NOT NULL REFERENCES public.medicamentos(id),
     cantidad_solicitada INT NOT NULL CHECK (cantidad_solicitada > 0),
     cantidad_despachada INT NOT NULL DEFAULT 0 CHECK (cantidad_despachada >= 0),
-    cantidad_recibida INT CHECK (cantidad_recibida >= 0 AND cantidad_recibida <= cantidad_despachada),
+    cantidad_recibida INT, -- La sección 16 instala pedido_cantidad_recibida_check
     -- La migración agrega pedido_abastecimiento_despachos para registrar todos los lotes.
     -- Lote específico del que se descuenta al despachar (FEFO: primero el que vence antes)
     lote_id UUID REFERENCES public.lotes(id)
@@ -277,60 +281,19 @@ CREATE INDEX IF NOT EXISTS idx_auditoria_fecha ON public.auditoria_trazabilidad(
 
 -- Trigger para crear automáticamente el perfil al registrarse un usuario en auth.users
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-DECLARE
-    user_rol TEXT;
-    user_nombre TEXT;
-    user_areas TEXT[];
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 BEGIN
-    -- Determinar rol según metadata o inferir automáticamente por email
-    user_rol := COALESCE(
-        NEW.raw_user_meta_data->>'rol',
-        CASE
-            WHEN NEW.email ILIKE '%admin%' THEN 'ADMINISTRADOR'
-            WHEN NEW.email ILIKE '%jef%' THEN 'JEFATURA_FARMACIA'
-            WHEN NEW.email ILIKE '%farma%' THEN 'FARMACIA'
-            WHEN NEW.email ILIKE '%almacen%' THEN 'ALMACEN'
-            ELSE 'ENFERMERIA'
-        END
-    );
-
-    -- Determinar nombre por defecto según rol
-    user_nombre := COALESCE(
-        NEW.raw_user_meta_data->>'nombre',
-        CASE
-            WHEN user_rol = 'ADMINISTRADOR' THEN 'Ing. Carlos Mendoza'
-            WHEN user_rol = 'JEFATURA_FARMACIA' THEN 'Dra. Elena Ramos'
-            WHEN user_rol = 'FARMACIA' THEN 'Q.F. Manuel Flores'
-            WHEN user_rol = 'ALMACEN' THEN 'Sr. Roberto Paredes'
-            WHEN user_rol = 'ENFERMERIA' THEN 'Lic. Ana Morales'
-            ELSE split_part(NEW.email, '@', 1)
-        END
-    );
-
-    -- Determinar áreas asignadas según rol
-    IF NEW.raw_user_meta_data->>'areas' IS NOT NULL THEN
-        user_areas := string_to_array(NEW.raw_user_meta_data->>'areas', ',');
-    ELSIF user_rol = 'ALMACEN' THEN
-        user_areas := ARRAY['Almacén General']::text[];
-    ELSIF user_rol = 'ADMINISTRADOR' THEN
-        user_areas := ARRAY['Sistemas', 'Auditoría']::text[];
-    ELSIF user_rol = 'ENFERMERIA' THEN
-        user_areas := ARRAY['UCI Adultos', 'SOP']::text[];
-    ELSE
-        user_areas := ARRAY['Farmacia Central']::text[];
-    END IF;
-
-    INSERT INTO public.profiles (id, email, nombre, rol, areas_asignadas, activo)
-    VALUES (NEW.id, NEW.email, user_nombre, user_rol, user_areas, true)
-    ON CONFLICT (id) DO UPDATE SET
-        email = EXCLUDED.email,
-        nombre = EXCLUDED.nombre,
-        rol = EXCLUDED.rol,
-        areas_asignadas = EXCLUDED.areas_asignadas;
+    -- Misma regla de HU-002 desde el inicio: el email y la metadata no asignan roles.
+    -- La sección de usuarios de demostración asigna sus permisos explícitamente.
+    INSERT INTO public.profiles(id, email, nombre, rol, areas_asignadas, activo)
+    VALUES (NEW.id, NEW.email,
+      COALESCE(NULLIF(btrim(NEW.raw_user_meta_data->>'nombre'), ''), split_part(NEW.email, '@', 1)),
+      'ENFERMERIA', '{}'::TEXT[], false)
+    ON CONFLICT (id) DO NOTHING;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
@@ -368,35 +331,9 @@ ALTER TABLE public.dispensaciones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.dispensacion_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.auditoria_trazabilidad ENABLE ROW LEVEL SECURITY;
 
--- Políticas para perfiles: todos los autenticados pueden ver perfiles, y editar el suyo propio
-CREATE POLICY "Permitir lectura de perfiles a usuarios autenticados" 
-    ON public.profiles FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Permitir a cada usuario actualizar su propio perfil y FCM token" 
-    ON public.profiles FOR UPDATE TO authenticated USING (auth.uid() = id);
-
--- Políticas para lectura de catálogos y stock a cualquier usuario autenticado
-CREATE POLICY "Lectura de áreas a usuarios autenticados" ON public.areas FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Lectura de doctores a usuarios autenticados" ON public.doctores FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Lectura de medicamentos a usuarios autenticados" ON public.medicamentos FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Escritura de medicamentos a usuarios autenticados" ON public.medicamentos FOR ALL TO authenticated USING (true);
-
-CREATE POLICY "Lectura de lotes a usuarios autenticados" ON public.lotes FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Escritura de lotes a usuarios autenticados" ON public.lotes FOR ALL TO authenticated USING (true);
-
-CREATE POLICY "Lectura de inventario a usuarios autenticados" ON public.inventario_stock FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Escritura de inventario a usuarios autenticados" ON public.inventario_stock FOR ALL TO authenticated USING (true);
-
-CREATE POLICY "Acceso total a pedidos para autenticados" ON public.pedidos_abastecimiento FOR ALL TO authenticated USING (true);
-CREATE POLICY "Acceso total a items de pedidos para autenticados" ON public.pedidos_abastecimiento_items FOR ALL TO authenticated USING (true);
-
-CREATE POLICY "Lectura de kits para autenticados" ON public.kits FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Lectura de kit_items para autenticados" ON public.kit_items FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "Acceso total a dispensaciones para autenticados" ON public.dispensaciones FOR ALL TO authenticated USING (true);
-CREATE POLICY "Acceso total a items de dispensacion para autenticados" ON public.dispensacion_items FOR ALL TO authenticated USING (true);
-
-CREATE POLICY "Lectura e inserción de auditoría para autenticados" ON public.auditoria_trazabilidad FOR ALL TO authenticated USING (true);
+-- Las políticas definitivas y los privilegios se instalan en la sección HU-002
+-- al final del setup, después de crear el detalle por lote y la función de pedidos.
+-- No se crean políticas abiertas FOR ALL para usuarios autenticados.
 
 -- ============================================================================
 -- 14. DATOS INICIALES (SEED DATA PARA PRUEBAS)
@@ -421,8 +358,7 @@ INSERT INTO public.doctores (nombre, colegiatura, especialidad) VALUES
 ON CONFLICT DO NOTHING;
 
 -- Medicamentos maestros
--- Medicamentos maestros
-INSERT INTO public.medicamentos (gtin, cod_art, nombre_comercial, principio_activo, forma_farmaceutica, registro_sanitario, unidad_presentacion, cantidad_por_presentacion, requiere_cadena_frio, precio_kairos) VALUES
+INSERT INTO public.medicamentos (gtin, cod_art, nombre_comercial, principio_activo, presentacion, registro_sanitario, unidad_presentacion, cantidad_por_presentacion, requiere_cadena_frio, precio_kairos) VALUES
 ('7750215001234', 'ART-001', 'Amoxicilina 500mg', 'Amoxicilina', 'Cápsula', 'RS-EE-04812', 'cápsulas', 100, false, 25.50),
 ('7750215005678', 'ART-002', 'Paracetamol 1g Inyectable', 'Paracetamol', 'Ampolla', 'RS-EN-01294', 'ampollas', 1, false, 5.00),
 ('7750215009012', 'ART-003', 'Fentanilo 0.5mg/10ml', 'Citrato de Fentanilo', 'Ampolla', 'RS-EE-09312', 'ampollas', 5, false, 80.00),
@@ -797,3 +733,233 @@ REVOKE ALL ON FUNCTION public.procesar_pedido_abastecimiento(UUID,TEXT,TEXT,JSON
 GRANT EXECUTE ON FUNCTION public.procesar_pedido_abastecimiento(UUID,TEXT,TEXT,JSONB,TEXT,TEXT) TO authenticated;
 NOTIFY pgrst, 'reload schema';
 COMMIT;
+
+
+-- ============================================================================
+-- 17. HU-002: SESION Y PERMISOS POR ROL
+-- Sincronizado con migracion_hu002_permisos_sesion_2026_10_13.sql.
+-- ============================================================================
+-- HU-002: ejecutar después de migracion_recepcion_pedidos_2026_10_12.sql.
+-- Sustituye las políticas del sistema; no elimina tablas, usuarios ni registros.
+-- Las fichas y kits quedan preparados para sus futuros sprints, sin implementar sus flujos.
+BEGIN;
+
+-- Consulta el perfil de la sesión, nunca el rol enviado por el cliente.
+-- SECURITY DEFINER evita recursión al consultar profiles desde sus propias políticas.
+CREATE OR REPLACE FUNCTION public.sitra_rol_actual()
+RETURNS TEXT LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT p.rol FROM public.profiles p WHERE p.id = auth.uid() AND p.activo = true;
+$$;
+
+CREATE OR REPLACE FUNCTION public.sitra_tiene_area(p_area TEXT)
+RETURNS BOOLEAN LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles p
+    JOIN public.areas a ON a.codigo = p_area OR lower(btrim(a.nombre)) = lower(btrim(p_area))
+    CROSS JOIN LATERAL unnest(p.areas_asignadas) AS asignada(valor)
+    WHERE p.id = auth.uid() AND p.activo = true
+      AND (upper(btrim(asignada.valor)) = upper(a.codigo)
+           OR lower(btrim(asignada.valor)) = lower(btrim(a.nombre)))
+  );
+$$;
+REVOKE ALL ON FUNCTION public.sitra_rol_actual() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.sitra_tiene_area(TEXT) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.sitra_rol_actual() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.sitra_tiene_area(TEXT) TO authenticated;
+
+-- El usuario únicamente puede sincronizar su propio FCM token. Rol, activo,
+-- áreas y datos de perfil se administran por Administrador o servicio autorizado.
+CREATE OR REPLACE FUNCTION public.sitra_proteger_perfil()
+RETURNS TRIGGER LANGUAGE plpgsql SET search_path = '' AS $$
+BEGIN
+  IF current_user IN ('postgres', 'service_role', 'supabase_admin') THEN RETURN NEW; END IF;
+  IF public.sitra_rol_actual() = 'ADMINISTRADOR' THEN RETURN NEW; END IF;
+  IF OLD.id IS DISTINCT FROM auth.uid() OR public.sitra_rol_actual() IS NULL
+     OR (to_jsonb(NEW) - 'fcm_token' - 'updated_at')
+        IS DISTINCT FROM (to_jsonb(OLD) - 'fcm_token' - 'updated_at') THEN
+    RAISE EXCEPTION 'Solo el administrador puede modificar el perfil, rol, áreas o estado.' USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.sitra_proteger_perfil() FROM PUBLIC, anon, authenticated;
+DROP TRIGGER IF EXISTS hu002_proteger_perfil ON public.profiles;
+CREATE TRIGGER hu002_proteger_perfil BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.sitra_proteger_perfil();
+
+-- Registrarse o usar un email que contenga "admin" no concede privilegios.
+-- Los nuevos perfiles requieren activación y asignación por Administración.
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
+BEGIN
+  INSERT INTO public.profiles(id, email, nombre, rol, areas_asignadas, activo)
+  VALUES (NEW.id, NEW.email,
+    COALESCE(NULLIF(btrim(NEW.raw_user_meta_data->>'nombre'), ''), split_part(NEW.email, '@', 1)),
+    'ENFERMERIA', '{}'::TEXT[], false)
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
+
+-- Elimina las políticas anteriores de estas tablas para que ninguna política
+-- permisiva residual pueda abrir de nuevo el acceso (las políticas SELECT se suman).
+DO $$
+DECLARE v_tabla TEXT; v_politica RECORD;
+BEGIN
+  FOREACH v_tabla IN ARRAY ARRAY[
+    'profiles', 'areas', 'doctores', 'medicamentos', 'lotes', 'inventario_stock',
+    'pedidos_abastecimiento', 'pedidos_abastecimiento_items', 'pedido_abastecimiento_despachos',
+    'kits', 'kit_items', 'dispensaciones', 'dispensacion_items', 'auditoria_trazabilidad'
+  ] LOOP
+    IF to_regclass(format('public.%I', v_tabla)) IS NULL THEN
+      RAISE EXCEPTION 'Falta la tabla %. Ejecuta primero la migración de recepción de pedidos.', v_tabla;
+    END IF;
+    FOR v_politica IN SELECT policyname FROM pg_policies WHERE schemaname = 'public' AND tablename = v_tabla LOOP
+      EXECUTE format('DROP POLICY %I ON public.%I', v_politica.policyname, v_tabla);
+    END LOOP;
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', v_tabla);
+    EXECUTE format('REVOKE ALL ON TABLE public.%I FROM anon, authenticated', v_tabla);
+    EXECUTE format('GRANT SELECT ON TABLE public.%I TO authenticated', v_tabla);
+  END LOOP;
+END;
+$$;
+
+GRANT UPDATE ON public.profiles TO authenticated;
+GRANT INSERT, UPDATE ON public.areas, public.doctores, public.medicamentos,
+  public.lotes, public.inventario_stock, public.kits, public.kit_items TO authenticated;
+GRANT INSERT ON public.pedidos_abastecimiento, public.pedidos_abastecimiento_items,
+  public.dispensaciones, public.dispensacion_items, public.auditoria_trazabilidad TO authenticated;
+-- No se concede DELETE. Los pedidos emitidos y sus despachos solo cambian vía RPC.
+
+CREATE POLICY hu002_perfiles_lectura ON public.profiles FOR SELECT TO authenticated USING (
+  id = auth.uid() OR public.sitra_rol_actual() IN ('ADMINISTRADOR', 'JEFATURA_FARMACIA', 'FARMACIA', 'ALMACEN')
+  OR (public.sitra_rol_actual() = 'ENFERMERIA' AND rol = 'ENFERMERIA'
+      AND EXISTS (SELECT 1 FROM unnest(areas_asignadas) AS area(valor) WHERE public.sitra_tiene_area(area.valor)))
+);
+CREATE POLICY hu002_perfiles_actualizacion ON public.profiles FOR UPDATE TO authenticated
+  USING (public.sitra_rol_actual() = 'ADMINISTRADOR' OR (id = auth.uid() AND public.sitra_rol_actual() IS NOT NULL))
+  WITH CHECK (public.sitra_rol_actual() = 'ADMINISTRADOR' OR (id = auth.uid() AND public.sitra_rol_actual() IS NOT NULL));
+
+CREATE POLICY hu002_areas_lectura ON public.areas FOR SELECT TO authenticated USING (public.sitra_rol_actual() IS NOT NULL);
+CREATE POLICY hu002_areas_creacion ON public.areas FOR INSERT TO authenticated WITH CHECK (public.sitra_rol_actual() = 'ADMINISTRADOR');
+CREATE POLICY hu002_areas_actualizacion ON public.areas FOR UPDATE TO authenticated USING (public.sitra_rol_actual() = 'ADMINISTRADOR') WITH CHECK (public.sitra_rol_actual() = 'ADMINISTRADOR');
+CREATE POLICY hu002_doctores_lectura ON public.doctores FOR SELECT TO authenticated USING (public.sitra_rol_actual() IS NOT NULL);
+CREATE POLICY hu002_doctores_creacion ON public.doctores FOR INSERT TO authenticated WITH CHECK (public.sitra_rol_actual() = 'ADMINISTRADOR');
+CREATE POLICY hu002_doctores_actualizacion ON public.doctores FOR UPDATE TO authenticated USING (public.sitra_rol_actual() = 'ADMINISTRADOR') WITH CHECK (public.sitra_rol_actual() = 'ADMINISTRADOR');
+
+CREATE POLICY hu002_medicamentos_lectura ON public.medicamentos FOR SELECT TO authenticated USING (public.sitra_rol_actual() IS NOT NULL);
+CREATE POLICY hu002_medicamentos_creacion ON public.medicamentos FOR INSERT TO authenticated WITH CHECK (public.sitra_rol_actual() IN ('ADMINISTRADOR', 'ALMACEN'));
+CREATE POLICY hu002_medicamentos_actualizacion ON public.medicamentos FOR UPDATE TO authenticated USING (public.sitra_rol_actual() IN ('ADMINISTRADOR', 'ALMACEN')) WITH CHECK (public.sitra_rol_actual() IN ('ADMINISTRADOR', 'ALMACEN'));
+CREATE POLICY hu002_lotes_lectura ON public.lotes FOR SELECT TO authenticated USING (public.sitra_rol_actual() IS NOT NULL);
+CREATE POLICY hu002_lotes_creacion ON public.lotes FOR INSERT TO authenticated WITH CHECK (public.sitra_rol_actual() IN ('ADMINISTRADOR', 'ALMACEN'));
+CREATE POLICY hu002_lotes_actualizacion ON public.lotes FOR UPDATE TO authenticated USING (public.sitra_rol_actual() IN ('ADMINISTRADOR', 'ALMACEN')) WITH CHECK (public.sitra_rol_actual() IN ('ADMINISTRADOR', 'ALMACEN'));
+
+CREATE POLICY hu002_inventario_lectura ON public.inventario_stock FOR SELECT TO authenticated USING (
+  public.sitra_rol_actual() IN ('ADMINISTRADOR', 'JEFATURA_FARMACIA', 'ALMACEN', 'FARMACIA')
+  OR (public.sitra_rol_actual() = 'ENFERMERIA'
+      AND (area_codigo IN ('FARMACIA', 'ALMACEN') OR public.sitra_tiene_area(area_codigo)))
+);
+CREATE POLICY hu002_inventario_creacion ON public.inventario_stock FOR INSERT TO authenticated WITH CHECK (
+  public.sitra_rol_actual() = 'ADMINISTRADOR'
+  OR (public.sitra_rol_actual() = 'ALMACEN' AND area_codigo IN ('ALMACEN', 'FARMACIA'))
+);
+CREATE POLICY hu002_inventario_actualizacion ON public.inventario_stock FOR UPDATE TO authenticated USING (
+  public.sitra_rol_actual() = 'ADMINISTRADOR'
+  OR (public.sitra_rol_actual() = 'ALMACEN' AND area_codigo IN ('ALMACEN', 'FARMACIA'))
+) WITH CHECK (
+  public.sitra_rol_actual() = 'ADMINISTRADOR'
+  OR (public.sitra_rol_actual() = 'ALMACEN' AND area_codigo IN ('ALMACEN', 'FARMACIA'))
+);
+
+CREATE POLICY hu002_pedidos_lectura ON public.pedidos_abastecimiento FOR SELECT TO authenticated USING (
+  public.sitra_rol_actual() IN ('ADMINISTRADOR', 'JEFATURA_FARMACIA', 'FARMACIA', 'ALMACEN')
+);
+CREATE POLICY hu002_pedidos_creacion ON public.pedidos_abastecimiento FOR INSERT TO authenticated WITH CHECK (
+  public.sitra_rol_actual() IN ('FARMACIA', 'ADMINISTRADOR') AND solicitante_id = auth.uid()
+  AND area_origen = 'FARMACIA' AND area_destino = 'ALMACEN' AND estado = 'PENDIENTE'
+  AND NOT confirmado_almacen AND NOT confirmado_farmacia
+  AND responsable_almacen_id IS NULL AND responsable_farmacia_id IS NULL
+  AND cancelado_por IS NULL AND rechazado_por IS NULL
+);
+CREATE POLICY hu002_pedido_items_lectura ON public.pedidos_abastecimiento_items FOR SELECT TO authenticated USING (
+  EXISTS (SELECT 1 FROM public.pedidos_abastecimiento p WHERE p.id = pedido_id)
+);
+CREATE POLICY hu002_pedido_items_creacion ON public.pedidos_abastecimiento_items FOR INSERT TO authenticated WITH CHECK (
+  public.sitra_rol_actual() IN ('FARMACIA', 'ADMINISTRADOR') AND cantidad_despachada = 0
+  AND cantidad_recibida IS NULL AND lote_id IS NULL
+  AND EXISTS (SELECT 1 FROM public.pedidos_abastecimiento p WHERE p.id = pedido_id
+              AND p.solicitante_id = auth.uid() AND p.estado = 'PENDIENTE')
+);
+CREATE POLICY hu002_despachos_lectura ON public.pedido_abastecimiento_despachos FOR SELECT TO authenticated USING (
+  EXISTS (SELECT 1 FROM public.pedidos_abastecimiento_items i WHERE i.id = item_id)
+);
+
+CREATE POLICY hu002_kits_lectura ON public.kits FOR SELECT TO authenticated USING (
+  public.sitra_rol_actual() IN ('ADMINISTRADOR', 'JEFATURA_FARMACIA', 'FARMACIA', 'ALMACEN')
+  OR (public.sitra_rol_actual() = 'ENFERMERIA' AND public.sitra_tiene_area(area_destino))
+);
+CREATE POLICY hu002_kits_creacion ON public.kits FOR INSERT TO authenticated WITH CHECK (public.sitra_rol_actual() = 'ADMINISTRADOR');
+CREATE POLICY hu002_kits_actualizacion ON public.kits FOR UPDATE TO authenticated USING (public.sitra_rol_actual() = 'ADMINISTRADOR') WITH CHECK (public.sitra_rol_actual() = 'ADMINISTRADOR');
+CREATE POLICY hu002_kit_items_lectura ON public.kit_items FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.kits k WHERE k.id = kit_id));
+CREATE POLICY hu002_kit_items_creacion ON public.kit_items FOR INSERT TO authenticated WITH CHECK (public.sitra_rol_actual() = 'ADMINISTRADOR');
+CREATE POLICY hu002_kit_items_actualizacion ON public.kit_items FOR UPDATE TO authenticated USING (public.sitra_rol_actual() = 'ADMINISTRADOR') WITH CHECK (public.sitra_rol_actual() = 'ADMINISTRADOR');
+
+CREATE POLICY hu002_fichas_lectura ON public.dispensaciones FOR SELECT TO authenticated USING (
+  public.sitra_rol_actual() IN ('ADMINISTRADOR', 'JEFATURA_FARMACIA', 'FARMACIA')
+  OR (public.sitra_rol_actual() = 'ENFERMERIA' AND public.sitra_tiene_area(area_origen))
+);
+CREATE POLICY hu002_fichas_creacion ON public.dispensaciones FOR INSERT TO authenticated WITH CHECK (
+  solicitado_por = auth.uid() AND estado = 'SOLICITADO' AND entregado_por IS NULL AND fecha_entrega IS NULL
+  AND (public.sitra_rol_actual() = 'ADMINISTRADOR'
+       OR (public.sitra_rol_actual() = 'ENFERMERIA' AND public.sitra_tiene_area(area_origen)))
+);
+CREATE POLICY hu002_ficha_items_lectura ON public.dispensacion_items FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.dispensaciones d WHERE d.id = dispensacion_id));
+CREATE POLICY hu002_ficha_items_creacion ON public.dispensacion_items FOR INSERT TO authenticated WITH CHECK (
+  cantidad_entregada = 0 AND public.sitra_rol_actual() IN ('ADMINISTRADOR', 'ENFERMERIA')
+  AND EXISTS (SELECT 1 FROM public.dispensaciones d WHERE d.id = dispensacion_id
+              AND d.solicitado_por = auth.uid() AND d.estado = 'SOLICITADO')
+);
+-- La preparación, entrega y anulación de fichas se incorporarán con RPC en sus HU.
+
+CREATE POLICY hu002_auditoria_lectura ON public.auditoria_trazabilidad FOR SELECT TO authenticated USING (
+  public.sitra_rol_actual() IN ('ADMINISTRADOR', 'JEFATURA_FARMACIA', 'FARMACIA')
+  OR (public.sitra_rol_actual() = 'ALMACEN' AND (
+    usuario_id = auth.uid() OR area_origen = 'ALMACEN' OR area_destino = 'ALMACEN'
+    OR (tabla_referencia = 'pedidos_abastecimiento' AND EXISTS (
+      SELECT 1 FROM public.pedidos_abastecimiento p WHERE p.id = entidad_referencia_id))
+  ))
+  OR (public.sitra_rol_actual() = 'ENFERMERIA' AND (
+    usuario_id = auth.uid() OR public.sitra_tiene_area(area_origen) OR public.sitra_tiene_area(area_destino)
+  ))
+);
+CREATE POLICY hu002_auditoria_creacion ON public.auditoria_trazabilidad FOR INSERT TO authenticated WITH CHECK (
+  usuario_id = auth.uid() AND public.sitra_rol_actual() IN ('ADMINISTRADOR', 'FARMACIA', 'ALMACEN')
+);
+-- Ningún rol de la aplicación recibe UPDATE/DELETE sobre auditoría.
+
+-- Extiende únicamente el control de rol de la RPC existente: Administración
+-- puede operar los módulos, pero conserva las mismas reglas de estado y stock.
+DO $$
+DECLARE v_funcion TEXT;
+  v_anterior TEXT := $viejo$IF p_accion IN ('CANCELAR', 'RECIBIR') AND v_rol <> 'FARMACIA'
+     OR p_accion IN ('TOMAR', 'RECHAZAR', 'DESPACHAR') AND v_rol <> 'ALMACEN' THEN$viejo$;
+  v_nuevo TEXT := $nuevo$IF v_rol <> 'ADMINISTRADOR' AND (
+     p_accion IN ('CANCELAR', 'RECIBIR') AND v_rol <> 'FARMACIA'
+     OR p_accion IN ('TOMAR', 'RECHAZAR', 'DESPACHAR') AND v_rol <> 'ALMACEN') THEN$nuevo$;
+BEGIN
+  SELECT pg_get_functiondef(to_regprocedure('public.procesar_pedido_abastecimiento(uuid,text,text,jsonb,text,text)')) INTO v_funcion;
+  IF v_funcion IS NULL THEN RAISE EXCEPTION 'Falta la función de pedidos. Ejecuta primero la migración de recepción.'; END IF;
+  IF position(v_anterior IN v_funcion) > 0 THEN
+    EXECUTE replace(v_funcion, v_anterior, v_nuevo);
+  ELSIF position(v_nuevo IN v_funcion) = 0 THEN
+    RAISE EXCEPTION 'La función de pedidos tiene otra versión. Revísala antes de aplicar HU-002.';
+  END IF;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.procesar_pedido_abastecimiento(UUID,TEXT,TEXT,JSONB,TEXT,TEXT) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.procesar_pedido_abastecimiento(UUID,TEXT,TEXT,JSONB,TEXT,TEXT) TO authenticated;
+
+NOTIFY pgrst, 'reload schema';
+COMMIT;
+

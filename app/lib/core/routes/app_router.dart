@@ -20,6 +20,19 @@ class AppRoutes {
   static const String almacen = '/almacen';
   static const String enfermeria = '/enfermeria';
 
+  static UserRole? roleForPath(String path) {
+    for (final entry in const {
+      admin: UserRole.administrador,
+      jefatura: UserRole.jefaturaFarmacia,
+      farmacia: UserRole.farmacia,
+      almacen: UserRole.almacen,
+      enfermeria: UserRole.enfermeria,
+    }.entries) {
+      if (path == entry.key || path.startsWith('${entry.key}/')) return entry.value;
+    }
+    return null;
+  }
+
   /// Determina la ruta correspondiente según el rol del usuario
   static String routeForRole(UserRole role) {
     switch (role) {
@@ -75,7 +88,7 @@ GoRouter createRouter(AuthViewModel authViewModel) {
 
       // Si no está autenticado, redirigir a login
       final isAuthenticated =
-          authState is AuthStateAuthenticated && currentUser != null;
+          authState is AuthStateAuthenticated && currentUser != null && currentUser.activo;
 
       if (!isAuthenticated) {
         return isLoggingIn ? null : AppRoutes.login;
@@ -83,6 +96,11 @@ GoRouter createRouter(AuthViewModel authViewModel) {
 
       // Si está autenticado y está intentando acceder a /login, llevarlo a su dashboard por rol
       if (isLoggingIn) {
+        return AppRoutes.routeForRole(currentUser.rol);
+      }
+
+      final requiredRole = AppRoutes.roleForPath(state.uri.path);
+      if (currentUser.rol != UserRole.administrador && requiredRole != currentUser.rol) {
         return AppRoutes.routeForRole(currentUser.rol);
       }
 

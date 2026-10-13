@@ -14,12 +14,23 @@ class AlmacenViewModel extends ChangeNotifier {
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
+  int _loadRevision = 0;
+
+  /// HU-002: Invalida datos y respuestas pendientes del usuario anterior.
+  void limpiarSesion() {
+    _loadRevision++;
+    _state = const AlmacenInitial();
+    _isSaving = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
 
   AlmacenViewModel({required AlmacenRepository repository})
       : _repository = repository;
 
   /// Carga el inventario y el catálogo de medicamentos desde Supabase
   Future<void> cargarInventario() async {
+    final revision = ++_loadRevision;
     _state = const AlmacenLoading();
     notifyListeners();
 
@@ -28,6 +39,8 @@ class AlmacenViewModel extends ChangeNotifier {
       final catalogo = await _repository.getMedicamentos();
       final solicitudes = await _repository.getSolicitudesAbastecimiento();
 
+      if (revision != _loadRevision) return;
+
       _state = AlmacenLoaded(
         inventario: inventario,
         catalogo: catalogo,
@@ -35,10 +48,11 @@ class AlmacenViewModel extends ChangeNotifier {
       );
       _errorMessage = null;
     } catch (e) {
+      if (revision != _loadRevision) return;
       _errorMessage = e.toString();
       _state = AlmacenError('No se pudo cargar el inventario: $e');
     } finally {
-      notifyListeners();
+      if (revision == _loadRevision) notifyListeners();
     }
   }
 

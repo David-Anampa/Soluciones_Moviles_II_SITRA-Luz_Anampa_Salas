@@ -22,7 +22,7 @@ class PedidoAbastecimientoItemModel extends PedidoAbastecimientoItemEntity {
       medicamentoId: map['medicamento_id']?.toString() ?? '',
       nombreMedicamento:
           med?['nombre_comercial']?.toString() ?? 'Medicamento Solicitado',
-      formaFarmaceutica: med?['forma_farmaceutica']?.toString() ?? '',
+      formaFarmaceutica: med?['presentacion']?.toString() ?? '',
       cantidadSolicitada: (map['cantidad_solicitada'] as num?)?.toInt() ?? 0,
       cantidadDespachada: (map['cantidad_despachada'] as num?)?.toInt() ?? 0,
       loteId: map['lote_id']?.toString(),

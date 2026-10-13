@@ -31,14 +31,9 @@ class AlmacenRemoteDataSource {
     required Map<String, int> items, // medicamentoId : cantidadSolicitada
   }) async {
     try {
-      String? currentUserId = _supabase.auth.currentUser?.id;
+      final currentUserId = _supabase.auth.currentUser?.id;
       if (currentUserId == null) {
-        final profile = await _supabase
-            .from('profiles')
-            .select('id')
-            .limit(1)
-            .maybeSingle();
-        currentUserId = profile?['id'] as String?;
+        throw const AlmacenException('Inicia sesión antes de crear una solicitud.');
       }
 
       // 1. Crear la cabecera del pedido
@@ -108,6 +103,9 @@ class AlmacenRemoteDataSource {
           )
           .toList();
     } catch (e) {
+      if (e is PostgrestException && e.code == '42501') {
+        throw const AlmacenException('Tu rol no tiene permiso para consultar este inventario.');
+      }
       debugPrint(
         '⚠️ Error al consultar inventario en Supabase: $e. Retornando datos base de contingencia.',
       );
@@ -129,6 +127,9 @@ class AlmacenRemoteDataSource {
           .map((item) => MedicamentoModel.fromMap(item as Map<String, dynamic>))
           .toList();
     } catch (e) {
+      if (e is PostgrestException && e.code == '42501') {
+        throw const AlmacenException('Tu rol no tiene permiso para consultar el catálogo.');
+      }
       debugPrint(
         '⚠️ Error al consultar catálogo de medicamentos: $e. Usando catálogo de contingencia.',
       );

@@ -38,7 +38,7 @@ class UserModel {
       rol: data['rol'] as String? ?? '',
       areasAsignadas: areas,
       fcmToken: data['fcm_token'] as String?,
-      activo: data['activo'] as bool? ?? true,
+      activo: data['activo'] as bool? ?? false,
     );
   }
 

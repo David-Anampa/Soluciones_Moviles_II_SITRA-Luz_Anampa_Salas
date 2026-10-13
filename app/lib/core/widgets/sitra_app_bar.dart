@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
@@ -24,7 +25,7 @@ class SitraAppBar extends StatelessWidget implements PreferredSizeWidget {
     if (role == null) return AppColors.primary;
     switch (role) {
       case UserRole.administrador:
-        return AppColors.adminColor;
+        return const Color(0xFFC62828);
       case UserRole.jefaturaFarmacia:
         return AppColors.jefaturaColor;
       case UserRole.farmacia:
@@ -57,6 +58,8 @@ class SitraAppBar extends StatelessWidget implements PreferredSizeWidget {
     final authViewModel = context.watch<AuthViewModel>();
     final user = authViewModel.currentUser;
     final roleColor = _getRoleColor(user?.rol);
+    final showModuleMenu = user?.rol == UserRole.administrador &&
+        GoRouterState.of(context).uri.path != '/admin';
 
     return Container(
       decoration: BoxDecoration(
@@ -131,7 +134,9 @@ class SitraAppBar extends StatelessWidget implements PreferredSizeWidget {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            user?.rol.displayName.toUpperCase() ?? 'SISTEMA',
+                            user?.rol == UserRole.administrador
+                                ? 'ADMIN'
+                                : user?.rol.displayName.toUpperCase() ?? 'SISTEMA',
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
@@ -160,6 +165,13 @@ class SitraAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
 
               // Acciones extras si se proveen
+              if (showModuleMenu)
+                IconButton(
+                  tooltip: 'Menú de módulos',
+                  onPressed: () => context.go('/admin'),
+                  icon: const Icon(Icons.grid_view_rounded,
+                      color: Color(0xFFC62828), size: 22),
+                ),
               if (actions != null) ...actions!,
 
               // Botón de Cerrar Sesión

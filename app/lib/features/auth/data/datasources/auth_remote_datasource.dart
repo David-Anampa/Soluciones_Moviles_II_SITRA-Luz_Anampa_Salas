@@ -76,9 +76,10 @@ class AuthRemoteDataSource {
   /// Cierra la sesión activa en Supabase
   Future<void> logout() async {
     try {
-      await _supabase.auth.signOut();
+      await _supabase.auth.signOut(scope: SignOutScope.local);
     } catch (e) {
       debugPrint('Error al cerrar sesión en Supabase: $e');
+      throw const AuthException('No se pudo cerrar la sesión. Revisa la conexión e inténtalo de nuevo.');
     }
   }
 
@@ -119,6 +120,7 @@ class AuthRemoteDataSource {
         .maybeSingle();
 
     if (response == null) {
+      await _descartarSesionInvalida();
       throw const AuthException(
         'Perfil de usuario no registrado en la base de datos de la clínica.',
       );
@@ -126,11 +128,26 @@ class AuthRemoteDataSource {
 
     final model = UserModel.fromMap(response, uid);
     if (!model.activo) {
+      await _descartarSesionInvalida();
       throw const AuthException(
         'Tu cuenta está deshabilitada. Contacta al administrador del sistema.',
       );
     }
+    try {
+      model.toEntity();
+    } on FormatException {
+      await _descartarSesionInvalida();
+      throw const AuthException('El perfil no tiene un rol válido. Contacta al administrador.');
+    }
     return model;
+  }
+
+  Future<void> _descartarSesionInvalida() async {
+    try {
+      await _supabase.auth.signOut(scope: SignOutScope.local);
+    } catch (_) {
+      // El ViewModel deniega igualmente el acceso; SQL valida el perfil activo.
+    }
   }
 
   /// Detecta si una cadena de error corresponde a una falla de conectividad a internet

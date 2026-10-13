@@ -15,6 +15,7 @@ import 'features/almacen/presentation/viewmodels/almacen_viewmodel.dart';
 import 'features/auth/data/datasources/auth_remote_datasource.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/auth/domain/entities/user_entity.dart';
 import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
 
 void main() async {
@@ -59,6 +60,15 @@ void main() async {
 
   final authViewModel = AuthViewModel(repository: authRepository);
   final almacenViewModel = AlmacenViewModel(repository: almacenRepository);
+  String? ultimoPerfil;
+  authViewModel.addListener(() {
+    final user = authViewModel.currentUser;
+    final perfil = user == null ? null : '${user.uid}:${user.rol.dbValue}:${user.areasAsignadas.join(',')}';
+    if (perfil != ultimoPerfil) {
+      ultimoPerfil = perfil;
+      almacenViewModel.limpiarSesion();
+    }
+  });
   final router = createRouter(authViewModel);
 
   runApp(
