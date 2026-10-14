@@ -86,14 +86,14 @@ Actualización de planificación: el equipo decidió empezar los próximos cinco
 - La comprobación de referencias y la eliminación deben ser seguras también en la base de datos, sin borrado en cascada de registros operativos ni de auditoría.
 - Desactivar impide nuevas selecciones/asignaciones, pero no oculta el registro de las fichas o movimientos históricos. Si el área tiene stock o pedidos abiertos, definir su tratamiento antes de desactivarla para no dejar operaciones inaccesibles; esta condición sigue pendiente de precisar.
 - Las áreas se utilizan en la asignación de usuarios HU-021/HU-022 y en las fichas HU-003. Mantener contratos estables para desarrollarlas en paralelo y preservar los vínculos al editar nombres o códigos.
-- Reparto confirmado: Walter Salas desarrolla la estructura de las tablas de HU-012 (columnas, tipos y relaciones que correspondan). David Anampa implementa su funcionalidad: listar, crear, editar, activar/desactivar y eliminar con las restricciones acordadas. Mantener una única HU-012 con subtareas y responsables; no declararla Listo al terminar solo la estructura.
-- La carga funcional se concentra en David: debe revisarse dentro de sus 7,5 horas semanales. Las 10 horas de Walter no se convierten automáticamente en horas disponibles de David. Si no cabe, renegociar tareas o alcance del sprint; no afirmar un cierre completo sin evidencia.
+- Reparto corregido y confirmado: **Walter Salas desarrolla HU-012 completa**, incluyendo estructura, interfaces y funcionalidad para listar, crear, editar, activar/desactivar y eliminar financiamientos, seguros y áreas con las restricciones acordadas. David revisa e integra con él las áreas necesarias para la gestión de usuarios.
+- Mantener el trabajo dentro de las 10 horas semanales de Walter y las 7,5 horas de David. Si no cabe, renegociar tareas o alcance del sprint; no afirmar un cierre completo sin evidencia.
 
 ### HU-020, HU-021 y HU-022: columnas y nuevo reparto
 
 - David Anampa desarrolla **HU-021 (crear usuario)** y **HU-022 (editar usuario)**.
-- Walter Salas realiza la **estructura de tablas de HU-012**, coordinando con David los campos del catálogo de áreas usado para las asignaciones de usuarios.
-- David Anampa realiza la **funcionalidad restante de HU-012** y **HU-020 (listado y activación/desactivación de usuarios)**. La estructura de HU-012 no equivale a implementar HU-020: son historias distintas.
+- Walter Salas desarrolla **HU-012 completa** y ajusta la **estructura de HU-020 (tabla de gestión de usuarios y sus campos)**, acordando con David las columnas y datos requeridos. Este ajuste no implica completar por sí solo HU-020.
+- David Anampa desarrolla la **funcionalidad restante de HU-020 (listado y activación/desactivación de usuarios)**, además de HU-021 y HU-022. HU-020 mantiene una única tarjeta con subtareas para estructura (Walter) y funcionalidad (David); solo pasa a Listo cuando ambas estén integradas y validadas.
 
 Columnas previstas para la tabla de gestión de usuarios:
 
@@ -173,13 +173,13 @@ El Kardex se vincula a HU-025; su resumen de existencias a HU-023; la visión de
 
 ## Plan de las próximas cinco semanas — Sprints 4 a 8
 
-Plan acordado el 13 de octubre de 2026 para dos integrantes: **Walter Salas (10 horas semanales)** y **David Anampa (7,5 horas semanales)**. Se conserva el informe anterior como diagnóstico; las tablas siguientes son una proyección de trabajo, no evidencias de tareas ya ejecutadas.
+Plan acordado el 13 de octubre de 2026 y actualizado el 14 de octubre a un daily por semana, para dos integrantes: **Walter Salas (10 horas semanales)** y **David Anampa (7,5 horas semanales)**. Se conserva el informe anterior como diagnóstico; las tablas siguientes son una proyección de trabajo, no evidencias de tareas ya ejecutadas.
 
 ### Organización y capacidad
 
-Se proponen cinco sprints de una semana, numerados del 4 al 8. Cada sprint tiene una meta y dos registros de seguimiento: **Daily 1**, a mitad de semana, y **Daily 2**, al cierre. Estos registros no dividen el sprint en dos sprints distintos. Las fechas son una referencia tomando como semana actual el 12–18 de octubre; ajustarlas si el calendario de la unidad utiliza otros días.
+Se proponen cinco sprints de una semana, numerados del 4 al 8. Cada sprint tiene una meta y **un único registro de daily semanal**, al cierre de la semana, que reúne el trabajo de ambos integrantes y una única tabla del estado del Project. La unidad tendrá cinco sprints y cinco registros; no se divide cada semana en dos dailys. Las fechas son una referencia tomando como semana actual el 12–18 de octubre; ajustarlas si el calendario de la unidad utiliza otros días.
 
-En Scrum, el Daily Scrum es una reunión breve de cada día de trabajo. Los dos registros semanales de este documento son las evidencias académicas seleccionadas; no sustituyen la coordinación diaria. Mantener una planificación al inicio, revisión del incremento y retrospectiva breve al cierre. Referencia: [Guía Scrum oficial — Sprint y Daily Scrum](https://scrumguides.org/scrum-guide.html).
+En Scrum, el Daily Scrum es una reunión breve de cada día de trabajo. El registro semanal de este documento es la evidencia académica solicitada; no sustituye la coordinación diaria del equipo. Mantener una planificación al inicio, revisión del incremento y retrospectiva breve al cierre. Referencia: [Guía Scrum oficial — Sprint y Daily Scrum](https://scrumguides.org/scrum-guide.html).
 
 | Integrante | Desarrollo por semana | Revisión, pruebas manuales e integración | Total semanal | Total de cinco semanas |
 |---|---:|---:|---:|---:|
@@ -195,7 +195,7 @@ Walter asume principalmente integridad de datos, permisos, IA y stock; David asu
 
 | Semana / sprint | Meta del sprint | Walter Salas — hasta 8 h de desarrollo | David Anampa — hasta 6 h de desarrollo |
 |---|---|---|---|
-| 1 · Sprint 4 · 12–18 oct. | Administrar usuarios, financiamientos, seguros y áreas desde la aplicación. | Estructura de tablas de HU-012: columnas, tipos y relaciones; reutilizar áreas existentes y documentar contratos. Revisar con David permisos e integración, y comprobar requisitos de Gemini/Drive en el refinamiento. | Funcionalidad de HU-012: gestión de financiamientos, seguros y áreas. HU-020, HU-021 y HU-022: gestionar, crear y editar usuarios. Revisar capacidad antes de comprometer el cierre de las cuatro HU. |
+| 1 · Sprint 4 · 12–18 oct. | Administrar usuarios, financiamientos, seguros y áreas desde la aplicación. | HU-012 completa: estructura, interfaces y gestión de financiamientos, seguros y áreas. Ajustar estructura y columnas de la tabla de usuarios HU-020 y acordar su contrato con David. Revisar permisos e integración. | Funcionalidad restante de HU-020: listado y activación/desactivación de usuarios. HU-021 y HU-022: crear y editar usuarios con roles y áreas. Integrar la estructura de HU-020 entregada por Walter. |
 | 2 · Sprint 5 · 19–25 oct. | Contar con stock coherente y plantillas de kits administrables. | HU-023 y HU-024: stock consolidado y entradas atómicas. Ajuste pendiente de HU-029: creación atómica de cabecera, ítems y auditoría, reutilizando las reglas existentes. | HU-017, HU-018 y HU-019: listado, creación y edición de kits. |
 | 3 · Sprint 6 · 26 oct.–1 nov. | Registrar fichas con productos/kits y completar registro asistido por IA. | HU-014 y HU-015 sincronizadas: extracción real, revisión humana y guardado. Preparar con David el contrato de persistencia de HU-003/HU-004/HU-005. | HU-003, HU-004 y HU-005: creación de ficha General/Neonatología, selección con stock y aplicación de kit. |
 | 4 · Sprint 7 · 2–8 nov. | Completar el recorrido de la ficha hasta la entrega física y anulación permitida. | HU-008, HU-009, HU-010 y HU-011: estados, despacho por ítem, confirmación con descuento atómico y anulación auditada. | HU-006 y HU-007: lista con filtros, detalle e historial. Preparar navegación y contrato del Kardex HU-025 cuando estas dos HU estén aceptadas. |
@@ -235,40 +235,20 @@ Una HU pasa a **Listo** cuando cumple sus criterios, fue revisada por el compañ
 
 En las tablas siguientes, **Base aceptada** significa las HU previas (001, 002, 013, 016, 029 y 030) únicamente cuando realmente superen su validación; mientras tanto se mantienen en revisión o pruebas respetando WIP. **Listo acumulado** son los resultados de los cierres anteriores, también sujetos a aceptación real.
 
-Los estados y textos de los diez registros son **objetivos proyectados**. Al celebrar la reunión se sustituyen por lo realizado y los impedimentos reales. “Por confirmar” no significa “No hay bloqueos”. Si no se cumple la proyección, el tablero conserva la situación real.
+Los estados y textos de los cinco registros semanales son **objetivos proyectados**. Al celebrar la reunión se sustituyen por lo realizado y los impedimentos reales. “Por confirmar” no significa “No hay bloqueos”. Si no se cumple la proyección, el tablero conserva la situación real.
 
 ### Semana 1 · Sprint 4 · Administración
 
 Meta: crear, editar y gestionar usuarios con permisos correctos, y administrar financiamientos, seguros y áreas.
 
-#### Daily 1 — registro proyectado a mitad de semana
+#### Daily semanal — registro proyectado al cierre del sprint
 
 **4. Registro del daily**
 
-| Integrante | ¿Qué realizó? — objetivo previsto para esta sesión | ¿Algo lo bloquea? |
+| Integrante | ¿Qué realizó? — objetivo previsto de la semana | ¿Algo lo bloquea? |
 |---|---|---|
-| Walter Salas | Completar la estructura de tablas de HU-012, acordar columnas/relaciones con David y documentar cómo se consultan áreas y financiamientos. | Por confirmar: referencias y contrato definitivo de datos. |
-| David Anampa | Implementar la funcionalidad de HU-012 sobre la estructura entregada y empezar HU-020 con listado, columnas y estados de usuarios. | Por confirmar: entrega de estructura y capacidad para completar además HU-021/HU-022. |
-
-**5. Estado del tablero al cerrar la sesión — proyección**
-
-| Columna | Historias / ítems | Límite de trabajo en curso | ¿Se respeta? |
-|---|---|---|---|
-| Product Backlog | HU-003 a HU-011, HU-014/HU-015, HU-017 a HU-019, HU-023 a HU-028; ajuste HU-029 programado para Sprint 5. | — | — |
-| Sprint Backlog | HU-021 y HU-022. | — | — |
-| En progreso | HU-020, después de pasar la funcionalidad de HU-012 a revisión. | 2 | Sí, en la proyección. |
-| En revisión | HU-012 completa: estructura y funcionalidad; no mover aquí solo por terminar la estructura. | 3 | Sí, en la proyección. |
-| En pruebas | —; incorporar pendientes previas solo si existe capacidad de validación. | 2 | Sí, en la proyección. |
-| Listo | Base aceptada, si corresponde. | — | — |
-
-#### Daily 2 — registro proyectado al cierre de semana
-
-**4. Registro del daily**
-
-| Integrante | ¿Qué realizó? — objetivo previsto para esta sesión | ¿Algo lo bloquea? |
-|---|---|---|
-| Walter Salas | Ajustar la estructura de HU-012 según integración, mantener migración/setup cuando corresponda y revisar con David referencias, permisos y resultados funcionales. | Por confirmar: resultados de integración y validación manual. |
-| David Anampa | Objetivo sujeto a capacidad: completar funcionalidad de HU-012 y HU-020/HU-021/HU-022, incluyendo alta segura, edición, estados y áreas asignadas. | Por confirmar: carga real de cuatro HU y validación de Supabase Auth/roles. Si no cabe, registrar arrastre y replanificar. |
+| Walter Salas | Completar HU-012: estructura, interfaces y gestión de financiamientos, seguros y áreas; bloquear eliminación con asociaciones. Ajustar la estructura y columnas de HU-020, acordar su contrato con David y actualizar migración/setup cuando corresponda. | Por confirmar: referencias, reglas de desactivación e integración con usuarios; respetar las 10 horas semanales. |
+| David Anampa | Completar la funcionalidad restante de HU-020 y HU-021/HU-022: listado, activación/desactivación, alta segura y edición de usuarios, roles y áreas asignadas. Integrar la estructura de HU-020 de Walter y revisar HU-012. | Por confirmar: contrato de HU-020 y validación de Supabase Auth/roles; respetar las 7,5 horas semanales. Si no cabe, registrar arrastre y replanificar. |
 
 **5. Estado del tablero al cerrar la sesión — proyección**
 
@@ -285,34 +265,14 @@ Meta: crear, editar y gestionar usuarios con permisos correctos, y administrar f
 
 Meta: configurar kits y registrar existencias sin operaciones parciales. El ajuste de HU-029 se aborda después de cerrar el núcleo de HU-024; si no cabe, se explicita el arrastre y se replanifica.
 
-#### Daily 1 — registro proyectado a mitad de semana
+#### Daily semanal — registro proyectado al cierre del sprint
 
 **4. Registro del daily**
 
-| Integrante | ¿Qué realizó? — objetivo previsto para esta sesión | ¿Algo lo bloquea? |
+| Integrante | ¿Qué realizó? — objetivo previsto de la semana | ¿Algo lo bloquea? |
 |---|---|---|
-| Walter Salas | Llevar HU-023 a pruebas con stock separado Farmacia/Almacén; avanzar HU-024 con guardado atómico de lote, stock y auditoría. | Por confirmar: regla de entradas directas a Farmacia y casos de lote existente. |
-| David Anampa | Completar HU-017, llevar HU-018 a revisión y comenzar HU-019 reutilizando el formulario de kits. | Por confirmar: catálogo y cantidades válidas para cada kit. |
-
-**5. Estado del tablero al cerrar la sesión — proyección**
-
-| Columna | Historias / ítems | Límite de trabajo en curso | ¿Se respeta? |
-|---|---|---|---|
-| Product Backlog | HU-003 a HU-011, HU-014/HU-015 y HU-025 a HU-028. | — | — |
-| Sprint Backlog | Ajuste HU-029, aún sin iniciar; tarea dentro de su tarjeta original. | — | — |
-| En progreso | HU-024 y HU-019. | 2 | Sí, en la proyección. |
-| En revisión | HU-018. | 3 | Sí, en la proyección. |
-| En pruebas | HU-023. | 2 | Sí, en la proyección. |
-| Listo | HU-017 y Listo acumulado de Sprint 4. | — | Solo con aceptación real. |
-
-#### Daily 2 — registro proyectado al cierre de semana
-
-**4. Registro del daily**
-
-| Integrante | ¿Qué realizó? — objetivo previsto para esta sesión | ¿Algo lo bloquea? |
-|---|---|---|
-| Walter Salas | Completar HU-023/HU-024 y el ajuste transaccional de HU-029; validar con David HU-030, recepción y devolución, sin duplicar movimientos. | Por confirmar: casos de fallo parcial, doble confirmación y existencias concurrentes. |
-| David Anampa | Completar HU-017/HU-018/HU-019 y revisar con Walter inventario, entradas y abastecimiento. | Por confirmar: integración de kits y preservación de sus futuros usos históricos. |
+| Walter Salas | Completar HU-023 con stock separado de Farmacia/Almacén, HU-024 con guardado atómico de lote, stock y auditoría, y el ajuste transaccional de HU-029; validar con David HU-030, recepción y devolución, sin duplicar movimientos. | Por confirmar: casos de fallo parcial, doble confirmación y existencias concurrentes. |
+| David Anampa | Completar HU-017/HU-018/HU-019: listado, habilitación, creación y edición de kits reutilizando el formulario y conservando sus usos históricos; revisar con Walter inventario, entradas y abastecimiento. | Por confirmar: integración de kits y preservación de sus futuros usos históricos. |
 
 **5. Estado del tablero al cerrar la sesión — proyección**
 
@@ -329,34 +289,14 @@ Meta: configurar kits y registrar existencias sin operaciones parciales. El ajus
 
 Meta: capturar productos con asistencia real de IA y crear fichas a partir del catálogo y kits existentes. Es el sprint de mayor riesgo de integración; HU-003 y el guardado de HU-015 comparten la necesidad de contratos estables, no deben competir por cambios incompatibles de esquema.
 
-#### Daily 1 — registro proyectado a mitad de semana
+#### Daily semanal — registro proyectado al cierre del sprint
 
 **4. Registro del daily**
 
-| Integrante | ¿Qué realizó? — objetivo previsto para esta sesión | ¿Algo lo bloquea? |
+| Integrante | ¿Qué realizó? — objetivo previsto de la semana | ¿Algo lo bloquea? |
 |---|---|---|
-| Walter Salas | Avanzar HU-014: GTIN/foto hacia extracción real y resultado estructurado. Dejar acordado el contrato de ficha para David. | Por confirmar: acceso a Gemini, conectividad y formato de la extracción. |
-| David Anampa | Avanzar HU-003: cabecera de ficha, paciente, área, doctor, financiamiento y receptor; preparar el selector de productos. | Por confirmar: campos finales, permisos por área y contrato de persistencia. |
-
-**5. Estado del tablero al cerrar la sesión — proyección**
-
-| Columna | Historias / ítems | Límite de trabajo en curso | ¿Se respeta? |
-|---|---|---|---|
-| Product Backlog | HU-006 a HU-011 y HU-025 a HU-028. | — | — |
-| Sprint Backlog | HU-015, HU-004 y HU-005. | — | — |
-| En progreso | HU-014 y HU-003. | 2 | Sí, en la proyección. |
-| En revisión | —. | 3 | Sí, en la proyección. |
-| En pruebas | —. | 2 | Sí, en la proyección. |
-| Listo | Listo acumulado hasta Sprint 5. | — | — |
-
-#### Daily 2 — registro proyectado al cierre de semana
-
-**4. Registro del daily**
-
-| Integrante | ¿Qué realizó? — objetivo previsto para esta sesión | ¿Algo lo bloquea? |
-|---|---|---|
-| Walter Salas | Completar HU-014/HU-015: extracción real, revisión editable, validaciones y guardado; revisar la creación de fichas de David. | Por confirmar: extracción con fotografías reales y comportamiento sin red. |
-| David Anampa | Completar HU-003/HU-004/HU-005: ficha, selección con stock y aplicación del kit como copia de sus ítems. Revisar el formulario de IA. | Por confirmar: registro completo, cantidades válidas y conservación del contenido del kit. |
+| Walter Salas | Completar HU-014/HU-015 sincronizadas: GTIN/foto, extracción real y estructurada, revisión editable, validaciones y guardado; acordar el contrato de persistencia de fichas y revisar el trabajo de David. | Por confirmar: extracción con fotografías reales y comportamiento sin red. |
+| David Anampa | Completar HU-003/HU-004/HU-005: ficha con paciente, área, doctor, financiamiento y receptor, selección de productos con stock y aplicación del kit como copia de sus ítems; revisar el formulario de IA. | Por confirmar: registro completo, cantidades válidas y conservación del contenido del kit. |
 
 **5. Estado del tablero al cerrar la sesión — proyección**
 
@@ -373,34 +313,14 @@ Meta: capturar productos con asistencia real de IA y crear fichas a partir del c
 
 Meta: operar fichas de principio a fin con cantidades reales, permisos y trazabilidad. Es el sprint de mayor riesgo de stock: las cuatro HU de Walter se desarrollan secuencialmente aprovechando la misma máquina de estados y operación transaccional.
 
-#### Daily 1 — registro proyectado a mitad de semana
+#### Daily semanal — registro proyectado al cierre del sprint
 
 **4. Registro del daily**
 
-| Integrante | ¿Qué realizó? — objetivo previsto para esta sesión | ¿Algo lo bloquea? |
+| Integrante | ¿Qué realizó? — objetivo previsto de la semana | ¿Algo lo bloquea? |
 |---|---|---|
-| Walter Salas | Llevar HU-008 a revisión y avanzar HU-009: preparación y despacho parcial por ítem con observaciones. | Por confirmar: correspondencia entre estados de ficha y transiciones autorizadas. |
-| David Anampa | Llevar HU-006 a pruebas y avanzar HU-007 con detalle completo e historial. | Por confirmar: acceso por áreas y eventos de cambio de estado. |
-
-**5. Estado del tablero al cerrar la sesión — proyección**
-
-| Columna | Historias / ítems | Límite de trabajo en curso | ¿Se respeta? |
-|---|---|---|---|
-| Product Backlog | HU-025, HU-026, HU-027 y HU-028. | — | — |
-| Sprint Backlog | HU-010 y HU-011. | — | — |
-| En progreso | HU-009 y HU-007. | 2 | Sí, en la proyección. |
-| En revisión | HU-008. | 3 | Sí, en la proyección. |
-| En pruebas | HU-006. | 2 | Sí, en la proyección. |
-| Listo | Listo acumulado hasta Sprint 6. | — | — |
-
-#### Daily 2 — registro proyectado al cierre de semana
-
-**4. Registro del daily**
-
-| Integrante | ¿Qué realizó? — objetivo previsto para esta sesión | ¿Algo lo bloquea? |
-|---|---|---|
-| Walter Salas | Completar HU-008/HU-009/HU-010/HU-011: entrega confirmada, descuento único por lote y anulación con motivo, sin borrar movimientos. | Por confirmar: stock insuficiente, doble pulsación, permisos y cancelación según estado. |
-| David Anampa | Completar HU-006/HU-007, validar con Walter el recorrido de fichas y refinar el detalle/Kardex HU-025 para Sprint 8. | Por confirmar: legibilidad móvil, historial completo y validación de Jefatura. |
+| Walter Salas | Completar HU-008/HU-009/HU-010/HU-011: estados de preparación, despacho parcial por ítem con observaciones, entrega confirmada, descuento único por lote y anulación con motivo, sin borrar movimientos. | Por confirmar: stock insuficiente, doble pulsación, permisos y cancelación según estado. |
+| David Anampa | Completar HU-006/HU-007: listado con filtros, detalle completo e historial; validar con Walter el recorrido de fichas y refinar el detalle/Kardex HU-025 para Sprint 8. | Por confirmar: legibilidad móvil, historial completo y validación de Jefatura. |
 
 **5. Estado del tablero al cerrar la sesión — proyección**
 
@@ -417,34 +337,14 @@ Meta: operar fichas de principio a fin con cantidades reales, permisos y trazabi
 
 Meta: consultar el recorrido real de los productos, exportar la ficha y supervisar stock/consumo. Evitar que Google Drive descubra una dependencia de credenciales al final: el acceso debe haberse confirmado en Sprint 4.
 
-#### Daily 1 — registro proyectado a mitad de semana
+#### Daily semanal — registro proyectado al cierre del sprint
 
 **4. Registro del daily**
 
-| Integrante | ¿Qué realizó? — objetivo previsto para esta sesión | ¿Algo lo bloquea? |
+| Integrante | ¿Qué realizó? — objetivo previsto de la semana | ¿Algo lo bloquea? |
 |---|---|---|
-| Walter Salas | Avanzar HU-025: detalle móvil con resumen, lotes y movimientos reales de compra, traslado, devolución y consumo por ficha. | Por confirmar: movimientos históricos con datos suficientes de lote, costo y responsable. |
-| David Anampa | Avanzar HU-026: PDF con formato oficial, datos de ficha y tablas separadas de medicamentos/dispositivos; preparar el destino autorizado de Drive. | Por confirmar: plantilla física aprobada y permisos de Google Drive. |
-
-**5. Estado del tablero al cerrar la sesión — proyección**
-
-| Columna | Historias / ítems | Límite de trabajo en curso | ¿Se respeta? |
-|---|---|---|---|
-| Product Backlog | Mejoras fuera del alcance de la unidad; integraciones adicionales de cobranza si se solicitan. | — | — |
-| Sprint Backlog | HU-027 y HU-028. | — | — |
-| En progreso | HU-025 y HU-026. | 2 | Sí, en la proyección. |
-| En revisión | —. | 3 | Sí, en la proyección. |
-| En pruebas | —. | 2 | Sí, en la proyección. |
-| Listo | Listo acumulado hasta Sprint 7. | — | — |
-
-#### Daily 2 — registro proyectado al cierre de unidad
-
-**4. Registro del daily**
-
-| Integrante | ¿Qué realizó? — objetivo previsto para esta sesión | ¿Algo lo bloquea? |
-|---|---|---|
-| Walter Salas | Completar HU-025/HU-028: Kardex y dashboard con stock crítico, fichas por estado, movimientos y consumo/valor por área. Consolidar migraciones y documentación. | Por confirmar: conciliación de cantidades e importes con operaciones reales. |
-| David Anampa | Completar HU-026/HU-027: PDF aprobado y subida a Drive con resultado visible, reintentos y prevención de duplicados. Revisar el flujo completo con Walter. | Por confirmar: aceptación del PDF, autorización externa y carga correcta del documento. |
+| Walter Salas | Completar HU-025/HU-028: detalle móvil/Kardex con resumen, lotes y movimientos reales de compra, traslado, devolución y consumo por ficha; dashboard con stock crítico, fichas por estado y consumo/valor por área; consolidar migraciones y documentación. | Por confirmar: conciliación de cantidades e importes con operaciones reales. |
+| David Anampa | Completar HU-026/HU-027: PDF fiel al formato oficial, datos de ficha y tablas separadas de medicamentos/dispositivos; subida al destino autorizado de Drive con resultado visible, reintentos y prevención de duplicados; revisar el flujo completo con Walter. | Por confirmar: aceptación del PDF, autorización externa y carga correcta del documento. |
 
 **5. Estado del tablero al cerrar la sesión — objetivo final, no estado actual**
 
