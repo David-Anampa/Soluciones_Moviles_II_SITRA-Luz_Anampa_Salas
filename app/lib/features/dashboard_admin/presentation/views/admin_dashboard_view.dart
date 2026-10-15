@@ -10,6 +10,12 @@ class AdminDashboardView extends StatelessWidget {
 
   static const _red = Color(0xFFC62828);
   static const _modules = [
+    _Module('Gestión de usuarios',
+        'Consulta al personal, sus datos, roles y áreas asignadas.',
+        Icons.manage_accounts_rounded, '/admin/usuarios'),
+    _Module('Financiamientos, seguros y áreas',
+        'Administra áreas, convenios y cobertura de medicamentos.',
+        Icons.settings_applications_rounded, '/admin/catalogos'),
     _Module('Farmacia', 'Inventario, abastecimiento y recepción de medicamentos.',
         Icons.local_pharmacy_rounded, '/farmacia'),
     _Module('Almacén', 'Registro de medicamentos, entradas y atención de pedidos.',

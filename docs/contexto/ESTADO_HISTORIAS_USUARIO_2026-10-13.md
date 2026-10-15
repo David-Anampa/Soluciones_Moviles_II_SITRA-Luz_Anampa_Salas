@@ -71,8 +71,8 @@ Las tablas `kits` y `kit_items` existen; eso todavía no constituye una implemen
 
 | HU | Historia | Estado |
 |---|---|---|
-| HU-012 | Gestionar financiamientos, seguros y áreas | **Pendiente; alcance ampliado y confirmado.** Administrador puede listar, crear, editar, activar/desactivar y eliminar tipos de financiamiento/seguro y áreas. Solo se permite eliminar registros sin asociaciones; con historial o referencias se bloquea la eliminación y se permite desactivar. |
-| HU-020 | Gestionar usuarios | **Pendiente; solo acceso de demostración** |
+| HU-012 | Gestionar financiamientos, seguros y áreas | **Implementada en código el 15 de octubre; pendiente de ejecutar migración y validación manual.** Administrador dispone de dos pestañas con búsqueda, filtros, creación, edición, habilitación y eliminación controlada. Seguros y Convenios incluyen porcentaje y lista de medicamentos con descuento sobre Kairos. Ver `docs/supabase/GUIA_HU012_Y_CONTRATO_HU020.md`. |
+| HU-020 | Gestionar usuarios | **Parcial: menú, estructura y consulta implementados el 15 de octubre.** Usuarios reales con tarjetas/detalle, búsqueda, filtros de habilitación/rol/área y orden dinámico. Migración aparte con usuario, nombres y apellidos, pendiente de ejecutar. David continúa activación/desactivación e integración con HU-021/HU-022. |
 | HU-021 | Crear usuario | **Pendiente** |
 | HU-022 | Editar usuario | **Pendiente** |
 
@@ -84,16 +84,18 @@ Actualización de planificación: el equipo decidió empezar los próximos cinco
 - Solo Administrador gestiona estos catálogos. Permite listar, crear, editar, activar/desactivar y eliminar tanto áreas como tipos de financiamiento/seguro.
 - La eliminación física solo se permite si el registro no tiene referencias: fichas, pedidos, stock, movimientos, kits, asignaciones de usuarios u otras asociaciones. Si existe alguna, bloquear la eliminación y ofrecer desactivación, conservando el historial. Regla confirmada por Walter Salas.
 - La comprobación de referencias y la eliminación deben ser seguras también en la base de datos, sin borrado en cascada de registros operativos ni de auditoría.
-- Desactivar impide nuevas selecciones/asignaciones, pero no oculta el registro de las fichas o movimientos históricos. Si el área tiene stock o pedidos abiertos, definir su tratamiento antes de desactivarla para no dejar operaciones inaccesibles; esta condición sigue pendiente de precisar.
+- Regla confirmada: desactivar impide nuevas selecciones/asignaciones y conserva registros, stock y asignaciones existentes. Los pedidos anteriores pueden finalizarse; no se cancelan ni se elimina stock al desactivar. Las validaciones de nuevas asignaciones/pedidos se incluyen en la migración HU-012.
 - Las áreas se utilizan en la asignación de usuarios HU-021/HU-022 y en las fichas HU-003. Mantener contratos estables para desarrollarlas en paralelo y preservar los vínculos al editar nombres o códigos.
 - Reparto corregido y confirmado: **Walter Salas desarrolla HU-012 completa**, incluyendo estructura, interfaces y funcionalidad para listar, crear, editar, activar/desactivar y eliminar financiamientos, seguros y áreas con las restricciones acordadas. David revisa e integra con él las áreas necesarias para la gestión de usuarios.
 - Mantener el trabajo dentro de las 10 horas semanales de Walter y las 7,5 horas de David. Si no cabe, renegociar tareas o alcance del sprint; no afirmar un cierre completo sin evidencia.
 
 ### HU-020, HU-021 y HU-022: columnas y nuevo reparto
 
+Actualización del 15 de octubre: la tarjeta **Gestión de usuarios** y la ruta `/admin/usuarios` ya muestran perfiles reales, con resumen táctil, buscador, filtros, ordenación, actualización al deslizar y detalle completo. La entrega prepara `nombre_usuario`, `nombres` y `apellidos` mediante `migracion_hu020_estructura_usuarios_2026_10_15.sql`, incluida también en el setup. Se conserva el nombre completo anterior sin inferir apellidos. Contraseñas pertenecen a Supabase Auth y no se muestran ni se guardan en profiles. La migración no se ejecutó. Ver `docs/supabase/GUIA_HU020_LISTADO_USUARIOS.md`; la habilitación y HU-021/HU-022 permanecen a cargo de David.
+
 - David Anampa desarrolla **HU-021 (crear usuario)** y **HU-022 (editar usuario)**.
 - Walter Salas desarrolla **HU-012 completa** y ajusta la **estructura de HU-020 (tabla de gestión de usuarios y sus campos)**, acordando con David las columnas y datos requeridos. Este ajuste no implica completar por sí solo HU-020.
-- David Anampa desarrolla la **funcionalidad restante de HU-020 (listado y activación/desactivación de usuarios)**, además de HU-021 y HU-022. HU-020 mantiene una única tarjeta con subtareas para estructura (Walter) y funcionalidad (David); solo pasa a Listo cuando ambas estén integradas y validadas.
+- David Anampa desarrolla la **funcionalidad restante de HU-020 (activación/desactivación e integración con crear/editar)**, además de HU-021 y HU-022. Walter ya preparó estructura y listado a petición del usuario. HU-020 mantiene una única tarjeta con subtareas para ambos; solo pasa a Listo cuando estén integradas y validadas.
 
 Columnas previstas para la tabla de gestión de usuarios:
 
@@ -113,7 +115,16 @@ En móvil, presentar los mismos datos en tarjetas: nombre, cargo y estado visibl
 
 Verificar al implementar los campos de perfil necesarios para cargo y correo de Drive, porque documentarlos no significa que ya existan en el esquema actual. Todo cambio SQL irá acompañado de migración y actualización del setup.
 
-Para las tablas de HU-012, la estructura propuesta es: áreas con código, nombre, descripción y estado; tipos de financiamiento/seguro con nombre y estado. El identificador y las referencias se conservan en la persistencia. La interfaz añade acciones de editar, activar/desactivar y eliminar; las acciones no son columnas de datos almacenadas. Reutilizar la tabla existente de áreas y acordar los campos definitivos antes de crear otra tabla o cambiar relaciones.
+La estructura implementada para HU-012 reutiliza áreas: UUID estable, código visible `codigo_interno` (AREA-001, editable y único), nombre, descripción, habilitación y configuración de stock propio. `areas.codigo` conserva el alias operativo usado por los pedidos actuales. Seguros/convenios tienen nombre, descripción, tipo SEGURO/CONVENIO, porcentaje y relación con los medicamentos incluidos. Particular no es un tercer tipo del catálogo: se utiliza en la ficha sin financiamiento asociado. Las acciones no son columnas de datos almacenadas.
+
+### Entrega HU-012 — 15 de octubre de 2026
+
+- Nueva ruta administrativa `/admin/catalogos`, enlazada desde el menú, con protección por rol existente. Dos pestañas y formularios móviles rojo/pastel/gris/blanco, hover, búsqueda, filtros y selección de cobertura con vista previa sobre Kairos.
+- Script aparte: `docs/supabase/migracion_hu012_catalogos_2026_10_15.sql`, incorporado también al final del `setup`. Pendiente de ejecución por el usuario; no se modificó la base remota.
+- Escritura de catálogo mediante RPC atómica con validación de Administrador, restricciones de eliminación y auditoría. La cobertura se guarda junto al porcentaje. Los importes históricos no se recalculan.
+- Estructura para David: `profiles.cargo`, `profiles.correo_drive` y relaciones UUID `profile_areas`, sincronizadas con el array de áreas existente. HU-020/HU-021/HU-022 no tienen interfaces ni alta de usuarios implementadas en esta entrega.
+- Preparados el tipo de atención Particular/Seguro/Convenio, la relación a financiamiento y campos de valoración histórica de ítems para próximas fichas. HU-003/HU-010 deberán integrar y guardar la cotización; no se implementa el flujo de fichas ni cobranza dentro de HU-012.
+- La guía `docs/supabase/GUIA_HU012_Y_CONTRATO_HU020.md` explica los campos, contratos y pasos de validación manual. No se ejecutaron pruebas, análisis Flutter ni capturas en esta entrega. El `No issues found` de días anteriores no valida estos cambios nuevos.
 
 ## 8. Documentos y supervisión
 

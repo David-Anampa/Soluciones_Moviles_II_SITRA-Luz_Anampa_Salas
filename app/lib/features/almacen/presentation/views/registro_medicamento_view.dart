@@ -235,6 +235,8 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
         title: const Text('Ingreso de Medicamento'),
         backgroundColor: AppColors.almacenColor,
         foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        actionsIconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
         actions: [
           IconButton(

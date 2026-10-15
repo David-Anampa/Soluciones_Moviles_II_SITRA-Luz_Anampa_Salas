@@ -216,6 +216,8 @@ class _IngresoLoteViewState extends State<IngresoLoteView> {
         ),
         backgroundColor: AppColors.almacenColor,
         foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        actionsIconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
       ),
       bottomNavigationBar: Container(
