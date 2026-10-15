@@ -39,9 +39,12 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
         _cargando = false;
       });
     } catch (e) {
-      if (mounted && revision == _revision) setState(() {
-        _error = CatalogosRepository.mensajeError(e); _cargando = false;
-      });
+      if (mounted && revision == _revision) {
+        setState(() {
+          _error = CatalogosRepository.mensajeError(e);
+          _cargando = false;
+        });
+      }
     }
   }
 

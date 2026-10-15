@@ -40,9 +40,12 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
         _cargando = false;
       });
     } catch (e) {
-      if (mounted && revision == _revision) setState(() {
-        _error = CatalogosRepository.mensajeError(e); _cargando = false;
-      });
+      if (mounted && revision == _revision) {
+        setState(() {
+          _error = CatalogosRepository.mensajeError(e);
+          _cargando = false;
+        });
+      }
     }
   }
 
