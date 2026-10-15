@@ -6,7 +6,9 @@ import 'catalogo_estilo.dart';
 class AreaEditor extends StatefulWidget {
   final AreaCatalogo? area;
   final CatalogosRepository repository;
+  /// Abre el formulario de un área nueva o existente con el repositorio de guardado.
   const AreaEditor({super.key, this.area, required this.repository});
+  /// Crea el estado que administra campos, validación y progreso del formulario.
   @override
   State<AreaEditor> createState() => _AreaEditorState();
 }
@@ -17,6 +19,7 @@ class _AreaEditorState extends State<AreaEditor> {
   late bool _stock;
   bool _guardando = false;
   String? _error;
+  /// Precarga los campos del área al editar; al crear deja el código opcional vacío.
   @override
   void initState() {
     super.initState();
@@ -25,10 +28,14 @@ class _AreaEditorState extends State<AreaEditor> {
     _descripcion = TextEditingController(text: widget.area?.descripcion ?? '');
     _stock = widget.area?.administraStock ?? false;
   }
+  /// Libera los controladores de texto cuando se cierra el formulario.
   @override
   void dispose() {
     _codigo.dispose(); _nombre.dispose(); _descripcion.dispose(); super.dispose();
   }
+  /// Valida el formulario y evita envíos duplicados mientras se guarda.
+  /// Envía nombre, descripción, código visible y stock propio a la RPC mediante
+  /// el repositorio; cierra con true solo después de un guardado satisfactorio.
   Future<void> _guardar() async {
     if (!_form.currentState!.validate() || _guardando) return;
     setState(() { _guardando = true; _error = null; });
@@ -43,6 +50,8 @@ class _AreaEditorState extends State<AreaEditor> {
       if (mounted) setState(() { _error = CatalogosRepository.mensajeError(e); _guardando = false; });
     }
   }
+  /// Dibuja los campos del área y las indicaciones de habilitación.
+  /// Los valores se editan localmente hasta pulsar Guardar; no consulta Supabase.
   @override
   Widget build(BuildContext context) => CatalogoDialogo(
     titulo: widget.area == null ? 'Nueva área' : 'Editar área',
@@ -80,8 +89,10 @@ class FinanciamientoEditor extends StatefulWidget {
   final FinanciamientoCatalogo? registro;
   final List<MedicamentoCobertura> medicamentos;
   final CatalogosRepository repository;
+  /// Recibe el registro a editar y el catálogo ya cargado para seleccionar cobertura.
   const FinanciamientoEditor({super.key, this.registro,
     required this.medicamentos, required this.repository});
+  /// Crea el estado que conserva la cobertura seleccionada y los campos del convenio/seguro.
   @override
   State<FinanciamientoEditor> createState() => _FinanciamientoEditorState();
 }
@@ -95,7 +106,10 @@ class _FinanciamientoEditorState extends State<FinanciamientoEditor> {
   String? _error;
   int _limite = 30;
   bool _soloSeleccionados = false, _guardando = false;
+  /// Interpreta el porcentaje escrito, admitiendo coma o punto como separador decimal.
+  /// Devuelve null si todavía no es un número válido; el formulario valida su rango.
   double? get _descuento => double.tryParse(_porcentaje.text.replaceAll(',', '.'));
+  /// Precarga nombre, tipo, descripción, porcentaje y cobertura en una copia editable.
   @override
   void initState() {
     super.initState();
@@ -106,10 +120,14 @@ class _FinanciamientoEditorState extends State<FinanciamientoEditor> {
     _tipo = f?.tipo ?? 'SEGURO';
     _seleccionados = {...?f?.medicamentos};
   }
+  /// Libera los controladores de los datos generales y del porcentaje.
   @override
   void dispose() {
     _nombre.dispose(); _descripcion.dispose(); _porcentaje.dispose(); super.dispose();
   }
+  /// Valida y envía el porcentaje junto con todos los IDs seleccionados.
+  /// La RPC guarda datos y cobertura en una transacción; el cálculo visible es
+  /// una vista previa y esta función no cobra ni modifica fichas históricas.
   Future<void> _guardar() async {
     if (!_form.currentState!.validate() || _guardando) return;
     setState(() { _guardando = true; _error = null; });
@@ -124,6 +142,9 @@ class _FinanciamientoEditorState extends State<FinanciamientoEditor> {
       if (mounted) setState(() { _error = CatalogosRepository.mensajeError(e); _guardando = false; });
     }
   }
+  /// Construye el editor de seguro/convenio y filtra localmente los medicamentos.
+  /// Muestra resultados por bloques de 30 sin perder la selección al buscar,
+  /// y calcula la vista previa del descuento a partir del Kairos disponible.
   @override
   Widget build(BuildContext context) {
     final coincidencias = widget.medicamentos.where((m) =>
@@ -218,8 +239,11 @@ class CatalogoDialogo extends StatelessWidget {
   final bool guardando;
   final VoidCallback guardar;
   final Widget child;
+  /// Recibe título, contenido y acción de guardado para reutilizar el mismo modal.
   const CatalogoDialogo({super.key, required this.titulo, required this.icono,
     required this.guardando, required this.guardar, required this.child});
+  /// Construye el modal con cabecera y acciones visibles y formulario con scroll.
+  /// Mientras se guarda impide cerrar/reenviar para evitar operaciones duplicadas.
   @override
   Widget build(BuildContext context) => PopScope(canPop: !guardando, child: Dialog(
     insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),

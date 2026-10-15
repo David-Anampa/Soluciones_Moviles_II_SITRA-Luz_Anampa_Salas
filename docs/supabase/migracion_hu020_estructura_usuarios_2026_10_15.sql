@@ -32,6 +32,10 @@ ALTER TABLE public.profiles ADD CONSTRAINT hu020_nombre_usuario_check
   CHECK (nombre_usuario IS NULL OR nombre_usuario ~ '^[a-z0-9][a-z0-9_.-]{2,31}$');
 
 -- Selección explícita: nunca devuelve fcm_token, auth.users ni contraseñas.
+-- RPC de solo lectura para Administrador activo: recibe desplazamiento y tamaño
+-- de página, valida sus límites y devuelve los campos públicos del perfil.
+-- Ordena por nombre/UUID para paginar de forma estable; no devuelve contraseñas,
+-- tokens FCM ni información de auth.users.
 CREATE OR REPLACE FUNCTION public.listar_usuarios_hu020(p_desde INTEGER DEFAULT 0,p_limite INTEGER DEFAULT 200)
 RETURNS TABLE(id UUID,nombre_usuario TEXT,nombres TEXT,apellidos TEXT,nombre TEXT,email TEXT,
   cargo TEXT,correo_drive TEXT,rol TEXT,areas_asignadas TEXT[],activo BOOLEAN,

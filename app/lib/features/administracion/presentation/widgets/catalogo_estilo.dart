@@ -6,6 +6,8 @@ class CatalogoEstilo {
   static const fondo = Color(0xFFF5F5F5);
   static const texto = Color(0xFF262630);
 
+  /// Deriva el tema administrativo del tema existente para conservar la tipografía.
+  /// Define rojo/pastel/gris, texto e iconos blancos en cabeceras y hover en botones.
   static ThemeData tema(BuildContext context) {
     final base = Theme.of(context);
     return base.copyWith(
@@ -45,6 +47,7 @@ class CatalogoEstilo {
     );
   }
 
+  /// Construye un aviso reutilizable con icono y texto; no abre diálogos ni consulta datos.
   static Widget nota(String texto, {IconData icono = Icons.info_outline_rounded}) => Container(
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(color: pastel, borderRadius: BorderRadius.circular(12)),

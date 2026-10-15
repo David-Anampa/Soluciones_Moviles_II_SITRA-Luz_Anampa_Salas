@@ -5,7 +5,9 @@ import '../widgets/catalogo_editores.dart';
 import '../widgets/catalogo_estilo.dart';
 
 class CatalogosAdminView extends StatefulWidget {
+  /// Entrada de Administrador para gestionar áreas y seguros/convenios.
   const CatalogosAdminView({super.key});
+  /// Crea el estado de listas, filtros y operaciones administrativas.
   @override
   State<CatalogosAdminView> createState() => _CatalogosAdminViewState();
 }
@@ -20,11 +22,16 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
   String? _error;
   String _estado = 'TODOS', _tipo = 'TODOS';
   int _pestana = 0, _revision = 0;
+  /// Inicia la primera carga de los catálogos al abrir la pantalla.
   @override
   void initState() { super.initState(); _cargar(); }
+  /// Libera el controlador del buscador cuando se abandona la pantalla.
   @override
   void dispose() { _busqueda.dispose(); super.dispose(); }
 
+  /// Consulta áreas, financiamientos y medicamentos en paralelo mediante el repositorio.
+  /// La revisión descarta respuestas antiguas si comenzó otra carga o se cerró la vista;
+  /// los errores se muestran sin reemplazar la información por datos ficticios.
   Future<void> _cargar() async {
     final revision = ++_revision;
     setState(() { _cargando = true; _error = null; });
@@ -49,6 +56,8 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     }
   }
 
+  /// Abre el editor correspondiente a la pestaña actual, vacío o precargado.
+  /// Al regresar con true recarga los datos guardados; cancelar no escribe cambios.
   Future<void> _editar({AreaCatalogo? area, FinanciamientoCatalogo? financiamiento}) async {
     if (_operando || _cargando) return;
     final result = await showDialog<bool>(context: context, barrierDismissible: false,
@@ -61,6 +70,9 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     }
   }
 
+  /// Procesa habilitación o eliminación y bloquea pulsaciones simultáneas.
+  /// Solo eliminar pide confirmación. Después llama a la RPC mediante el repositorio,
+  /// muestra el resultado y recarga la lista; el servidor decide si se puede borrar.
   Future<void> _accion({required String entidad, required String id,
     required String nombre, required bool activo, required bool eliminar}) async {
     if (_operando || _cargando) return;
@@ -92,11 +104,16 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     }
   }
 
+  /// Presenta el resultado de una operación mediante un aviso temporal.
   void _mensaje(String texto) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     content: Text(texto), backgroundColor: CatalogoEstilo.rojo, behavior: SnackBarBehavior.floating));
 
+  /// Comprueba el filtro Todos/Habilitados/Deshabilitados sobre una fila ya cargada.
   bool _cumpleEstado(bool activo) => _estado == 'TODOS' || (_estado == 'ACTIVOS' ? activo : !activo);
 
+  /// Construye las dos pestañas, buscador, filtros, listado y botón Agregar.
+  /// La búsqueda y los filtros operan en memoria; deslizar hacia abajo sí vuelve
+  /// a consultar Supabase mediante _cargar.
   @override
   Widget build(BuildContext context) {
     final q = _busqueda.text.trim().toLowerCase();
@@ -163,6 +180,7 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     )));
   }
 
+  /// Construye una pestaña con icono, selección y hover; cambiarla limpia la búsqueda.
   Widget _tab(int index, String texto, IconData icon) => Expanded(child: Material(
     color: _pestana == index ? CatalogoEstilo.rojo : Colors.transparent,
     borderRadius: BorderRadius.circular(11), clipBehavior: Clip.antiAlias,
@@ -176,10 +194,12 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
               color: _pestana == index ? Colors.white : CatalogoEstilo.texto))),
         ])))));
 
+  /// Construye un chip que cambia el filtro local de habilitación.
   Widget _filtroEstado(String value, String label) => ChoiceChip(
     label: Text(label, style: const TextStyle(fontSize: 12)), selected: _estado == value,
     selectedColor: CatalogoEstilo.pastel, onSelected: (_) => setState(() => _estado = value));
 
+  /// Muestra una lista vacía o un error y, si corresponde, permite reintentar la carga.
   Widget _estadoVacio(IconData icon, String titulo, String detalle, {bool reintentar = false}) =>
     Center(child: Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, children: [
       Icon(icon, size: 42, color: CatalogoEstilo.rojo), const SizedBox(height: 14),
@@ -189,6 +209,7 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
         icon: const Icon(Icons.refresh_rounded), label: const Text('Reintentar'))],
     ])));
 
+  /// Adapta los datos de un área y enlaza sus acciones con el componente común.
   Widget _tarjetaArea(AreaCatalogo a) => _tarjeta(
     nombre: a.nombre, subtitulo: a.codigo, descripcion: a.descripcion,
     icono: Icons.apartment_rounded, activo: a.activo,
@@ -197,6 +218,8 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     estado: () => _accion(entidad: 'AREA', id: a.id, nombre: a.nombre, activo: a.activo, eliminar: false),
     eliminar: () => _accion(entidad: 'AREA', id: a.id, nombre: a.nombre, activo: a.activo, eliminar: true));
 
+  /// Adapta tipo, porcentaje y número de medicamentos incluidos a una tarjeta.
+  /// El icono distingue Seguro de Convenio sin cambiar las reglas de escritura.
   Widget _tarjetaFinanciamiento(FinanciamientoCatalogo f) => _tarjeta(
     nombre: f.nombre, subtitulo: f.tipo == 'SEGURO' ? 'Seguro' : 'Convenio',
     descripcion: f.descripcion, icono: f.tipo == 'SEGURO' ? Icons.shield_outlined : Icons.handshake_rounded,
@@ -205,6 +228,8 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     estado: () => _accion(entidad: 'FINANCIAMIENTO', id: f.id, nombre: f.nombre, activo: f.activo, eliminar: false),
     eliminar: () => _accion(entidad: 'FINANCIAMIENTO', id: f.id, nombre: f.nombre, activo: f.activo, eliminar: true));
 
+  /// Compone el contenido del registro, la etiqueta de estado y su botón debajo.
+  /// La fila inferior reparte el ancho entre Editar y Eliminar; no hace consultas.
   Widget _tarjeta({required String nombre, required String subtitulo, required String descripcion,
     required IconData icono, required bool activo, required String detalle,
     required VoidCallback editar, required VoidCallback estado, required VoidCallback eliminar}) => Padding(
@@ -254,6 +279,8 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
             ]),
           ])))));
 
+  /// Dibuja un botón de icono con tooltip, borde, hover y objetivo táctil de 48 px.
+  /// Durante una operación queda deshabilitado para evitar solicitudes repetidas.
   Widget _botonAccion(String tooltip, IconData icono, Color color, VoidCallback accion) =>
     Tooltip(message: tooltip, child: OutlinedButton(
       onPressed: _operando ? null : accion,

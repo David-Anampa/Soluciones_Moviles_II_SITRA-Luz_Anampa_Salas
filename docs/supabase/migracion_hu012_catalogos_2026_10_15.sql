@@ -82,6 +82,9 @@ ALTER TABLE public.dispensaciones ADD CONSTRAINT hu012_ficha_financiamiento_chec
   (tipo_atencion = 'PARTICULAR' AND financiamiento_id IS NULL)
   OR (tipo_atencion IN ('SEGURO','CONVENIO') AND financiamiento_id IS NOT NULL));
 
+-- Trigger de fichas: valida un área habilitada al crear/cambiar el área y un
+-- seguro/convenio habilitado del tipo seleccionado al crear/cambiar cobertura.
+-- Guarda el nombre aplicado; no vuelve a validar una selección histórica sin cambios.
 CREATE OR REPLACE FUNCTION public.hu012_validar_ficha()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE v_area public.areas%ROWTYPE; v_fin public.financiamientos%ROWTYPE;
@@ -107,6 +110,10 @@ $$;
 
 -- Contrato para futuras fichas: calcula Kairos sin descuento si no hay cobertura.
 -- No factura ni escribe ítems; HU-003/HU-010 guardarán el resultado como snapshot.
+-- Consulta de valoración para futuras fichas: recibe medicamento y financiamiento
+-- opcional, lee Kairos y verifica si ese medicamento pertenece a la cobertura.
+-- Devuelve un JSON con base, porcentaje efectivo y precio redondeado, sin escribir
+-- ni cobrar. Sin cobertura/Particular el porcentaje es cero; Kairos ausente se rechaza.
 CREATE OR REPLACE FUNCTION public.cotizar_medicamento_hu012(p_medicamento_id UUID,p_financiamiento_id UUID DEFAULT NULL)
 RETURNS JSONB LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = '' AS $$
 DECLARE v_base NUMERIC; v_porcentaje NUMERIC:=0; v_fin public.financiamientos%ROWTYPE;
@@ -130,6 +137,9 @@ DROP TRIGGER IF EXISTS hu012_validar_ficha ON public.dispensaciones;
 CREATE TRIGGER hu012_validar_ficha BEFORE INSERT OR UPDATE ON public.dispensaciones
 FOR EACH ROW EXECUTE FUNCTION public.hu012_validar_ficha();
 
+-- Trigger de pedidos/kits: consulta las áreas y bloquea nuevas selecciones de
+-- áreas deshabilitadas. Actualizaciones sin cambio de área pueden continuar,
+-- para que deshabilitar no interrumpa pedidos anteriores.
 CREATE OR REPLACE FUNCTION public.hu012_validar_area_nueva()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE v_codigo TEXT; v_anterior TEXT;
@@ -162,6 +172,9 @@ FOR EACH ROW EXECUTE FUNCTION public.hu012_validar_area_nueva();
 
 -- Un ingreso directo nuevo no utiliza un área deshabilitada. Las RPC de
 -- pedidos, que ya validan su transición, pueden cerrar operaciones anteriores.
+-- Trigger de inventario: comprueba el área en ingresos/asignaciones directas de
+-- usuarios autenticados. Las RPC autorizadas pueden finalizar operaciones previas.
+-- No borra stock ni modifica cantidades; devuelve NEW o rechaza la operación.
 CREATE OR REPLACE FUNCTION public.hu012_validar_stock_area()
 RETURNS TRIGGER LANGUAGE plpgsql SET search_path = '' AS $$
 BEGIN
@@ -177,6 +190,9 @@ DROP TRIGGER IF EXISTS hu012_stock_area ON public.inventario_stock;
 CREATE TRIGGER hu012_stock_area BEFORE INSERT OR UPDATE ON public.inventario_stock
 FOR EACH ROW EXECUTE FUNCTION public.hu012_validar_stock_area();
 
+-- Trigger de perfiles: resuelve áreas por alias, código visible o nombre;
+-- rechaza nuevas asignaciones desconocidas/deshabilitadas y sincroniza la tabla
+-- profile_areas por UUID. Conserva asignaciones anteriores para no perder historial.
 CREATE OR REPLACE FUNCTION public.hu012_sincronizar_areas_perfil()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE v_token TEXT; v_area public.areas%ROWTYPE; v_previas TEXT[] := '{}';
@@ -209,6 +225,9 @@ DROP TRIGGER IF EXISTS hu012_areas_perfil ON public.profiles;
 CREATE TRIGGER hu012_areas_perfil AFTER INSERT OR UPDATE OF areas_asignadas ON public.profiles
 FOR EACH ROW EXECUTE FUNCTION public.hu012_sincronizar_areas_perfil();
 
+-- Consulta auxiliar de RLS: devuelve si el perfil autenticado y activo tiene
+-- asignada el área consultada. No exige que el área siga habilitada, porque
+-- las asignaciones anteriores deben conservar acceso a su información histórica.
 CREATE OR REPLACE FUNCTION public.sitra_tiene_area(p_area TEXT)
 RETURNS BOOLEAN LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = '' AS $$
   SELECT EXISTS (SELECT 1 FROM public.profiles p JOIN public.profile_areas pa ON pa.profile_id=p.id
@@ -219,6 +238,10 @@ RETURNS BOOLEAN LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = '' AS $$
 $$;
 
 -- Todas las escrituras de HU-012 pasan por esta operación atómica y auditada.
+-- RPC de escritura: recibe entidad (AREA/FINANCIAMIENTO), acción, ID opcional y
+-- JSON de campos. Exige Administrador activo, serializa cambios, valida unicidad
+-- y comprueba asociaciones antes de eliminar. Guarda cobertura y auditoría en la
+-- misma transacción; devuelve el UUID afectado o lanza una excepción.
 CREATE OR REPLACE FUNCTION public.administrar_catalogo_hu012(
   p_entidad TEXT, p_accion TEXT, p_id UUID DEFAULT NULL, p_datos JSONB DEFAULT '{}'::JSONB
 ) RETURNS UUID LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$

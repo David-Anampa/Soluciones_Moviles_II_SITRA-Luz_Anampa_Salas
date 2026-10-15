@@ -6,7 +6,9 @@ import '../widgets/catalogo_estilo.dart';
 
 /// HU-020: estructura de consulta. Crear, editar y habilitar los implementa David.
 class UsuariosAdminView extends StatefulWidget {
+  /// Entrada a la consulta administrativa de usuarios existentes.
   const UsuariosAdminView({super.key});
+  /// Crea el estado del listado y sus filtros, sin funciones de alta o edición.
   @override
   State<UsuariosAdminView> createState() => _UsuariosAdminViewState();
 }
@@ -20,11 +22,15 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
   String _estado = 'TODOS', _rol = 'TODOS', _area = 'TODAS', _orden = 'NOMBRE';
   String? _error;
   int _revision = 0;
+  /// Carga los perfiles reales al entrar a Gestión de usuarios.
   @override
   void initState() { super.initState(); _cargar(); }
+  /// Libera el controlador del buscador al abandonar la vista.
   @override
   void dispose() { _buscador.dispose(); super.dispose(); }
 
+  /// Solicita usuarios y áreas al repositorio, y conserva filtros todavía válidos.
+  /// Descarta respuestas anteriores y actualizaciones posteriores al cierre de la vista.
   Future<void> _cargar() async {
     final revision = ++_revision;
     setState(() { _cargando = true; _error = null; });
@@ -48,6 +54,8 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
     }
   }
 
+  /// Resuelve un código/nombre histórico del perfil contra las áreas ya cargadas.
+  /// No consulta la base; si no existe coincidencia conserva el texto original.
   AreaUsuario? _resolverArea(String token) {
     final valor = token.trim().toLowerCase();
     for (final a in _areas) {
@@ -55,8 +63,12 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
     }
     return null;
   }
+  /// Obtiene una clave estable para el filtro: UUID del área o texto histórico normalizado.
   String _claveArea(String token) => _resolverArea(token)?.id ?? 'texto:${token.trim().toLowerCase()}';
+  /// Devuelve el nombre visible del área sin perder asignaciones históricas desconocidas.
   String _nombreArea(String token) => _resolverArea(token)?.nombre ?? token;
+  /// Genera las opciones del filtro con las áreas realmente asignadas a usuarios,
+  /// agrupando coincidencias por UUID para evitar opciones duplicadas.
   Map<String,String> get _opcionesAreas {
     final opciones = <String,String>{};
     for (final u in _usuarios) {
@@ -64,11 +76,15 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
     }
     return opciones;
   }
+  /// Cuenta filtros de estado, rol y área activos para la etiqueta del botón Filtros.
   int get _numeroFiltros => (_estado == 'TODOS' ? 0 : 1) + (_rol == 'TODOS' ? 0 : 1) + (_area == 'TODAS' ? 0 : 1);
+  /// Restablece búsqueda, filtros y ordenación; reutiliza los datos ya cargados.
   void _limpiar() => setState(() {
     _buscador.clear(); _estado = 'TODOS'; _rol = 'TODOS'; _area = 'TODAS'; _orden = 'NOMBRE';
   });
 
+  /// Combina estado, rol, área y todas las palabras del buscador, y ordena el resultado.
+  /// Todo se realiza en memoria: escribir o cambiar filtros no envía consultas nuevas.
   List<UsuarioAdministrativo> get _filtrados {
     final palabras = _buscador.text.trim().toLowerCase().split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
     final lista = _usuarios.where((u) {
@@ -89,6 +105,8 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
     return lista;
   }
 
+  /// Construye resumen táctil, buscador, filtros y tarjetas con creación visual diferida.
+  /// La actualización al deslizar llama a _cargar; esta vista no modifica perfiles.
   @override
   Widget build(BuildContext context) {
     final lista = _filtrados;
@@ -150,8 +168,10 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
     ));
   }
 
+  /// Limita el ancho del contenido en pantallas amplias, conservando el margen móvil.
   Widget _centrado(Widget child) => Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 850), child: child));
 
+  /// Dibuja un contador cuyo toque filtra por habilitación; no cambia el estado de usuarios.
   Widget _contador(String etiqueta, int cantidad, String filtro, IconData icono) {
     final seleccionado = _estado == filtro;
     return Semantics(selected: seleccionado, child: Material(
@@ -168,6 +188,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
           ])))));
   }
 
+  /// Construye selectores de rol, área y orden con opciones derivadas de los registros.
   Widget _panelFiltros() {
     final roles = _usuarios.map((u) => u.rol).toSet().toList()..sort();
     final areas = _opcionesAreas.entries.toList()..sort((a,b) => a.value.compareTo(b.value));
@@ -197,6 +218,8 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
       ])));
   }
 
+  /// Resume un usuario con avatar, cargo/rol, correo y áreas.
+  /// Tocar la tarjeta o el ojo abre sus datos completos; no habilita ni edita.
   Widget _tarjeta(UsuarioAdministrativo u) => Material(color: Colors.white,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Color(0xFFE6E6E6))),
     clipBehavior: Clip.antiAlias, child: InkWell(onTap: () => _detalle(u), hoverColor: const Color(0xFFFFF7F7),
@@ -227,16 +250,19 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
             constraints: const BoxConstraints(minWidth: 48, minHeight: 48), icon: const Icon(Icons.visibility_outlined, size: 22))]),
       ]))));
 
+  /// Dibuja una línea compacta de icono/texto; el detalle conserva el valor completo.
   Widget _linea(IconData icono, String texto) => Row(children: [
     Icon(icono, color: const Color(0xFF84848C), size: 17), const SizedBox(width: 9),
     Expanded(child: Text(texto, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
   ]);
 
+  /// Muestra una etiqueta informativa de habilitación, sin acción de cambio.
   Widget _etiquetaEstado(bool activo) => Container(padding: const EdgeInsets.symmetric(horizontal: 8,vertical: 6),
     decoration: BoxDecoration(color: activo ? CatalogoEstilo.pastel : const Color(0xFFEEEEEE), borderRadius: BorderRadius.circular(8)),
     child: Text(activo ? 'Habilitado' : 'Deshabilitado', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600,
       color: activo ? CatalogoEstilo.rojo : const Color(0xFF66666E))));
 
+  /// Construye una etiqueta compacta de rol o área para las tarjetas y el detalle.
   Widget _chip(String texto, {IconData? icono}) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 9,vertical: 6),
     decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(8)),
@@ -245,6 +271,8 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
       Flexible(child: Text(texto, style: const TextStyle(fontSize: 11), overflow: TextOverflow.ellipsis)),
     ]));
 
+  /// Abre un panel inferior desplazable con los datos del usuario ya cargado.
+  /// No realiza otra consulta ni muestra contraseñas; los valores ausentes se indican.
   void _detalle(UsuarioAdministrativo u) {
     showModalBottomSheet<void>(context: context, isScrollControlled: true,
       backgroundColor: Colors.white, clipBehavior: Clip.antiAlias,
@@ -273,11 +301,14 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
         ])))));
   }
 
+  /// Muestra etiqueta y valor seleccionable, usando Sin registrar cuando está vacío.
   Widget _dato(String etiqueta,String valor) => Padding(padding: const EdgeInsets.only(bottom: 18),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start,children: [
       Text(etiqueta,style: const TextStyle(fontSize: 12,color: Color(0xFF777780))), const SizedBox(height: 6),
       SelectableText(valor.isEmpty ? 'Sin registrar' : valor,style: const TextStyle(fontSize: 14,color: CatalogoEstilo.texto)),
     ]));
+  /// Formatea una fecha en la zona horaria del dispositivo como día/mes/año y hora.
+  /// Si el dato no existe devuelve vacío para que la vista indique Sin registrar.
   String _fecha(DateTime? valor) {
     if (valor == null) return '';
     final f=valor.toLocal();
@@ -285,12 +316,14 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
       '${f.hour.toString().padLeft(2,'0')}:${f.minute.toString().padLeft(2,'0')}';
   }
 
+  /// Distingue ausencia de usuarios de un filtro sin coincidencias y permite limpiar filtros.
   Widget _sinResultados() => Padding(padding: const EdgeInsets.symmetric(vertical: 30),child: Center(child: Column(children: [
     const Icon(Icons.person_search_outlined,size: 42,color: CatalogoEstilo.rojo),const SizedBox(height: 12),
     Text(_usuarios.isEmpty ? 'Todavía no hay usuarios registrados' : 'No hay usuarios con estos filtros',
       textAlign: TextAlign.center,style: const TextStyle(fontSize: 15,fontWeight: FontWeight.w600)),
     if (_usuarios.isNotEmpty) TextButton(onPressed: _limpiar,child: const Text('Mostrar todos')),
   ])));
+  /// Muestra el fallo de consulta y ofrece reintentar la carga de datos reales.
   Widget _pantallaError() => Center(child: Padding(padding: const EdgeInsets.all(24),child: Column(mainAxisSize: MainAxisSize.min,children: [
     const Icon(Icons.cloud_off_rounded,size: 42,color: CatalogoEstilo.rojo), const SizedBox(height: 16),
     Text(_error!,textAlign: TextAlign.center,style: const TextStyle(fontSize: 14,height: 1.5)), const SizedBox(height: 16),
