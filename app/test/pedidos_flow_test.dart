@@ -132,6 +132,15 @@ Future<_ViewModel> _abrir(
   return vm;
 }
 
+/// Las tarjetas y los motivos pueden superar la altura del teléfono de prueba.
+/// Desplaza el control a la vista antes de pulsar y espera su animación/reconstrucción.
+Future<void> _tocarVisible(WidgetTester tester, Finder control) async {
+  await tester.ensureVisible(control);
+  await tester.pumpAndSettle();
+  await tester.tap(control);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   test(
     'La recepción conserva el despacho original y calcula el contra-asiento',
@@ -157,13 +166,12 @@ void main() {
     'Pendiente se cancela con motivo y permite crear una nueva solicitud',
     (tester) async {
       final vm = await _abrir(tester, 'PENDIENTE');
-      await tester.tap(find.text('Cancelar Solicitud'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Duplicado de turno'));
-      await tester.tap(find.text('Cancelar pedido'));
-      await tester.pumpAndSettle();
+      await _tocarVisible(tester, find.text('Cancelar Solicitud'));
+      await _tocarVisible(tester, find.text('Duplicado de turno'));
+      await _tocarVisible(tester, find.text('Cancelar pedido'));
       expect(vm.accion, 'CANCELAR');
       expect(vm.motivo, 'Duplicado de turno');
+      expect(find.byType(AlertDialog), findsNothing);
       expect(find.text('Crear nueva'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
@@ -174,10 +182,9 @@ void main() {
     (tester) async {
       final vm = await _abrir(tester, 'PENDIENTE');
       vm.falla = true;
-      await tester.tap(find.text('Cancelar Solicitud'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Cancelar pedido'));
-      await tester.pumpAndSettle();
+      await _tocarVisible(tester, find.text('Cancelar Solicitud'));
+      await _tocarVisible(tester, find.text('Cancelar pedido'));
+      expect(vm.accion, 'CANCELAR');
       expect(find.text(vm.errorMessage!), findsOneWidget);
       expect(find.byType(AlertDialog), findsOneWidget);
       expect(find.text('Crear nueva'), findsNothing);
