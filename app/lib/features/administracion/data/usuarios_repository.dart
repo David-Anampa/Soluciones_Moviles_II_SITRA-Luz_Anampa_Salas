@@ -1,4 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../domain/usuario_borrador.dart';
+import 'catalogos_repository.dart';
 
 class AreaUsuario {
   final String id, codigo, nombre;
@@ -110,5 +112,57 @@ class UsuariosRepository {
       if (rows.length < 500) break;
     }
     return UsuariosConsulta(usuarios,areas,pendiente);
+  }
+
+  /// UUID del usuario con sesión iniciada; permite impedir autoacciones peligrosas
+  /// (deshabilitarse o cambiarse el rol). Es null si no hay sesión.
+  String? get idSesion => _client.auth.currentUser?.id;
+
+  /// Crea la cuenta de acceso y su perfil mediante la Edge Function `crear-usuario`.
+  /// La función valida que quien llama sea Administrador y usa la clave service-role
+  /// en el servidor. La contraseña solo viaja en esta solicitud; no se guarda.
+  Future<void> crear(UsuarioBorrador datos, {required String correo, required String contrasena}) async {
+    final respuesta = await _client.functions.invoke('crear-usuario', body: {
+      'email': correo.trim().toLowerCase(),
+      'password': contrasena,
+      'perfil': datos.toJson(),
+    });
+    if (respuesta.status != 200) {
+      throw StateError('No se pudo crear el usuario.');
+    }
+  }
+
+  /// Actualiza los datos del perfil mediante la RPC atómica y auditada.
+  /// El correo de acceso no se modifica aquí: pertenece a Supabase Auth.
+  Future<void> editar(String id, UsuarioBorrador datos) =>
+      _administrar('EDITAR', id, datos.toJson());
+
+  /// Habilita o deshabilita al usuario. `activo` es el estado deseado, no una inversión.
+  /// Nunca elimina: deshabilitar conserva su historial y bloquea el acceso.
+  Future<void> cambiarEstado(String id, {required bool activo}) =>
+      _administrar('ESTADO', id, {'activo': activo});
+
+  /// Punto único de llamada a `administrar_usuario_hu020` para no repetir sus parámetros.
+  Future<void> _administrar(String accion, String id, Map<String, dynamic> datos) async {
+    await _client.rpc('administrar_usuario_hu020',
+        params: {'p_accion': accion, 'p_id': id, 'p_datos': datos});
+  }
+
+  /// Traduce errores de escritura a un mensaje para el usuario. Reconoce los
+  /// rechazos de la Edge Function (HTTP 4xx con `error`) y la migración pendiente;
+  /// el resto lo resuelve el traductor general del módulo de administración.
+  static String mensajeError(Object error) {
+    if (error is FunctionException) {
+      final detalle = error.details;
+      if (error.status == 404) {
+        return 'Falta desplegar la función crear-usuario en Supabase. Revisa la guía HU-021/HU-022.';
+      }
+      if (detalle is Map && detalle['error'] is String) return detalle['error'] as String;
+      return 'No se pudo crear el usuario. Revisa los datos y la conexión.';
+    }
+    if (error is PostgrestException && (error.code == 'PGRST202' || error.code == '42883')) {
+      return 'Falta aplicar la migración HU-021/HU-022 en Supabase.';
+    }
+    return CatalogosRepository.mensajeError(error);
   }
 }

@@ -3,8 +3,9 @@ import 'package:go_router/go_router.dart';
 import '../../data/usuarios_repository.dart';
 import '../../data/catalogos_repository.dart';
 import '../widgets/catalogo_estilo.dart';
+import 'usuario_formulario_view.dart';
 
-/// HU-020: estructura de consulta. Crear, editar y habilitar los implementa David.
+/// HU-020/HU-021/HU-022: consulta, alta, edición y habilitación de usuarios.
 class UsuariosAdminView extends StatefulWidget {
   /// Entrada a la consulta administrativa de usuarios existentes.
   const UsuariosAdminView({super.key});
@@ -22,6 +23,8 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
   String _estado = 'TODOS', _rol = 'TODOS', _area = 'TODAS', _orden = 'NOMBRE';
   String? _error;
   int _revision = 0;
+  /// Id del usuario cuyo cambio de estado está en curso; bloquea pulsaciones repetidas.
+  String? _cambiandoEstadoId;
   /// Carga los perfiles reales al entrar a Gestión de usuarios.
   @override
   void initState() { super.initState(); _cargar(); }
@@ -83,6 +86,61 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
     _buscador.clear(); _estado = 'TODOS'; _rol = 'TODOS'; _area = 'TODAS'; _orden = 'NOMBRE';
   });
 
+  /// Abre el formulario de alta. Si se guardó un usuario, recarga el listado.
+  Future<void> _nuevo() => _abrirFormulario(null);
+
+  /// Abre el formulario precargado con [u]. Si hubo cambios, recarga el listado.
+  Future<void> _editar(UsuarioAdministrativo u) => _abrirFormulario(u);
+
+  /// Navega al formulario compartido por HU-021 y HU-022 y refresca al volver con éxito.
+  Future<void> _abrirFormulario(UsuarioAdministrativo? u) async {
+    final guardado = await Navigator.of(context).push<bool>(MaterialPageRoute(
+      builder: (_) => UsuarioFormularioView(
+        usuario: u, areas: _areas, repositorio: _repository)));
+    if (guardado != true || !mounted) return;
+    _mensaje(u == null ? 'Usuario creado.' : 'Cambios guardados.');
+    await _cargar();
+  }
+
+  /// Habilita o deshabilita a [u] tras confirmación. No elimina: conserva el historial.
+  /// El servidor rechaza deshabilitarse a sí mismo o dejar sin administradores.
+  Future<void> _alternarEstado(UsuarioAdministrativo u) async {
+    if (_cambiandoEstadoId != null) return;
+    final destino = !u.activo;
+    if (!await _confirmarEstado(u, destino) || !mounted) return;
+    setState(() => _cambiandoEstadoId = u.id);
+    try {
+      await _repository.cambiarEstado(u.id, activo: destino);
+      if (!mounted) return;
+      _mensaje(destino ? 'Usuario habilitado.' : 'Usuario deshabilitado.');
+      await _cargar();
+    } catch (e) {
+      if (mounted) _mensaje(UsuariosRepository.mensajeError(e));
+    } finally {
+      if (mounted) setState(() => _cambiandoEstadoId = null);
+    }
+  }
+
+  /// Pide confirmar el cambio de estado explicando su efecto; devuelve true si acepta.
+  Future<bool> _confirmarEstado(UsuarioAdministrativo u, bool destino) async {
+    final acepta = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+      title: Text(destino ? 'Habilitar usuario' : 'Deshabilitar usuario'),
+      content: Text(destino
+        ? '${u.nombreCompleto} podrá iniciar sesión nuevamente.'
+        : '${u.nombreCompleto} no podrá iniciar sesión. Su historial se conserva.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+        FilledButton(onPressed: () => Navigator.pop(ctx, true),
+          child: Text(destino ? 'Habilitar' : 'Deshabilitar')),
+      ]));
+    return acepta ?? false;
+  }
+
+  /// Muestra un aviso breve en la parte inferior de la pantalla.
+  void _mensaje(String texto) => ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(texto)));
+
   /// Combina estado, rol, área y todas las palabras del buscador, y ordena el resultado.
   /// Todo se realiza en memoria: escribir o cambiar filtros no envía consultas nuevas.
   List<UsuarioAdministrativo> get _filtrados {
@@ -112,6 +170,9 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
     final lista = _filtrados;
     return Theme(data: CatalogoEstilo.tema(context), child: Scaffold(
       backgroundColor: CatalogoEstilo.fondo,
+      floatingActionButton: _cargando || _error != null ? null : FloatingActionButton(
+        tooltip: 'Nuevo usuario', backgroundColor: CatalogoEstilo.rojo, foregroundColor: Colors.white,
+        onPressed: _nuevo, child: const Icon(Icons.person_add_alt_1_rounded)),
       appBar: AppBar(backgroundColor: CatalogoEstilo.rojo, foregroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(tooltip: 'Volver al menú',
@@ -163,7 +224,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                 ])))),
               SliverList(delegate: SliverChildBuilderDelegate((context,index) => _centrado(
                 Padding(padding: const EdgeInsets.fromLTRB(16,0,16,14), child: _tarjeta(lista[index]))), childCount: lista.length)),
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              const SliverToBoxAdapter(child: SizedBox(height: 90)),
             ])),
     ));
   }
@@ -219,7 +280,8 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
   }
 
   /// Resume un usuario con avatar, cargo/rol, correo y áreas.
-  /// Tocar la tarjeta o el ojo abre sus datos completos; no habilita ni edita.
+  /// Tocar la tarjeta o el ojo abre sus datos completos; el lápiz edita y el icono
+  /// de persona habilita o deshabilita (con confirmación).
   Widget _tarjeta(UsuarioAdministrativo u) => Material(color: Colors.white,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Color(0xFFE6E6E6))),
     clipBehavior: Clip.antiAlias, child: InkWell(onTap: () => _detalle(u), hoverColor: const Color(0xFFFFF7F7),
@@ -244,11 +306,29 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
           if (u.areas.isEmpty) _chip('Sin áreas asignadas'),
         ]),
         const SizedBox(height: 12), const Divider(color: Color(0xFFEEEEEE)),
-        Row(children: [const Expanded(child: Text('Datos del usuario', style: TextStyle(fontSize: 12))),
-          IconButton(tooltip: 'Ver detalle del usuario', onPressed: () => _detalle(u),
-            color: CatalogoEstilo.rojo, hoverColor: CatalogoEstilo.pastel,
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48), icon: const Icon(Icons.visibility_outlined, size: 22))]),
+        Row(children: [const Expanded(child: Text('Acciones', style: TextStyle(fontSize: 12))),
+          _accion('Ver detalle del usuario', Icons.visibility_outlined, CatalogoEstilo.rojo, () => _detalle(u)),
+          _accion('Editar usuario', Icons.edit_outlined, CatalogoEstilo.rojo, () => _editar(u)),
+          _accionEstado(u)]),
       ]))));
+
+  /// Botón de icono de tarjeta con tooltip, hover y objetivo táctil de 48 px.
+  /// Con `alPresionar` nulo aparece deshabilitado.
+  Widget _accion(String ayuda, IconData icono, Color color, VoidCallback? alPresionar) =>
+    IconButton(tooltip: ayuda, onPressed: alPresionar, color: color, hoverColor: CatalogoEstilo.pastel,
+      constraints: const BoxConstraints(minWidth: 48, minHeight: 48), icon: Icon(icono, size: 22));
+
+  /// Botón de habilitación: verde si el usuario está habilitado, rojo si no.
+  /// Se bloquea en la cuenta propia y mientras otro cambio de estado está en curso.
+  Widget _accionEstado(UsuarioAdministrativo u) {
+    final propia = u.id == _repository.idSesion;
+    final ocupado = _cambiandoEstadoId != null;
+    final ayuda = propia ? 'No puedes deshabilitar tu propia cuenta'
+      : u.activo ? 'Deshabilitar usuario' : 'Habilitar usuario';
+    return _accion(ayuda, u.activo ? Icons.person_rounded : Icons.person_off_rounded,
+      u.activo ? const Color(0xFF2E7D32) : CatalogoEstilo.rojo,
+      propia || ocupado ? null : () => _alternarEstado(u));
+  }
 
   /// Dibuja una línea compacta de icono/texto; el detalle conserva el valor completo.
   Widget _linea(IconData icono, String texto) => Row(children: [

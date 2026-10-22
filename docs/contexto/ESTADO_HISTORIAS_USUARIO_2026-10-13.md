@@ -72,9 +72,9 @@ Las tablas `kits` y `kit_items` existen; eso todavía no constituye una implemen
 | HU | Historia | Estado |
 |---|---|---|
 | HU-012 | Gestionar financiamientos, seguros y áreas | **Implementada en código el 15 de octubre; pendiente de ejecutar migración y validación manual.** Administrador dispone de dos pestañas con búsqueda, filtros, creación, edición, habilitación y eliminación controlada. Seguros y Convenios incluyen porcentaje y lista de medicamentos con descuento sobre Kairos. Ver `docs/supabase/GUIA_HU012_Y_CONTRATO_HU020.md`. |
-| HU-020 | Gestionar usuarios | **Parcial: menú, estructura y consulta implementados el 15 de octubre.** Usuarios reales con tarjetas/detalle, búsqueda, filtros de habilitación/rol/área y orden dinámico. Migración aparte con usuario, nombres y apellidos, pendiente de ejecutar. David continúa activación/desactivación e integración con HU-021/HU-022. |
-| HU-021 | Crear usuario | **Pendiente** |
-| HU-022 | Editar usuario | **Pendiente** |
+| HU-020 | Gestionar usuarios | **Implementada en código (habilitación el 22 de octubre); pendiente de ejecutar migraciones y validación manual.** Usuarios reales con tarjetas/detalle, búsqueda, filtros y orden. Activación/desactivación con confirmación, integrada con crear/editar. Solo pasa a Listo tras revisión y pruebas. |
+| HU-021 | Crear usuario | **Implementada en código el 22 de octubre; pendiente de ejecutar migración, desplegar la función `crear-usuario` y validar manualmente.** Ver `docs/supabase/GUIA_HU020_HU021_HU022_GESTION_USUARIOS.md`. |
+| HU-022 | Editar usuario | **Implementada en código el 22 de octubre; pendiente de ejecutar migración y validar manualmente.** |
 
 Actualización de planificación: el equipo decidió empezar los próximos cinco sprints por Administración. Ver el plan de trabajo al final del documento.
 
