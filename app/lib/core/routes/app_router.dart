@@ -7,6 +7,7 @@ import '../../features/auth/presentation/views/login_view.dart';
 import '../../features/dashboard_admin/presentation/views/admin_dashboard_view.dart';
 import '../../features/administracion/presentation/views/catalogos_admin_view.dart';
 import '../../features/administracion/presentation/views/usuarios_admin_view.dart';
+import '../../features/kits/presentation/views/kits_admin_view.dart';
 import '../../features/dashboard_almacen/presentation/views/almacen_dashboard_view.dart';
 import '../../features/dashboard_enfermeria/presentation/views/enfermeria_dashboard_view.dart';
 import '../../features/dashboard_farmacia/presentation/views/farmacia_dashboard_view.dart';
@@ -19,6 +20,7 @@ class AppRoutes {
   static const String admin = '/admin';
   static const String catalogos = '/admin/catalogos';
   static const String usuarios = '/admin/usuarios';
+  static const String kits = '/admin/kits';
   static const String jefatura = '/jefatura';
   static const String farmacia = '/farmacia';
   static const String almacen = '/almacen';
@@ -79,6 +81,10 @@ GoRouter createRouter(AuthViewModel authViewModel) {
       GoRoute(
         path: AppRoutes.usuarios,
         builder: (context, state) => const UsuariosAdminView(),
+      ),
+      GoRoute(
+        path: AppRoutes.kits,
+        builder: (context, state) => const KitsAdminView(),
       ),
       GoRoute(
         path: AppRoutes.farmacia,

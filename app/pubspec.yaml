@@ -48,7 +48,7 @@ dependencies:
 
   # Cámara y Escaneo de Códigos de Barra (ML Kit Offline) e Imágenes
   mobile_scanner: ^7.4.2
-  image_picker: ^1.2.3
+  image_picker: ^1.1.2
   mask_text_input_formatter: ^2.9.0
 
 dev_dependencies:

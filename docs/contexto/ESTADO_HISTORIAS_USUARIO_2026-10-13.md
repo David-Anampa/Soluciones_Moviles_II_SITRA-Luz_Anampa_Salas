@@ -57,15 +57,15 @@ Estas historias **no quedan cubiertas por HU-029/HU-030**: corresponden a otro f
 
 Existen tablas base de dispensación, pero no el flujo completo de estas historias.
 
-## 6. Kits de Neonatología
+## 6. Kits de Neonatología y Quirófano
 
 | HU | Historia | Estado |
 |---|---|---|
-| HU-017 | Listar y habilitar/inhabilitar kits | **Pendiente** |
-| HU-018 | Crear kit | **Pendiente** |
-| HU-019 | Editar kit | **Pendiente** |
+| HU-017 | Listar y habilitar/inhabilitar kits | **Implementada en código el 22 de octubre por David Anampa; pendiente de ejecutar migración y validación manual.** Consulta kits reales con total de insumos, filtros dinámicos por estado y área, búsqueda en tiempo real, desglose expandible de medicamentos y activación/desactivación con confirmación (conserva historial). Ver `docs/supabase/GUIA_HU017_HU018_HU019_KITS.md`. |
+| HU-018 | Crear kit | **Implementada en código el 22 de octubre por David Anampa.** Formulario reutilizable con selector dinámico de áreas activas y buscador de medicamentos del catálogo maestro de Supabase; guardado atómico mediante RPC transaccional `administrar_kit_hu018` con auditoría. |
+| HU-019 | Editar kit | **Implementada en código el 22 de octubre por David Anampa.** Reutiliza el formulario de HU-018 con carga previa de ítems y cantidades. Cumple la regla de preservación estricta de historial clínico: la edición de la plantilla no altera las fichas o dispensaciones pasadas ni sus ítems previamente despachados; bloquea la eliminación si existen dispensaciones asociadas. |
 
-Las tablas `kits` y `kit_items` existen; eso todavía no constituye una implementación funcional.
+Las tablas `kits` y `kit_items` cuentan con migración dedicada `migracion_hu017_hu018_hu019_kits_2026_10_22.sql`, RPCs atómicas, modelo limpio en `lib/features/kits` y 100% de tests unitarios aprobados.
 
 ## 7. Administración
 

@@ -1635,5 +1635,345 @@ $$;
 REVOKE ALL ON FUNCTION public.registrar_perfil_usuario_hu021(UUID, UUID, JSONB) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.registrar_perfil_usuario_hu021(UUID, UUID, JSONB) TO service_role;
 
+-- ============================================================================
+-- SPRINT 5 · SEMANA 2: KITS QUIRÚRGICOS Y PLANTILLAS CLÍNICAS (HU-017, HU-018, HU-019)
+-- Responsable: David Anampa
+-- ============================================================================
+ALTER TABLE public.kits 
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now());
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'uq_kit_medicamento' AND conrelid = 'public.kit_items'::regclass
+    ) THEN
+        ALTER TABLE public.kit_items 
+            ADD CONSTRAINT uq_kit_medicamento UNIQUE (kit_id, medicamento_id);
+    END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_kits_area_destino ON public.kits(area_destino);
+CREATE INDEX IF NOT EXISTS idx_kits_activo ON public.kits(activo);
+CREATE INDEX IF NOT EXISTS idx_kit_items_kit_id ON public.kit_items(kit_id);
+CREATE INDEX IF NOT EXISTS idx_kit_items_medicamento_id ON public.kit_items(medicamento_id);
+
+CREATE OR REPLACE FUNCTION public.listar_kits_hu017(
+    p_area TEXT DEFAULT NULL,
+    p_solo_activos BOOLEAN DEFAULT NULL
+)
+RETURNS TABLE (
+    id UUID,
+    nombre TEXT,
+    descripcion TEXT,
+    area_destino TEXT,
+    area_nombre TEXT,
+    area_codigo_interno TEXT,
+    activo BOOLEAN,
+    created_at TIMESTAMPTZ,
+    updated_at TIMESTAMPTZ,
+    total_items BIGINT,
+    items JSONB
+)
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    v_rol TEXT;
+    v_areas_usuario TEXT[];
+BEGIN
+    v_rol := public.sitra_rol_actual();
+    IF v_rol IS NULL THEN
+        RAISE EXCEPTION 'Usuario no autenticado o sin rol asignado.' USING ERRCODE = '42501';
+    END IF;
+
+    IF v_rol = 'ENFERMERIA' THEN
+        SELECT COALESCE(p.areas_asignadas, '{}') INTO v_areas_usuario
+        FROM public.profiles p WHERE p.id = auth.uid();
+    END IF;
+
+    RETURN QUERY
+    SELECT 
+        k.id,
+        k.nombre,
+        k.descripcion,
+        k.area_destino,
+        COALESCE(a.nombre, k.area_destino) AS area_nombre,
+        COALESCE(a.codigo_interno, k.area_destino) AS area_codigo_interno,
+        k.activo,
+        k.created_at,
+        k.updated_at,
+        COUNT(ki.id)::BIGINT AS total_items,
+        COALESCE(
+            jsonb_agg(
+                jsonb_build_object(
+                    'id', ki.id,
+                    'medicamento_id', ki.medicamento_id,
+                    'nombre_comercial', m.nombre_comercial,
+                    'principio_activo', m.principio_activo,
+                    'presentacion', m.presentacion,
+                    'laboratorio', m.laboratorio,
+                    'cantidad', ki.cantidad
+                ) ORDER BY m.nombre_comercial ASC
+            ) FILTER (WHERE ki.id IS NOT NULL),
+            '[]'::JSONB
+        ) AS items
+    FROM public.kits k
+    LEFT JOIN public.areas a ON (a.codigo = k.area_destino)
+    LEFT JOIN public.kit_items ki ON (ki.kit_id = k.id)
+    LEFT JOIN public.medicamentos m ON (m.id = ki.medicamento_id)
+    WHERE 
+        (p_area IS NULL OR k.area_destino = p_area OR a.codigo_interno = p_area)
+        AND (p_solo_activos IS NULL OR k.activo = p_solo_activos)
+        AND (
+            v_rol IN ('ADMINISTRADOR', 'JEFATURA_FARMACIA', 'FARMACIA', 'ALMACEN')
+            OR (v_rol = 'ENFERMERIA' AND k.area_destino = ANY(v_areas_usuario))
+        )
+    GROUP BY k.id, k.nombre, k.descripcion, k.area_destino, a.nombre, a.codigo_interno, k.activo, k.created_at, k.updated_at
+    ORDER BY k.activo DESC, k.nombre ASC;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.listar_kits_hu017(TEXT, BOOLEAN) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.listar_kits_hu017(TEXT, BOOLEAN) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.administrar_kit_hu018(
+    p_accion TEXT,
+    p_id UUID DEFAULT NULL,
+    p_datos JSONB DEFAULT '{}'::JSONB
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    v_rol TEXT;
+    v_uid UUID;
+    v_id UUID := p_id;
+    v_nombre TEXT;
+    v_descripcion TEXT;
+    v_area TEXT;
+    v_activo BOOLEAN;
+    v_items JSONB;
+    v_item JSONB;
+    v_med_id UUID;
+    v_cantidad INT;
+    v_med_ids UUID[] := '{}';
+    v_antes JSONB := NULL;
+    v_despues JSONB := NULL;
+    v_kit_actual public.kits%ROWTYPE;
+BEGIN
+    v_rol := public.sitra_rol_actual();
+    v_uid := auth.uid();
+
+    IF v_rol NOT IN ('ADMINISTRADOR', 'JEFATURA_FARMACIA', 'FARMACIA') THEN
+        RAISE EXCEPTION 'No tienes permisos para administrar plantillas de kits (Rol: %).', COALESCE(v_rol, 'Sin Rol')
+            USING ERRCODE = '42501';
+    END IF;
+
+    IF p_accion IS NULL OR p_accion NOT IN ('GUARDAR', 'ESTADO', 'ELIMINAR') THEN
+        RAISE EXCEPTION 'Acción no válida: %. Use GUARDAR, ESTADO o ELIMINAR.', p_accion;
+    END IF;
+
+    IF p_accion = 'ESTADO' THEN
+        IF p_id IS NULL THEN
+            RAISE EXCEPTION 'Se requiere el ID del kit para cambiar su estado.';
+        END IF;
+
+        IF jsonb_typeof(p_datos->'activo') IS DISTINCT FROM 'boolean' THEN
+            RAISE EXCEPTION 'El estado activo debe ser un valor booleano.';
+        END IF;
+
+        v_activo := (p_datos->>'activo')::BOOLEAN;
+
+        SELECT * INTO v_kit_actual FROM public.kits WHERE id = p_id FOR UPDATE;
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'El kit indicado no existe.';
+        END IF;
+
+        v_antes := to_jsonb(v_kit_actual);
+
+        UPDATE public.kits
+        SET activo = v_activo,
+            updated_at = timezone('utc'::text, now())
+        WHERE id = p_id
+        RETURNING to_jsonb(kits.*) INTO v_despues;
+
+        INSERT INTO public.auditoria_trazabilidad(
+            tipo_evento, entidad_referencia_id, tabla_referencia, usuario_id,
+            estado_anterior, estado_nuevo, descripcion
+        ) VALUES (
+            'KIT_ESTADO', p_id, 'kits', v_uid,
+            v_antes, v_despues,
+            CASE WHEN v_activo THEN 'Kit habilitado para dispensación: ' || v_kit_actual.nombre
+                 ELSE 'Kit deshabilitado para dispensación (conserva historial): ' || v_kit_actual.nombre
+            END
+        );
+
+        RETURN p_id;
+    END IF;
+
+    IF p_accion = 'ELIMINAR' THEN
+        IF p_id IS NULL THEN
+            RAISE EXCEPTION 'Se requiere el ID del kit para eliminar.';
+        END IF;
+
+        SELECT * INTO v_kit_actual FROM public.kits WHERE id = p_id FOR UPDATE;
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'El kit indicado no existe.';
+        END IF;
+
+        IF EXISTS (SELECT 1 FROM public.dispensaciones WHERE kit_id = p_id) THEN
+            RAISE EXCEPTION 'El kit tiene fichas y dispensaciones históricas asociadas. No se puede eliminar físicamente; desactívalo para conservarlo en el historial clínico.';
+        END IF;
+
+        v_antes := to_jsonb(v_kit_actual);
+
+        DELETE FROM public.kits WHERE id = p_id;
+
+        INSERT INTO public.auditoria_trazabilidad(
+            tipo_evento, entidad_referencia_id, tabla_referencia, usuario_id,
+            estado_anterior, estado_nuevo, descripcion
+        ) VALUES (
+            'KIT_ELIMINADO', p_id, 'kits', v_uid,
+            v_antes, NULL,
+            'Kit borrador eliminado sin usos históricos: ' || v_kit_actual.nombre
+        );
+
+        RETURN p_id;
+    END IF;
+
+    IF p_accion = 'GUARDAR' THEN
+        v_nombre := regexp_replace(btrim(COALESCE(p_datos->>'nombre', '')), '\s+', ' ', 'g');
+        IF length(v_nombre) < 3 OR length(v_nombre) > 120 THEN
+            RAISE EXCEPTION 'El nombre del kit debe tener entre 3 y 120 caracteres.';
+        END IF;
+
+        v_descripcion := NULLIF(btrim(COALESCE(p_datos->>'descripcion', '')), '');
+        IF v_descripcion IS NOT NULL AND length(v_descripcion) > 300 THEN
+            RAISE EXCEPTION 'La descripción no puede exceder los 300 caracteres.';
+        END IF;
+
+        v_area := upper(btrim(COALESCE(p_datos->>'area_destino', '')));
+        IF v_area = '' THEN
+            RAISE EXCEPTION 'Debe seleccionar el área de destino para el kit.';
+        END IF;
+
+        IF NOT EXISTS (
+            SELECT 1 FROM public.areas 
+            WHERE (codigo = v_area OR codigo_interno = v_area) AND activo = true
+        ) THEN
+            RAISE EXCEPTION 'El área destino % no existe o se encuentra inactiva.', v_area;
+        END IF;
+
+        SELECT codigo INTO v_area FROM public.areas 
+        WHERE (codigo = v_area OR codigo_interno = v_area) LIMIT 1;
+
+        IF EXISTS (
+            SELECT 1 FROM public.kits 
+            WHERE lower(btrim(nombre)) = lower(v_nombre)
+              AND area_destino = v_area
+              AND id IS DISTINCT FROM p_id
+        ) THEN
+            RAISE EXCEPTION 'Ya existe un kit con el nombre "%" registrado para el área %.', v_nombre, v_area;
+        END IF;
+
+        v_items := p_datos->'items';
+        IF v_items IS NULL OR jsonb_typeof(v_items) IS DISTINCT FROM 'array' OR jsonb_array_length(v_items) = 0 THEN
+            RAISE EXCEPTION 'El kit debe contener al menos un medicamento o insumo con su cantidad.';
+        END IF;
+
+        FOR v_item IN SELECT * FROM jsonb_array_elements(v_items) LOOP
+            v_med_id := (v_item->>'medicamento_id')::UUID;
+            v_cantidad := COALESCE((v_item->>'cantidad')::INT, 0);
+
+            IF v_med_id IS NULL THEN
+                RAISE EXCEPTION 'Cada ítem del kit debe especificar un medicamento válido.';
+            END IF;
+
+            IF v_cantidad <= 0 THEN
+                RAISE EXCEPTION 'La cantidad para cada insumo del kit debe ser mayor a 0.';
+            END IF;
+
+            IF NOT EXISTS (SELECT 1 FROM public.medicamentos WHERE id = v_med_id AND activo = true) THEN
+                RAISE EXCEPTION 'Uno de los medicamentos seleccionados no existe o está inactivo en el catálogo maestro.';
+            END IF;
+
+            IF v_med_id = ANY(v_med_ids) THEN
+                RAISE EXCEPTION 'No se puede repetir el mismo medicamento más de una vez en el kit. Ajuste la cantidad en una sola fila.';
+            END IF;
+
+            v_med_ids := v_med_ids || v_med_id;
+        END LOOP;
+
+        IF p_id IS NULL THEN
+            v_id := gen_random_uuid();
+            INSERT INTO public.kits (id, nombre, descripcion, area_destino, activo, created_at, updated_at)
+            VALUES (v_id, v_nombre, v_descripcion, v_area, true, timezone('utc'::text, now()), timezone('utc'::text, now()))
+            RETURNING to_jsonb(kits.*) INTO v_despues;
+
+            FOR v_item IN SELECT * FROM jsonb_array_elements(v_items) LOOP
+                INSERT INTO public.kit_items (kit_id, medicamento_id, cantidad)
+                VALUES (v_id, (v_item->>'medicamento_id')::UUID, (v_item->>'cantidad')::INT);
+            END LOOP;
+
+            INSERT INTO public.auditoria_trazabilidad(
+                tipo_evento, entidad_referencia_id, tabla_referencia, usuario_id,
+                estado_anterior, estado_nuevo, descripcion
+            ) VALUES (
+                'KIT_CREADO', v_id, 'kits', v_uid,
+                NULL, v_despues || jsonb_build_object('items', v_items),
+                'Creación de kit prearmado: ' || v_nombre || ' para ' || v_area
+            );
+
+        ELSE
+            SELECT * INTO v_kit_actual FROM public.kits WHERE id = p_id FOR UPDATE;
+            IF NOT FOUND THEN
+                RAISE EXCEPTION 'El kit que intenta editar no existe.';
+            END IF;
+
+            SELECT to_jsonb(v_kit_actual) || jsonb_build_object(
+                'items', (SELECT COALESCE(jsonb_agg(to_jsonb(ki.*)), '[]'::JSONB) FROM public.kit_items ki WHERE ki.kit_id = p_id)
+            ) INTO v_antes;
+
+            UPDATE public.kits
+            SET nombre = v_nombre,
+                descripcion = v_descripcion,
+                area_destino = v_area,
+                updated_at = timezone('utc'::text, now())
+            WHERE id = p_id
+            RETURNING to_jsonb(kits.*) INTO v_despues;
+
+            DELETE FROM public.kit_items WHERE kit_id = p_id;
+
+            FOR v_item IN SELECT * FROM jsonb_array_elements(v_items) LOOP
+                INSERT INTO public.kit_items (kit_id, medicamento_id, cantidad)
+                VALUES (p_id, (v_item->>'medicamento_id')::UUID, (v_item->>'cantidad')::INT);
+            END LOOP;
+
+            INSERT INTO public.auditoria_trazabilidad(
+                tipo_evento, entidad_referencia_id, tabla_referencia, usuario_id,
+                estado_anterior, estado_nuevo, descripcion
+            ) VALUES (
+                'KIT_ACTUALIZADO', p_id, 'kits', v_uid,
+                v_antes, v_despues || jsonb_build_object('items', v_items),
+                'Actualización de plantilla de kit: ' || v_nombre || ' (preserva historial de fichas)'
+            );
+        END IF;
+
+        RETURN v_id;
+    END IF;
+
+    RETURN v_id;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.administrar_kit_hu018(TEXT, UUID, JSONB) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.administrar_kit_hu018(TEXT, UUID, JSONB) TO authenticated;
+
 NOTIFY pgrst, 'reload schema';
 COMMIT;
+
