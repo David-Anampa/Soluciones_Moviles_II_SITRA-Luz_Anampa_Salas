@@ -66,8 +66,9 @@ class UsuarioValidadores {
   /// El número se conserva como texto para no perder ceros iniciales.
   static String? colegiatura(String? valor, {required bool tieneColegio}) {
     final texto = (valor ?? '').trim();
-    if (!tieneColegio)
+    if (!tieneColegio) {
       return texto.isEmpty ? null : 'Selecciona un colegio profesional.';
+    }
     if (!RegExp(r'^[0-9]{1,20}$').hasMatch(texto)) {
       return 'Ingresa el número de colegiatura (solo dígitos, máximo 20).';
     }

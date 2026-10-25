@@ -15,8 +15,9 @@ Está incorporada al final del setup. La columna `correo_drive` se conserva úni
 como dato heredado, sin mostrarse, recibirse ni actualizarse mediante las nuevas RPC.
 La migración no modifica correos de acceso ni borra los valores heredados.
 
-Esta actualización está preparada localmente; no se ha aplicado a Supabase remoto.
-No se ejecutaron pruebas, análisis ni compilaciones para este cambio.
+La migración de correo único y las migraciones de estructura, gestión y colegiatura
+se aplicaron a Supabase el 25 de octubre, con verificación de estructura y permisos.
+El estado de Edge Function y validaciones está detallado en la guía de colegiatura.
 
 Fecha: 22 de octubre de 2026. Entrega de David Anampa (Sprint 4, semana 1). Implementada en código; **pendiente de aplicar SQL, desplegar la función y validar manualmente**. No se ejecutaron pruebas funcionales ni `flutter analyze` (el SDK local, Dart 3.9.2, no resuelve las dependencias del proyecto, que piden Dart ≥ 3.10).
 

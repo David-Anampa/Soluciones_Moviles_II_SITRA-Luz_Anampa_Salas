@@ -84,17 +84,19 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
     });
     try {
       final datos = await widget.repositorio.cargarCatalogosProfesionales();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _catalogos = datos;
           _cargandoCatalogos = false;
         });
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _cargandoCatalogos = false;
           _errorCatalogos = UsuariosRepository.mensajeError(e);
         });
+      }
     }
   }
 
@@ -120,8 +122,9 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
   String _codigoDeArea(String token) {
     final valor = token.trim().toLowerCase();
     for (final a in widget.areas) {
-      if (a.codigo.toLowerCase() == valor || a.nombre.toLowerCase() == valor)
+      if (a.codigo.toLowerCase() == valor || a.nombre.toLowerCase() == valor) {
         return a.codigo;
+      }
     }
     return token;
   }
@@ -159,8 +162,9 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
     if (_guardando ||
         _cargandoCatalogos ||
         _catalogos == null ||
-        !_formKey.currentState!.validate())
+        !_formKey.currentState!.validate()) {
       return;
+    }
     setState(() {
       _guardando = true;
       _error = null;
@@ -292,7 +296,7 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
   /// Muestra solo los campos aplicables, sin añadir otro campo de profesión.
   List<Widget> _camposProfesionales() {
     if (_cargandoCatalogos) return [const LinearProgressIndicator()];
-    if (_errorCatalogos != null)
+    if (_errorCatalogos != null) {
       return [
         CatalogoEstilo.nota(
           _errorCatalogos!,
@@ -303,6 +307,7 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
           child: const Text('Reintentar'),
         ),
       ];
+    }
     final colegios = <String, String>{'': 'No aplica / sin registrar'};
     for (final c in _catalogos!.colegios) {
       if (c.activo || c.codigo == _colegioCodigo) {
@@ -310,8 +315,9 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
             '${c.codigo} — ${c.nombre}${c.activo ? '' : ' (deshabilitado)'}';
       }
     }
-    if (_colegioCodigo.isNotEmpty)
+    if (_colegioCodigo.isNotEmpty) {
       colegios.putIfAbsent(_colegioCodigo, () => _colegioCodigo);
+    }
     final especialidades = <String, String>{'': 'Sin especialidad registrada'};
     for (final e in _catalogos!.especialidades) {
       if (e.colegioCodigo == _colegioCodigo &&
@@ -320,11 +326,12 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
             '${e.nombre}${e.activo ? '' : ' (deshabilitada)'}';
       }
     }
-    if (_especialidadCodigo.isNotEmpty)
+    if (_especialidadCodigo.isNotEmpty) {
       especialidades.putIfAbsent(
         _especialidadCodigo,
         () => _especialidadCodigo,
       );
+    }
     return [
       const Text(
         'Completa estos datos cuando correspondan a su ocupación.',

@@ -57,10 +57,12 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
         _usuarios = datos.usuarios;
         _areas = datos.areas;
         _estructuraPendiente = datos.estructuraPendiente;
-        if (_rol != 'TODOS' && !_usuarios.any((u) => u.rol == _rol))
+        if (_rol != 'TODOS' && !_usuarios.any((u) => u.rol == _rol)) {
           _rol = 'TODOS';
-        if (_area != 'TODAS' && !_opcionesAreas.containsKey(_area))
+        }
+        if (_area != 'TODAS' && !_opcionesAreas.containsKey(_area)) {
           _area = 'TODAS';
+        }
         _cargando = false;
       });
     } catch (e) {
@@ -78,8 +80,9 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
   AreaUsuario? _resolverArea(String token) {
     final valor = token.trim().toLowerCase();
     for (final a in _areas) {
-      if (a.codigo.toLowerCase() == valor || a.nombre.toLowerCase() == valor)
+      if (a.codigo.toLowerCase() == valor || a.nombre.toLowerCase() == valor) {
         return a;
+      }
     }
     return null;
   }
@@ -199,11 +202,13 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
         .split(RegExp(r'\s+'))
         .where((p) => p.isNotEmpty);
     final lista = _usuarios.where((u) {
-      if (_estado != 'TODOS' && u.activo != (_estado == 'ACTIVOS'))
+      if (_estado != 'TODOS' && u.activo != (_estado == 'ACTIVOS')) {
         return false;
+      }
       if (_rol != 'TODOS' && u.rol != _rol) return false;
-      if (_area != 'TODAS' && !u.areas.any((a) => _claveArea(a) == _area))
+      if (_area != 'TODAS' && !u.areas.any((a) => _claveArea(a) == _area)) {
         return false;
+      }
       final texto =
           '${u.usuario} ${u.nombreCompleto} ${u.nombreAnterior} ${u.correo} ${u.cargo} ${u.rolVisible} ${u.areas.map(_nombreArea).join(' ')}'
               .toLowerCase();

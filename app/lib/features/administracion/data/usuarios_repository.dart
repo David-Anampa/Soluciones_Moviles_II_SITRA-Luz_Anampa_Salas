@@ -332,8 +332,9 @@ class UsuariosRepository {
       if (error.status == 404) {
         return 'Falta desplegar la función crear-usuario en Supabase. Revisa la guía HU-021/HU-022.';
       }
-      if (detalle is Map && detalle['error'] is String)
+      if (detalle is Map && detalle['error'] is String) {
         return detalle['error'] as String;
+      }
       return 'No se pudo crear el usuario. Revisa los datos y la conexión.';
     }
     if (error is PostgrestException &&
