@@ -19,7 +19,7 @@ Ejecutar `migracion_hu020_estructura_usuarios_2026_10_15.sql` después de HU-012
 - Nuevos campos: `profiles.nombre_usuario`, `nombres` y `apellidos`.
 - `nombre_usuario`: 3–32 caracteres, minúsculas, números, punto, guion o guion bajo; comienza con letra o número; único sin distinguir mayúsculas. Para perfiles existentes se deriva del correo, agregando un sufijo si hace falta para evitar duplicados.
 - Se conserva `profiles.nombre` (nombre completo histórico). No se divide automáticamente: títulos y apellidos compuestos harían inseguro inferir la separación. `nombres` y `apellidos` quedan pendientes de completar mediante HU-022. El listado muestra el nombre completo actual mientras tanto.
-- `cargo` y `correo_drive` se prepararon en HU-012. Cargo no equivale a rol. Los doctores se mantienen como registros seleccionables, sin cuenta de acceso.
+- `cargo` se preparó en HU-012 y no equivale a rol. Desde el ajuste del 25 de octubre se muestra únicamente `email`; `correo_drive` queda como columna heredada sin uso en la gestión de usuarios. Se conserva un solo campo Cargo / ocupación, sin agregar Profesión. Los doctores se mantienen como registros seleccionables, sin crear un nuevo rol de acceso. Ver `GUIA_COLEGIATURA_Y_ESPECIALIDADES_2026_10_25.md`.
 - `listar_usuarios_hu020(p_desde,p_limite)` pagina y devuelve exclusivamente los campos de perfil necesarios. No devuelve FCM, contraseñas ni datos de `auth.users`.
 - Si todavía no existe la RPC, la vista puede consultar los campos originales de los perfiles y avisa que faltan los nuevos campos de estructura. No inventa nombres de usuario, cargos ni nombres/apellidos separados. Los errores de permiso o conexión no se reemplazan por datos de demostración.
 

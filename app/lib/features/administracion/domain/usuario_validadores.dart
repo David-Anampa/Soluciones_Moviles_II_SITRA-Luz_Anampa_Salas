@@ -37,14 +37,9 @@ class UsuarioValidadores {
   static String? correoAcceso(String? valor) {
     final texto = (valor ?? '').trim();
     if (texto.isEmpty) return 'Escribe el correo de acceso.';
-    return _correo.hasMatch(texto) ? null : 'El correo no tiene un formato válido.';
-  }
-
-  /// Valida el correo de Drive, que es opcional: vacío es válido.
-  static String? correoDrive(String? valor) {
-    final texto = (valor ?? '').trim();
-    if (texto.isEmpty) return null;
-    return _correo.hasMatch(texto) ? null : 'El correo de Drive no es válido.';
+    return _correo.hasMatch(texto)
+        ? null
+        : 'El correo no tiene un formato válido.';
   }
 
   /// Valida la contraseña inicial: mínimo 8 caracteres con al menos una letra y un número.
@@ -53,7 +48,8 @@ class UsuarioValidadores {
     if (texto.length < longitudMinimaClave) {
       return 'Usa al menos $longitudMinimaClave caracteres.';
     }
-    if (!texto.contains(RegExp(r'[A-Za-z]')) || !texto.contains(RegExp(r'\d'))) {
+    if (!texto.contains(RegExp(r'[A-Za-z]')) ||
+        !texto.contains(RegExp(r'\d'))) {
       return 'Incluye letras y números.';
     }
     return null;
@@ -65,6 +61,17 @@ class UsuarioValidadores {
     return texto.length > longitudMaximaNombre
         ? 'Máximo $longitudMaximaNombre caracteres.'
         : null;
+  }
+
+  /// El número se conserva como texto para no perder ceros iniciales.
+  static String? colegiatura(String? valor, {required bool tieneColegio}) {
+    final texto = (valor ?? '').trim();
+    if (!tieneColegio)
+      return texto.isEmpty ? null : 'Selecciona un colegio profesional.';
+    if (!RegExp(r'^[0-9]{1,20}$').hasMatch(texto)) {
+      return 'Ingresa el número de colegiatura (solo dígitos, máximo 20).';
+    }
+    return null;
   }
 
   /// Valida que se haya elegido un rol.

@@ -1,5 +1,23 @@
 # HU-020, HU-021 y HU-022 — habilitar, crear y editar usuarios
 
+## Actualización del 25 de octubre de 2026 — correo único
+
+La ampliación de colegiatura, especialidad, fuentes y estado real de despliegue
+se detalla en `GUIA_COLEGIATURA_Y_ESPECIALIDADES_2026_10_25.md`.
+
+El formulario y el detalle utilizan un solo correo: el de Supabase Auth, reflejado
+en `profiles.email`. También será la referencia para vincular Google Drive en
+HU-027; guardar el correo no autoriza el acceso a Google ni selecciona una carpeta.
+
+Después de las migraciones HU-020 y HU-021/HU-022, aplicar
+`migracion_hu020_hu021_hu022_correo_unico_2026_10_25.sql`.
+Está incorporada al final del setup. La columna `correo_drive` se conserva únicamente
+como dato heredado, sin mostrarse, recibirse ni actualizarse mediante las nuevas RPC.
+La migración no modifica correos de acceso ni borra los valores heredados.
+
+Esta actualización está preparada localmente; no se ha aplicado a Supabase remoto.
+No se ejecutaron pruebas, análisis ni compilaciones para este cambio.
+
 Fecha: 22 de octubre de 2026. Entrega de David Anampa (Sprint 4, semana 1). Implementada en código; **pendiente de aplicar SQL, desplegar la función y validar manualmente**. No se ejecutaron pruebas funcionales ni `flutter analyze` (el SDK local, Dart 3.9.2, no resuelve las dependencias del proyecto, que piden Dart ≥ 3.10).
 
 ## Qué se entrega
@@ -25,7 +43,7 @@ Fecha: 22 de octubre de 2026. Entrega de David Anampa (Sprint 4, semana 1). Impl
 - **Sin eliminación.** Deshabilitar conserva el historial y bloquea el acceso.
 - **Protecciones.** No se puede deshabilitar ni cambiar el rol de la propia cuenta, y debe quedar al menos un Administrador activo. La interfaz bloquea la acción y el servidor la rechaza igualmente.
 - **Contraseña.** Campo oculto con opción de mostrar, mínimo 8 caracteres con letras y números. Solo existe al crear; HU-022 no la precarga. No se guarda en `profiles`.
-- **Correo de acceso.** Se define al crear y no se edita (pertenece a Supabase Auth). Es distinto del correo de Drive, que es opcional.
+- **Correo electrónico.** Se define al crear y no se edita (pertenece a Supabase Auth). Es el único correo del formulario y se reutiliza para la futura vinculación con Drive.
 - **Áreas.** Se guardan con `areas.codigo`. Solo se ofrecen las habilitadas; las ya asignadas se conservan aunque se deshabiliten, para no quitarlas en silencio. El trigger de HU-012 sincroniza `profile_areas`.
 - **Nombre completo.** Al guardar nombres y apellidos, `profiles.nombre` se actualiza como `nombres + ' ' + apellidos`, como pide el contrato de HU-020.
 

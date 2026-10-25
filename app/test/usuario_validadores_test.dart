@@ -6,13 +6,22 @@ void main() {
   group('UsuarioValidadores.nombre', () {
     test('rechaza vacío y textos de un carácter', () {
       expect(UsuarioValidadores.nombre('', etiqueta: 'los nombres'), isNotNull);
-      expect(UsuarioValidadores.nombre(' a ', etiqueta: 'los nombres'), isNotNull);
+      expect(
+        UsuarioValidadores.nombre(' a ', etiqueta: 'los nombres'),
+        isNotNull,
+      );
     });
     test('acepta nombres válidos e ignora espacios externos', () {
-      expect(UsuarioValidadores.nombre(' David ', etiqueta: 'los nombres'), isNull);
+      expect(
+        UsuarioValidadores.nombre(' David ', etiqueta: 'los nombres'),
+        isNull,
+      );
     });
     test('rechaza más de 80 caracteres', () {
-      expect(UsuarioValidadores.nombre('a' * 81, etiqueta: 'los nombres'), isNotNull);
+      expect(
+        UsuarioValidadores.nombre('a' * 81, etiqueta: 'los nombres'),
+        isNotNull,
+      );
     });
   });
 
@@ -34,12 +43,6 @@ void main() {
       expect(UsuarioValidadores.correoAcceso(''), isNotNull);
       expect(UsuarioValidadores.correoAcceso('sin-arroba'), isNotNull);
       expect(UsuarioValidadores.correoAcceso('a@b.pe'), isNull);
-    });
-    test('correo de Drive es opcional pero, si existe, debe ser válido', () {
-      expect(UsuarioValidadores.correoDrive(''), isNull);
-      expect(UsuarioValidadores.correoDrive(null), isNull);
-      expect(UsuarioValidadores.correoDrive('mal'), isNotNull);
-      expect(UsuarioValidadores.correoDrive('area@gmail.com'), isNull);
     });
   });
 
@@ -66,20 +69,33 @@ void main() {
   group('UsuarioBorrador.toJson', () {
     test('limpia espacios y normaliza a minúsculas los identificadores', () {
       const borrador = UsuarioBorrador(
-        nombres: ' Ana ', apellidos: ' Pérez ', nombreUsuario: ' Ana.Perez ',
-        cargo: ' Técnica ', correoDrive: ' Area@Gmail.com ', rol: 'ENFERMERIA',
+        nombres: ' Ana ',
+        apellidos: ' Pérez ',
+        nombreUsuario: ' Ana.Perez ',
+        cargo: ' Técnica ',
+        rol: 'ENFERMERIA',
         areas: ['SOP'],
       );
       expect(borrador.toJson(), {
-        'nombres': 'Ana', 'apellidos': 'Pérez', 'nombre_usuario': 'ana.perez',
-        'cargo': 'Técnica', 'correo_drive': 'area@gmail.com', 'rol': 'ENFERMERIA',
+        'nombres': 'Ana',
+        'apellidos': 'Pérez',
+        'nombre_usuario': 'ana.perez',
+        'cargo': 'Técnica',
+        'rol': 'ENFERMERIA',
         'areas': ['SOP'],
+        'colegio_codigo': null,
+        'numero_colegiatura': null,
+        'especialidad_codigo': null,
       });
     });
     test('no incluye contraseñas ni el correo de acceso', () {
       const borrador = UsuarioBorrador(
-        nombres: 'A', apellidos: 'B', nombreUsuario: 'abc', cargo: '',
-        correoDrive: '', rol: 'FARMACIA', areas: [],
+        nombres: 'A',
+        apellidos: 'B',
+        nombreUsuario: 'abc',
+        cargo: '',
+        rol: 'FARMACIA',
+        areas: [],
       );
       expect(borrador.toJson().keys, isNot(contains('password')));
       expect(borrador.toJson().keys, isNot(contains('email')));

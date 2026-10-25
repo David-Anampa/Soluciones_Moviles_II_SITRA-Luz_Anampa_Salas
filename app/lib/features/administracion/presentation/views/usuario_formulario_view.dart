@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../data/usuarios_repository.dart';
 import '../../domain/usuario_borrador.dart';
 import '../../domain/usuario_validadores.dart';
+import '../../domain/catalogos_profesionales.dart';
 import '../widgets/catalogo_estilo.dart';
 
 /// HU-021 (crear) y HU-022 (editar): formulario de usuario.
@@ -30,7 +31,17 @@ class UsuarioFormularioView extends StatefulWidget {
 
 class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _nombres, _apellidos, _usuario, _correo, _clave, _cargo, _drive;
+  late final TextEditingController _nombres,
+      _apellidos,
+      _usuario,
+      _correo,
+      _clave,
+      _cargo,
+      _colegiatura;
+  CatalogosProfesionales? _catalogos;
+  bool _cargandoCatalogos = true;
+  String? _errorCatalogos;
+  late String _colegioCodigo, _especialidadCodigo;
   late String? _rol;
   late final Set<String> _areasSeleccionadas;
   bool _verClave = false, _guardando = false;
@@ -41,7 +52,8 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
 
   /// Indica si se edita la propia cuenta, caso en que el rol queda bloqueado
   /// para no perder el acceso administrativo por accidente.
-  bool get _esCuentaPropia => _edita && widget.usuario!.id == widget.repositorio.idSesion;
+  bool get _esCuentaPropia =>
+      _edita && widget.usuario!.id == widget.repositorio.idSesion;
 
   /// Precarga los datos del usuario (o valores vacíos al crear).
   @override
@@ -54,15 +66,50 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
     _correo = TextEditingController(text: u?.correo ?? '');
     _clave = TextEditingController();
     _cargo = TextEditingController(text: u?.cargo ?? '');
-    _drive = TextEditingController(text: u?.correoDrive ?? '');
+    _colegiatura = TextEditingController(text: u?.numeroColegiatura ?? '');
+    _colegioCodigo = u?.colegioCodigo ?? '';
+    _especialidadCodigo = u?.especialidadCodigo ?? '';
     _rol = u?.rol.isEmpty ?? true ? null : u!.rol;
-    _areasSeleccionadas = {for (final token in u?.areas ?? <String>[]) _codigoDeArea(token)};
+    _areasSeleccionadas = {
+      for (final token in u?.areas ?? <String>[]) _codigoDeArea(token),
+    };
+    _cargarCatalogos();
+  }
+
+  /// Carga referencias del servidor antes de permitir guardar la colegiatura.
+  Future<void> _cargarCatalogos() async {
+    setState(() {
+      _cargandoCatalogos = true;
+      _errorCatalogos = null;
+    });
+    try {
+      final datos = await widget.repositorio.cargarCatalogosProfesionales();
+      if (mounted)
+        setState(() {
+          _catalogos = datos;
+          _cargandoCatalogos = false;
+        });
+    } catch (e) {
+      if (mounted)
+        setState(() {
+          _cargandoCatalogos = false;
+          _errorCatalogos = UsuariosRepository.mensajeError(e);
+        });
+    }
   }
 
   /// Libera todos los controladores de texto.
   @override
   void dispose() {
-    for (final c in [_nombres, _apellidos, _usuario, _correo, _clave, _cargo, _drive]) {
+    for (final c in [
+      _nombres,
+      _apellidos,
+      _usuario,
+      _correo,
+      _clave,
+      _cargo,
+      _colegiatura,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -73,7 +120,8 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
   String _codigoDeArea(String token) {
     final valor = token.trim().toLowerCase();
     for (final a in widget.areas) {
-      if (a.codigo.toLowerCase() == valor || a.nombre.toLowerCase() == valor) return a.codigo;
+      if (a.codigo.toLowerCase() == valor || a.nombre.toLowerCase() == valor)
+        return a.codigo;
     }
     return token;
   }
@@ -83,7 +131,8 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
   Map<String, String> get _opcionesAreas {
     final opciones = <String, String>{
       for (final a in widget.areas)
-        if (a.activo || _areasSeleccionadas.contains(a.codigo)) a.codigo: a.nombre,
+        if (a.activo || _areasSeleccionadas.contains(a.codigo))
+          a.codigo: a.nombre,
     };
     for (final codigo in _areasSeleccionadas) {
       opciones.putIfAbsent(codigo, () => codigo);
@@ -93,31 +142,47 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
 
   /// Construye el borrador a partir de los campos del formulario.
   UsuarioBorrador _borrador() => UsuarioBorrador(
-        nombres: _nombres.text,
-        apellidos: _apellidos.text,
-        nombreUsuario: _usuario.text,
-        cargo: _cargo.text,
-        correoDrive: _drive.text,
-        rol: _rol!,
-        areas: _areasSeleccionadas.toList()..sort(),
-      );
+    nombres: _nombres.text,
+    apellidos: _apellidos.text,
+    nombreUsuario: _usuario.text,
+    cargo: _cargo.text,
+    rol: _rol!,
+    areas: _areasSeleccionadas.toList()..sort(),
+    colegioCodigo: _colegioCodigo,
+    numeroColegiatura: _colegiatura.text,
+    especialidadCodigo: _especialidadCodigo,
+  );
 
   /// Valida el formulario y lo envía; muestra el error del servidor si lo hay.
   /// Ignora pulsaciones repetidas mientras hay un guardado en curso.
   Future<void> _guardar() async {
-    if (_guardando || !_formKey.currentState!.validate()) return;
-    setState(() { _guardando = true; _error = null; });
+    if (_guardando ||
+        _cargandoCatalogos ||
+        _catalogos == null ||
+        !_formKey.currentState!.validate())
+      return;
+    setState(() {
+      _guardando = true;
+      _error = null;
+    });
     try {
       final datos = _borrador();
       if (_edita) {
         await widget.repositorio.editar(widget.usuario!.id, datos);
       } else {
-        await widget.repositorio.crear(datos, correo: _correo.text, contrasena: _clave.text);
+        await widget.repositorio.crear(
+          datos,
+          correo: _correo.text,
+          contrasena: _clave.text,
+        );
       }
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
-        setState(() { _error = UsuariosRepository.mensajeError(e); _guardando = false; });
+        setState(() {
+          _error = UsuariosRepository.mensajeError(e);
+          _guardando = false;
+        });
       }
     }
   }
@@ -130,8 +195,10 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
       child: Scaffold(
         backgroundColor: CatalogoEstilo.fondo,
         appBar: AppBar(
-          title: Text(_edita ? 'Editar usuario' : 'Nuevo usuario',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+          title: Text(
+            _edita ? 'Editar usuario' : 'Nuevo usuario',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
           leading: IconButton(
             tooltip: 'Cancelar',
             icon: const Icon(Icons.arrow_back_rounded),
@@ -145,37 +212,71 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
               key: _formKey,
               child: ListView(
                 padding: const EdgeInsets.all(16),
-                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
                 children: [
                   _seccion('Datos personales', [
-                    _campo(_nombres, 'Nombres', Icons.badge_outlined,
-                        validador: (v) => UsuarioValidadores.nombre(v, etiqueta: 'los nombres'),
-                        capitalizacion: TextCapitalization.words),
-                    _campo(_apellidos, 'Apellidos', Icons.badge_outlined,
-                        validador: (v) => UsuarioValidadores.nombre(v, etiqueta: 'los apellidos'),
-                        capitalizacion: TextCapitalization.words),
-                    _campo(_cargo, 'Cargo (opcional)', Icons.work_outline_rounded,
-                        validador: UsuarioValidadores.cargo,
-                        capitalizacion: TextCapitalization.sentences),
-                  ]),
+                    _campo(
+                      _nombres,
+                      'Nombres',
+                      Icons.badge_outlined,
+                      validador: (v) =>
+                          UsuarioValidadores.nombre(v, etiqueta: 'los nombres'),
+                      capitalizacion: TextCapitalization.words,
+                    ),
+                    _campo(
+                      _apellidos,
+                      'Apellidos',
+                      Icons.badge_outlined,
+                      validador: (v) => UsuarioValidadores.nombre(
+                        v,
+                        etiqueta: 'los apellidos',
+                      ),
+                      capitalizacion: TextCapitalization.words,
+                    ),
+                    _campo(
+                      _cargo,
+                      'Cargo / ocupación (opcional)',
+                      Icons.work_outline_rounded,
+                      validador: UsuarioValidadores.cargo,
+                      capitalizacion: TextCapitalization.sentences,
+                    ),
+                  ], icono: Icons.person_outline_rounded),
+                  _seccion(
+                    'Colegiatura y especialidad',
+                    _camposProfesionales(),
+                    icono: Icons.verified_outlined,
+                  ),
                   _seccion('Acceso', [
-                    _campo(_usuario, 'Nombre de usuario', Icons.alternate_email_rounded,
-                        validador: UsuarioValidadores.nombreUsuario,
-                        ayuda: 'Minúsculas, números, punto, guion o guion bajo.'),
-                    _campo(_correo, 'Correo de acceso', Icons.mail_outline_rounded,
-                        validador: UsuarioValidadores.correoAcceso,
-                        teclado: TextInputType.emailAddress,
-                        soloLectura: _edita,
-                        ayuda: _edita ? 'El correo de acceso no se modifica desde aquí.' : null),
+                    _campo(
+                      _usuario,
+                      'Nombre de usuario',
+                      Icons.alternate_email_rounded,
+                      validador: UsuarioValidadores.nombreUsuario,
+                      ayuda: 'Minúsculas, números, punto, guion o guion bajo.',
+                    ),
+                    _campo(
+                      _correo,
+                      'Correo electrónico',
+                      Icons.mail_outline_rounded,
+                      validador: UsuarioValidadores.correoAcceso,
+                      teclado: TextInputType.emailAddress,
+                      soloLectura: _edita,
+                      ayuda: _edita
+                          ? 'Se usa para el acceso y la vinculación con Drive. No se modifica desde aquí.'
+                          : 'Se usa para el acceso y la vinculación con Drive, previa autorización de Google.',
+                    ),
                     if (!_edita) _campoContrasena(),
-                    _campo(_drive, 'Correo para Drive (opcional)', Icons.cloud_outlined,
-                        validador: UsuarioValidadores.correoDrive,
-                        teclado: TextInputType.emailAddress,
-                        ayuda: 'Es configuración; no concede permisos de Drive por sí mismo.'),
                   ]),
-                  _seccion('Rol y áreas', [_selectorRol(), _selectorAreas()]),
+                  _seccion('Rol y áreas', [
+                    _selectorRol(),
+                    _selectorAreas(),
+                  ], icono: Icons.admin_panel_settings_outlined),
                   if (_error != null) ...[
-                    CatalogoEstilo.nota(_error!, icono: Icons.error_outline_rounded),
+                    CatalogoEstilo.nota(
+                      _error!,
+                      icono: Icons.error_outline_rounded,
+                    ),
                     const SizedBox(height: 16),
                   ],
                   _acciones(),
@@ -188,25 +289,178 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
     );
   }
 
-  /// Agrupa campos relacionados bajo un título dentro de una tarjeta blanca.
-  Widget _seccion(String titulo, List<Widget> hijos) => Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE6E6E6)),
-          ),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(titulo,
-                style: const TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w700, color: CatalogoEstilo.texto)),
-            const SizedBox(height: 14),
-            for (final h in hijos) ...[h, const SizedBox(height: 14)],
-          ]),
+  /// Muestra solo los campos aplicables, sin añadir otro campo de profesión.
+  List<Widget> _camposProfesionales() {
+    if (_cargandoCatalogos) return [const LinearProgressIndicator()];
+    if (_errorCatalogos != null)
+      return [
+        CatalogoEstilo.nota(
+          _errorCatalogos!,
+          icono: Icons.error_outline_rounded,
         ),
+        TextButton(
+          onPressed: _cargarCatalogos,
+          child: const Text('Reintentar'),
+        ),
+      ];
+    final colegios = <String, String>{'': 'No aplica / sin registrar'};
+    for (final c in _catalogos!.colegios) {
+      if (c.activo || c.codigo == _colegioCodigo) {
+        colegios[c.codigo] =
+            '${c.codigo} — ${c.nombre}${c.activo ? '' : ' (deshabilitado)'}';
+      }
+    }
+    if (_colegioCodigo.isNotEmpty)
+      colegios.putIfAbsent(_colegioCodigo, () => _colegioCodigo);
+    final especialidades = <String, String>{'': 'Sin especialidad registrada'};
+    for (final e in _catalogos!.especialidades) {
+      if (e.colegioCodigo == _colegioCodigo &&
+          (e.activo || e.codigo == _especialidadCodigo)) {
+        especialidades[e.codigo] =
+            '${e.nombre}${e.activo ? '' : ' (deshabilitada)'}';
+      }
+    }
+    if (_especialidadCodigo.isNotEmpty)
+      especialidades.putIfAbsent(
+        _especialidadCodigo,
+        () => _especialidadCodigo,
       );
+    return [
+      const Text(
+        'Completa estos datos cuando correspondan a su ocupación.',
+        style: TextStyle(fontSize: 13, height: 1.5, color: Color(0xFF64646D)),
+      ),
+      _selectorProfesional(
+        'Colegio profesional',
+        _colegioCodigo,
+        colegios,
+        (valor) {
+          if (valor == _colegioCodigo) return;
+          setState(() {
+            _colegioCodigo = valor;
+            _especialidadCodigo = '';
+            _colegiatura.clear();
+          });
+        },
+        icono: Icons.account_balance_outlined,
+      ),
+      if (_colegioCodigo.isNotEmpty) ...[
+        _campo(
+          _colegiatura,
+          'Número de colegiatura ($_colegioCodigo)',
+          Icons.badge_outlined,
+          validador: (v) =>
+              UsuarioValidadores.colegiatura(v, tieneColegio: true),
+          teclado: TextInputType.number,
+        ),
+        _selectorProfesional(
+          _colegioCodigo == 'CTMP'
+              ? 'Área profesional (opcional)'
+              : 'Especialidad (opcional)',
+          _especialidadCodigo,
+          especialidades,
+          (valor) => setState(() => _especialidadCodigo = valor),
+          icono: Icons.medical_services_outlined,
+        ),
+      ],
+    ];
+  }
+
+  /// Menús expandidos con altura limitada y etiquetas legibles en teléfono.
+  Widget _selectorProfesional(
+    String etiqueta,
+    String valor,
+    Map<String, String> opciones,
+    ValueChanged<String> cambiar, {
+    required IconData icono,
+  }) => DropdownButtonFormField<String>(
+    key: ValueKey('$etiqueta:$valor'),
+    value: valor,
+    isExpanded: true,
+    menuMaxHeight: 360,
+    itemHeight: 72,
+    decoration: InputDecoration(
+      labelText: etiqueta,
+      filled: true,
+      prefixIcon: Icon(icono, color: CatalogoEstilo.rojo),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+    ),
+    selectedItemBuilder: (context) => opciones.values
+        .map(
+          (nombre) => Align(
+            alignment: Alignment.centerLeft,
+            child: Text(nombre, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
+        )
+        .toList(),
+    items: opciones.entries
+        .map(
+          (e) => DropdownMenuItem(
+            value: e.key,
+            child: Text(e.value, maxLines: 3, overflow: TextOverflow.ellipsis),
+          ),
+        )
+        .toList(),
+    onChanged: _guardando
+        ? null
+        : (v) {
+            if (v != null) cambiar(v);
+          },
+  );
+
+  /// Agrupa campos relacionados bajo un título dentro de una tarjeta blanca.
+  Widget _seccion(
+    String titulo,
+    List<Widget> hijos, {
+    IconData icono = Icons.lock_outline_rounded,
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: 20),
+    child: Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE6E6E6)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: CatalogoEstilo.pastel,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icono, color: CatalogoEstilo.rojo, size: 21),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  titulo,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: CatalogoEstilo.texto,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 22),
+          for (var i = 0; i < hijos.length; i++) ...[
+            hijos[i],
+            if (i < hijos.length - 1) const SizedBox(height: 20),
+          ],
+        ],
+      ),
+    ),
+  );
 
   /// Campo de texto con icono, validación y estilo comunes; evita repetir la
   /// decoración en cada campo del formulario.
@@ -219,69 +473,82 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
     TextCapitalization capitalizacion = TextCapitalization.none,
     bool soloLectura = false,
     String? ayuda,
-  }) =>
-      TextFormField(
-        controller: controlador,
-        validator: validador,
-        keyboardType: teclado,
-        textCapitalization: capitalizacion,
-        readOnly: soloLectura,
-        enabled: !_guardando,
-        autovalidateMode: AutovalidateMode.onUserInteraction,
-        decoration: InputDecoration(
-          labelText: etiqueta,
-          helperText: ayuda,
-          helperMaxLines: 2,
-          prefixIcon: Icon(icono),
-          filled: true,
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        ),
-      );
+  }) => TextFormField(
+    controller: controlador,
+    validator: validador,
+    keyboardType: teclado,
+    textCapitalization: capitalizacion,
+    readOnly: soloLectura,
+    enabled: !_guardando,
+    autovalidateMode: AutovalidateMode.onUserInteraction,
+    decoration: InputDecoration(
+      labelText: etiqueta,
+      helperText: ayuda,
+      helperMaxLines: 2,
+      prefixIcon: Icon(icono, color: CatalogoEstilo.rojo),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      filled: true,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+    ),
+  );
 
   /// Contraseña inicial oculta con opción de mostrarla mientras se escribe.
   /// Solo existe al crear: HU-022 nunca precarga ni muestra contraseñas.
   Widget _campoContrasena() => TextFormField(
-        controller: _clave,
-        validator: UsuarioValidadores.contrasena,
-        obscureText: !_verClave,
-        enabled: !_guardando,
-        autovalidateMode: AutovalidateMode.onUserInteraction,
-        decoration: InputDecoration(
-          labelText: 'Contraseña inicial',
-          helperText: 'Mínimo 8 caracteres, con letras y números.',
-          prefixIcon: const Icon(Icons.lock_outline_rounded),
-          suffixIcon: IconButton(
-            tooltip: _verClave ? 'Ocultar contraseña' : 'Mostrar contraseña',
-            icon: Icon(_verClave ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-            onPressed: () => setState(() => _verClave = !_verClave),
-          ),
-          filled: true,
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+    controller: _clave,
+    validator: UsuarioValidadores.contrasena,
+    obscureText: !_verClave,
+    enabled: !_guardando,
+    autovalidateMode: AutovalidateMode.onUserInteraction,
+    decoration: InputDecoration(
+      labelText: 'Contraseña inicial',
+      helperText: 'Mínimo 8 caracteres, con letras y números.',
+      prefixIcon: const Icon(Icons.lock_outline_rounded),
+      suffixIcon: IconButton(
+        tooltip: _verClave ? 'Ocultar contraseña' : 'Mostrar contraseña',
+        icon: Icon(
+          _verClave ? Icons.visibility_off_outlined : Icons.visibility_outlined,
         ),
-      );
+        onPressed: () => setState(() => _verClave = !_verClave),
+      ),
+      filled: true,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+    ),
+  );
 
   /// Lista desplegable de roles. Se bloquea al editar la cuenta propia.
   Widget _selectorRol() => DropdownButtonFormField<String>(
-        value: _rol,
-        isExpanded: true,
-        validator: UsuarioValidadores.rol,
-        decoration: InputDecoration(
-          labelText: 'Rol de permisos',
-          helperText: _ayudaRol,
-          helperMaxLines: 2,
-          prefixIcon: const Icon(Icons.admin_panel_settings_outlined),
-          filled: true,
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+    value: _rol,
+    isExpanded: true,
+    validator: UsuarioValidadores.rol,
+    decoration: InputDecoration(
+      labelText: 'Rol de permisos',
+      helperText: _ayudaRol,
+      helperMaxLines: 2,
+      prefixIcon: const Icon(Icons.admin_panel_settings_outlined),
+      filled: true,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+    ),
+    items: [
+      for (final e in UsuarioAdministrativo.roles.entries)
+        DropdownMenuItem(
+          value: e.key,
+          child: Text(e.value, overflow: TextOverflow.ellipsis),
         ),
-        items: [
-          for (final e in UsuarioAdministrativo.roles.entries)
-            DropdownMenuItem(value: e.key, child: Text(e.value, overflow: TextOverflow.ellipsis)),
-        ],
-        onChanged: (_guardando || _esCuentaPropia) ? null : (v) => setState(() => _rol = v),
-      );
+    ],
+    onChanged: (_guardando || _esCuentaPropia)
+        ? null
+        : (v) => setState(() => _rol = v),
+  );
 
   /// Mensaje de ayuda del selector de rol, según el contexto.
   String? get _ayudaRol =>
@@ -291,55 +558,81 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
   Widget _selectorAreas() {
     final opciones = _opcionesAreas.entries.toList()
       ..sort((a, b) => a.value.compareTo(b.value));
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Áreas asignadas',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: CatalogoEstilo.texto)),
-      const SizedBox(height: 4),
-      const Text('Un usuario puede rotar entre varias áreas.', style: TextStyle(fontSize: 12)),
-      const SizedBox(height: 10),
-      if (opciones.isEmpty)
-        const Text('No hay áreas habilitadas. Créalas en Financiamientos, seguros y áreas.',
-            style: TextStyle(fontSize: 13))
-      else
-        Wrap(spacing: 8, runSpacing: 8, children: [
-          for (final o in opciones)
-            FilterChip(
-              label: Text(o.value),
-              selected: _areasSeleccionadas.contains(o.key),
-              selectedColor: CatalogoEstilo.pastel,
-              checkmarkColor: CatalogoEstilo.rojo,
-              onSelected: _guardando
-                  ? null
-                  : (marcado) => setState(() {
-                        marcado
-                            ? _areasSeleccionadas.add(o.key)
-                            : _areasSeleccionadas.remove(o.key);
-                      }),
-            ),
-        ]),
-    ]);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Áreas asignadas',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: CatalogoEstilo.texto,
+          ),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'Un usuario puede rotar entre varias áreas.',
+          style: TextStyle(fontSize: 12),
+        ),
+        const SizedBox(height: 10),
+        if (opciones.isEmpty)
+          const Text(
+            'No hay áreas habilitadas. Créalas en Financiamientos, seguros y áreas.',
+            style: TextStyle(fontSize: 13),
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final o in opciones)
+                FilterChip(
+                  label: Text(o.value),
+                  selected: _areasSeleccionadas.contains(o.key),
+                  selectedColor: CatalogoEstilo.pastel,
+                  checkmarkColor: CatalogoEstilo.rojo,
+                  onSelected: _guardando
+                      ? null
+                      : (marcado) => setState(() {
+                          marcado
+                              ? _areasSeleccionadas.add(o.key)
+                              : _areasSeleccionadas.remove(o.key);
+                        }),
+                ),
+            ],
+          ),
+      ],
+    );
   }
 
   /// Botones Cancelar y Guardar; Guardar muestra progreso y se bloquea al enviar.
-  Widget _acciones() => Row(children: [
-        Expanded(
-          child: TextButton(
-            onPressed: _guardando ? null : () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
+  Widget _acciones() => Row(
+    children: [
+      Expanded(
+        child: TextButton(
+          onPressed: _guardando ? null : () => Navigator.pop(context, false),
+          child: const Text('Cancelar'),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: FilledButton.icon(
-            onPressed: _guardando ? null : _guardar,
-            icon: _guardando
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Icon(Icons.check_rounded),
-            label: Text(_edita ? 'Guardar cambios' : 'Crear usuario'),
-          ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: FilledButton.icon(
+          onPressed: (_guardando || _cargandoCatalogos || _catalogos == null)
+              ? null
+              : _guardar,
+          icon: _guardando
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.check_rounded),
+          label: Text(_edita ? 'Guardar cambios' : 'Crear usuario'),
         ),
-      ]);
+      ),
+    ],
+  );
 }
