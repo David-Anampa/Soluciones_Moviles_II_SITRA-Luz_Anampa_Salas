@@ -152,6 +152,8 @@ class AlmacenRepositoryImpl implements AlmacenRepository {
     required String notas,
     required Map<String, int> items,
     String? solicitudId,
+    bool iniciadoPorAlmacen = false,
+    String modalidadEntrega = 'ENTREGA',
   }) async {
     return await _dataSource.crearPedidoAbastecimiento(
       areaDestino: areaDestino,
@@ -160,6 +162,8 @@ class AlmacenRepositoryImpl implements AlmacenRepository {
       notas: notas,
       items: items,
       solicitudId: solicitudId,
+      iniciadoPorAlmacen: iniciadoPorAlmacen,
+      modalidadEntrega: modalidadEntrega,
     );
   }
 

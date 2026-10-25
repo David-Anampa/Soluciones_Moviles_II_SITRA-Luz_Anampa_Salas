@@ -37,6 +37,8 @@ class PedidoAbastecimientoModel extends PedidoAbastecimientoEntity {
     required super.codigo,
     super.solicitanteId,
     super.solicitanteNombre,
+    super.iniciativa,
+    super.despachoEnTransito,
     super.responsableAlmacenId,
     super.responsableFarmaciaId,
     super.areaOrigen,
@@ -81,6 +83,8 @@ class PedidoAbastecimientoModel extends PedidoAbastecimientoEntity {
       id: map['id']?.toString() ?? '',
       codigo: map['codigo']?.toString() ?? 'PED-2026',
       solicitanteId: map['solicitante_id']?.toString(),
+      iniciativa: map['iniciativa'] as String? ?? 'SOLICITUD_FARMACIA',
+      despachoEnTransito: map['despacho_en_transito'] as bool? ?? false,
       solicitanteNombre:
           profile?['nombre']?.toString() ?? 'Guardia de Farmacia',
       responsableAlmacenId: map['responsable_almacen_id']?.toString(),

@@ -55,6 +55,8 @@ abstract class AlmacenRepository {
     required String notas,
     required Map<String, int> items,
     String? solicitudId,
+    bool iniciadoPorAlmacen = false,
+    String modalidadEntrega = 'ENTREGA',
   });
 
   /// Registra un ingreso de lote y agrega el stock correspondiente en Almacén

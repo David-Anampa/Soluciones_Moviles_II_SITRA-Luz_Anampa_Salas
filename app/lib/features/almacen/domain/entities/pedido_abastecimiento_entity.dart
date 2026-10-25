@@ -33,6 +33,8 @@ class PedidoAbastecimientoEntity {
 
   final String? solicitanteId;
   final String solicitanteNombre;
+  final String iniciativa;
+  final bool despachoEnTransito;
 
   final String? responsableAlmacenId;
   final String? responsableFarmaciaId;
@@ -75,6 +77,8 @@ class PedidoAbastecimientoEntity {
     required this.codigo,
     this.solicitanteId,
     this.solicitanteNombre = 'Guardia de Farmacia',
+    this.iniciativa = 'SOLICITUD_FARMACIA',
+    this.despachoEnTransito = false,
     this.responsableAlmacenId,
     this.responsableFarmaciaId,
     this.areaOrigen = 'FARMACIA',

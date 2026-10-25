@@ -2,6 +2,11 @@
 
 Fecha: 25 de octubre de 2026. Rama: Sprint-05.
 
+Avance posterior: [stock en tránsito y envíos iniciados por Almacén](GUIA_STOCK_TRANSITO_Y_ENVIOS_ALMACEN_2026_10_25.md).
+Ese cambio modifica el momento en que Farmacia recibe stock y agrega la consulta
+por ubicación. Está validado localmente y todavía no desplegado; esta guía
+describe la migración anterior que sí está instalada en Supabase.
+
 ## Comportamiento final
 
 HU-029 guarda la cabecera (número, solicitante, turno, justificación y estado),

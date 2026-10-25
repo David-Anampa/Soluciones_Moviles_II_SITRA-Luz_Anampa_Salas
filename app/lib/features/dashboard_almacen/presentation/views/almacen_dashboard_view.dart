@@ -12,6 +12,8 @@ import '../../../almacen/presentation/views/editar_medicamento_view.dart';
 import '../../../almacen/presentation/views/escaner_gtin_view.dart';
 import '../../../almacen/presentation/views/registro_medicamento_view.dart';
 import '../../../almacen/presentation/views/solicitudes_abastecimiento_view.dart';
+import '../../../almacen/presentation/views/crear_solicitud_abastecimiento_view.dart';
+import '../../../almacen/presentation/views/stock_ubicaciones_view.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 
 class AlmacenDashboardView extends StatefulWidget {
@@ -163,6 +165,24 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
       MaterialPageRoute(
         builder: (_) =>
             const SolicitudesAbastecimientoView(esModoFarmacia: false),
+      ),
+    );
+  }
+
+  Future<void> _abrirEnvioFarmacia() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const CrearSolicitudAbastecimientoView(iniciadoPorAlmacen: true),
+      ),
+    );
+    if (mounted) await context.read<AlmacenViewModel>().cargarInventario();
+  }
+
+  void _abrirStockUbicaciones() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const StockUbicacionesView(puedeEnviar: true),
       ),
     );
   }
@@ -617,6 +637,33 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
 
               const SizedBox(height: 24),
 
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _abrirEnvioFarmacia,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFC62828),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  icon: const Icon(Icons.local_shipping_outlined),
+                  label: const Text('Enviar a Farmacia'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _abrirStockUbicaciones,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFC62828),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  icon: const Icon(Icons.warehouse_outlined),
+                  label: const Text('Stock por ubicación'),
+                ),
+              ),
+              const SizedBox(height: 24),
               // HU-013 / HU-023: Inventario físico con búsqueda y filtros.
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

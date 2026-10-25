@@ -29,7 +29,12 @@ class _SolicitudesAbastecimientoViewState
   static const _textoSecundario = Color(0xFF6B7280);
   static const _azulMarino = Color(0xFF1A3A6B);
   final Map<String, GlobalKey> _filtroKeys = {
-    for (final estado in ['PENDIENTES', 'EN CURSO', 'COMPLETADOS', 'ARCHIVADOS'])
+    for (final estado in [
+      'PENDIENTES',
+      'EN CURSO',
+      'COMPLETADOS',
+      'ARCHIVADOS',
+    ])
       estado: GlobalKey(),
   };
 
@@ -38,60 +43,98 @@ class _SolicitudesAbastecimientoViewState
     final base = Theme.of(context);
     final botones = ButtonStyle(
       minimumSize: const WidgetStatePropertyAll(Size(0, 48)),
-      padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 18, vertical: 14)),
-      textStyle: const WidgetStatePropertyAll(TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-      shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+      padding: const WidgetStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      ),
+      textStyle: const WidgetStatePropertyAll(
+        TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+      ),
+      shape: WidgetStatePropertyAll(
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
     );
     return base.copyWith(
       colorScheme: base.colorScheme.copyWith(
-        primary: _rojo, onPrimary: _blanco,
-        secondary: _rojo, onSecondary: _blanco,
-        surface: _blanco, surfaceTint: Colors.transparent,
-        onSurface: _texto, error: _rojo,
+        primary: _rojo,
+        onPrimary: _blanco,
+        secondary: _rojo,
+        onSecondary: _blanco,
+        surface: _blanco,
+        surfaceTint: Colors.transparent,
+        onSurface: _texto,
+        error: _rojo,
       ),
-      filledButtonTheme: FilledButtonThemeData(style: botones.copyWith(
-        backgroundColor: WidgetStateProperty.resolveWith((states) =>
-            states.contains(WidgetState.disabled) ? _grisBorde : _rojo),
-        foregroundColor: const WidgetStatePropertyAll(_blanco),
-      )),
-      outlinedButtonTheme: OutlinedButtonThemeData(style: botones.copyWith(
-        foregroundColor: const WidgetStatePropertyAll(_rojo),
-        side: const WidgetStatePropertyAll(BorderSide(color: Color(0xFFEF9A9A))),
-      )),
-      textButtonTheme: TextButtonThemeData(style: botones.copyWith(
-        foregroundColor: const WidgetStatePropertyAll(_textoSecundario),
-      )),
+      filledButtonTheme: FilledButtonThemeData(
+        style: botones.copyWith(
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (states) =>
+                states.contains(WidgetState.disabled) ? _grisBorde : _rojo,
+          ),
+          foregroundColor: const WidgetStatePropertyAll(_blanco),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: botones.copyWith(
+          foregroundColor: const WidgetStatePropertyAll(_rojo),
+          side: const WidgetStatePropertyAll(
+            BorderSide(color: Color(0xFFEF9A9A)),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: botones.copyWith(
+          foregroundColor: const WidgetStatePropertyAll(_textoSecundario),
+        ),
+      ),
       chipTheme: base.chipTheme.copyWith(
-        backgroundColor: _blanco, selectedColor: _rojoSuave,
+        backgroundColor: _blanco,
+        selectedColor: _rojoSuave,
         checkmarkColor: _rojo,
         side: const BorderSide(color: _grisBorde),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: _texto),
+        labelStyle: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: _texto,
+        ),
       ),
       inputDecorationTheme: base.inputDecorationTheme.copyWith(
-        filled: true, fillColor: _grisFondo,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        filled: true,
+        fillColor: _grisFondo,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         labelStyle: const TextStyle(fontSize: 13, color: _textoSecundario),
         hintStyle: const TextStyle(fontSize: 13, color: _textoSecundario),
         errorStyle: const TextStyle(fontSize: 12, color: _rojo),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _grisBorde)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _rojo, width: 1.5)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _rojo)),
-        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _rojo, width: 1.5)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _grisBorde),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _rojo, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _rojo),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _rojo, width: 1.5),
+        ),
       ),
     );
   }
 
-  Future<T?> _mostrarModal<T>(Widget Function(BuildContext) contenido) => showDialog<T>(
-    context: context,
-    barrierDismissible: false,
-    builder: (ctx) => Theme(data: _temaPedidos(ctx), child: contenido(ctx)),
-  );
+  Future<T?> _mostrarModal<T>(Widget Function(BuildContext) contenido) =>
+      showDialog<T>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => Theme(data: _temaPedidos(ctx), child: contenido(ctx)),
+      );
 
   String _filtroEstado =
       'PENDIENTES'; // 'PENDIENTES', 'EN CURSO', 'COMPLETADOS', 'ARCHIVADOS'
@@ -103,81 +146,86 @@ class _SolicitudesAbastecimientoViewState
 
     const themeColor = _rojo;
 
-    return Theme(data: _temaPedidos(context), child: Scaffold(
-      backgroundColor: _grisFondo,
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.esModoFarmacia
-                  ? 'Mis Solicitudes a Almacén'
-                  : 'Solicitudes de Farmacia',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              widget.esModoFarmacia
-                  ? 'Seguimiento de reposición y recepción física'
-                  : 'Preparación, entrega y trazabilidad de pedidos',
-              style: const TextStyle(fontSize: 11, color: Colors.white70),
-            ),
-          ],
-        ),
-        backgroundColor: themeColor,
-        foregroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
-      ),
-      floatingActionButton: widget.esModoFarmacia
-          ? FloatingActionButton.extended(
-              backgroundColor: _rojo,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              icon: const Icon(Icons.add_shopping_cart_rounded),
-              label: const Text(
-                'Nueva Solicitud',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const CrearSolicitudAbastecimientoView(),
-                  ),
-                );
-              },
-            )
-          : null,
-      body: state is AlmacenLoaded
-          ? _buildBody(context, state, vm.isSaving, themeColor)
-          : state is AlmacenError
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.cloud_off_rounded,
-                      size: 40,
-                      color: _textoSecundario,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(state.message, textAlign: TextAlign.center),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: vm.cargarInventario,
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
+    return Theme(
+      data: _temaPedidos(context),
+      child: Scaffold(
+        backgroundColor: _grisFondo,
+        appBar: AppBar(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.esModoFarmacia
+                    ? 'Mis Solicitudes a Almacén'
+                    : 'Solicitudes de Farmacia',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-            )
-          : Center(child: CircularProgressIndicator(color: themeColor)),
-    ));
+              Text(
+                widget.esModoFarmacia
+                    ? 'Seguimiento de reposición y recepción física'
+                    : 'Preparación, entrega y trazabilidad de pedidos',
+                style: const TextStyle(fontSize: 11, color: Colors.white70),
+              ),
+            ],
+          ),
+          backgroundColor: themeColor,
+          foregroundColor: Colors.white,
+          iconTheme: const IconThemeData(color: Colors.white),
+          elevation: 0,
+        ),
+        floatingActionButton: widget.esModoFarmacia
+            ? FloatingActionButton.extended(
+                backgroundColor: _rojo,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                icon: const Icon(Icons.add_shopping_cart_rounded),
+                label: const Text(
+                  'Nueva Solicitud',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const CrearSolicitudAbastecimientoView(),
+                    ),
+                  );
+                },
+              )
+            : null,
+        body: state is AlmacenLoaded
+            ? _buildBody(context, state, vm.isSaving, themeColor)
+            : state is AlmacenError
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.cloud_off_rounded,
+                        size: 40,
+                        color: _textoSecundario,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(state.message, textAlign: TextAlign.center),
+                      const SizedBox(height: 12),
+                      FilledButton(
+                        onPressed: vm.cargarInventario,
+                        child: const Text('Reintentar'),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : Center(child: CircularProgressIndicator(color: themeColor)),
+      ),
+    );
   }
 
   Widget _buildBody(
@@ -209,19 +257,11 @@ class _SolicitudesAbastecimientoViewState
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFilterChip(
-                  'PENDIENTES',
-                  'Pendientes',
-                  _rojo,
-                ),
+                _buildFilterChip('PENDIENTES', 'Pendientes', _rojo),
                 const SizedBox(width: 8),
                 _buildFilterChip('EN CURSO', 'En curso', _rojo),
                 const SizedBox(width: 8),
-                _buildFilterChip(
-                  'COMPLETADOS',
-                  'Completados',
-                  _rojo,
-                ),
+                _buildFilterChip('COMPLETADOS', 'Completados', _rojo),
                 const SizedBox(width: 8),
                 _buildFilterChip(
                   'ARCHIVADOS',
@@ -313,29 +353,56 @@ class _SolicitudesAbastecimientoViewState
       children: [
         Icon(icono, size: 18, color: _textoSecundario),
         const SizedBox(width: 10),
-        Expanded(child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(etiqueta, style: const TextStyle(fontSize: 11, color: _textoSecundario)),
-            const SizedBox(height: 3),
-            Text(valor, style: const TextStyle(
-              fontSize: 13, fontWeight: FontWeight.w600, color: _texto, height: 1.4,
-            )),
-          ],
-        )),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                etiqueta,
+                style: const TextStyle(fontSize: 11, color: _textoSecundario),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                valor,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: _texto,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     ),
   );
 
-  Widget _cantidadPedido(String etiqueta, int cantidad, {bool devolucion = false}) => Padding(
+  Widget _cantidadPedido(
+    String etiqueta,
+    int cantidad, {
+    bool devolucion = false,
+  }) => Padding(
     padding: const EdgeInsets.only(top: 6),
-    child: Row(children: [
-      Expanded(child: Text(etiqueta, style: const TextStyle(fontSize: 12, color: _textoSecundario))),
-      const SizedBox(width: 8),
-      Text('$cantidad unid.', style: TextStyle(
-        fontSize: 12, fontWeight: FontWeight.w600, color: devolucion ? _rojo : _texto,
-      )),
-    ]),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            etiqueta,
+            style: const TextStyle(fontSize: 12, color: _textoSecundario),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '$cantidad unid.',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: devolucion ? _rojo : _texto,
+          ),
+        ),
+      ],
+    ),
   );
 
   Widget _buildSolicitudCard(
@@ -380,9 +447,7 @@ class _SolicitudesAbastecimientoViewState
         color: _blanco,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: esPendiente
-              ? _rojo.withValues(alpha: 0.2)
-              : _grisBorde,
+          color: esPendiente ? _rojo.withValues(alpha: 0.2) : _grisBorde,
           width: esPendiente ? 1.5 : 1,
         ),
         boxShadow: [
@@ -405,13 +470,21 @@ class _SolicitudesAbastecimientoViewState
                   color: estadoColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.receipt_long_outlined, color: estadoColor, size: 22),
+                child: Icon(
+                  Icons.receipt_long_outlined,
+                  color: estadoColor,
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   item.codigo,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _texto),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: _texto,
+                  ),
                 ),
               ),
             ],
@@ -423,33 +496,60 @@ class _SolicitudesAbastecimientoViewState
               color: estadoColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(estadoIcon, size: 16, color: estadoColor),
-              const SizedBox(width: 8),
-              Flexible(child: Text(
-                esCompletado && item.observacionRecepcion != null
-                    ? 'Completado con observación'
-                    : switch (item.estado) {
-                        'PENDIENTE' => 'Pendiente',
-                        'EN_PREPARACION' => 'En preparación',
-                        'LISTO' => 'Listo para entrega o recojo',
-                        'COMPLETADO' => 'Completado',
-                        'CANCELADO' => 'Cancelado',
-                        'RECHAZADO' => 'Rechazado',
-                        _ => item.estado,
-                      },
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: estadoColor),
-              )),
-            ]),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(estadoIcon, size: 16, color: estadoColor),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    esCompletado && item.observacionRecepcion != null
+                        ? 'Completado con observación'
+                        : switch (item.estado) {
+                            'PENDIENTE' => 'Pendiente',
+                            'EN_PREPARACION' => 'En preparación',
+                            'LISTO' => 'Listo para entrega o recojo',
+                            'COMPLETADO' => 'Completado',
+                            'CANCELADO' => 'Cancelado',
+                            'RECHAZADO' => 'Rechazado',
+                            _ => item.estado,
+                          },
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: estadoColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 14),
-          _datoPedido(Icons.person_outline_rounded, 'Solicitado por', item.solicitanteNombre),
-          _datoPedido(Icons.schedule_rounded, 'Fecha de solicitud', _fechaHora(item.fechaSolicitud)),
+          _datoPedido(
+            Icons.person_outline_rounded,
+            item.iniciativa == 'TRASLADO_ALMACEN'
+                ? 'Envío iniciado por Almacén'
+                : 'Solicitado por',
+            item.solicitanteNombre,
+          ),
+          _datoPedido(
+            Icons.schedule_rounded,
+            'Fecha de solicitud',
+            _fechaHora(item.fechaSolicitud),
+          ),
           _datoPedido(Icons.wb_twilight_rounded, 'Turno', switch (item.turno) {
-            'DIA' => 'Día', 'TARDE' => 'Tarde', 'NOCHE' => 'Noche', _ => item.turno,
+            'DIA' => 'Día',
+            'TARDE' => 'Tarde',
+            'NOCHE' => 'Noche',
+            _ => item.turno,
           }),
-          _datoPedido(Icons.assignment_outlined, 'Justificación',
-              item.justificacion == 'STOCK_CERO' ? 'Stock cero' : 'Reposición de stock'),
+          _datoPedido(
+            Icons.assignment_outlined,
+            'Justificación',
+            item.justificacion == 'STOCK_CERO'
+                ? 'Stock cero'
+                : 'Reposición de stock',
+          ),
 
           if (item.notas != null && item.notas!.isNotEmpty) ...[
             const SizedBox(height: 8),
@@ -461,7 +561,7 @@ class _SolicitudesAbastecimientoViewState
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'Nota de Farmacia: ${item.notas}',
+                '${item.iniciativa == 'TRASLADO_ALMACEN' ? 'Motivo del envío' : 'Nota de Farmacia'}: ${item.notas}',
                 style: const TextStyle(
                   fontSize: 12,
                   fontStyle: FontStyle.italic,
@@ -589,7 +689,13 @@ class _SolicitudesAbastecimientoViewState
                   ),
                   if (it.formaFarmaceutica?.isNotEmpty ?? false) ...[
                     const SizedBox(height: 4),
-                    Text(it.formaFarmaceutica!, style: const TextStyle(fontSize: 12, color: _textoSecundario)),
+                    Text(
+                      it.formaFarmaceutica!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: _textoSecundario,
+                      ),
+                    ),
                   ],
                   const SizedBox(height: 6),
                   _cantidadPedido('Solicitado', it.cantidadSolicitada),
@@ -598,7 +704,11 @@ class _SolicitudesAbastecimientoViewState
                   if (it.cantidadRecibida != null)
                     _cantidadPedido('Aceptado', it.cantidadRecibida!),
                   if (it.cantidadDevuelta > 0)
-                    _cantidadPedido('Devuelto', it.cantidadDevuelta, devolucion: true),
+                    _cantidadPedido(
+                      'Devuelto',
+                      it.cantidadDevuelta,
+                      devolucion: true,
+                    ),
                 ],
               ),
             ),
@@ -626,9 +736,7 @@ class _SolicitudesAbastecimientoViewState
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: _rojo,
-                      ),
+                      style: OutlinedButton.styleFrom(foregroundColor: _rojo),
                       onPressed: isSaving
                           ? null
                           : () => _mostrarDialogoCancelar(item),
@@ -675,11 +783,7 @@ class _SolicitudesAbastecimientoViewState
             else if (esCompletado)
               Row(
                 children: [
-                  const Icon(
-                    Icons.verified_rounded,
-                    color: _rojo,
-                    size: 16,
-                  ),
+                  const Icon(Icons.verified_rounded, color: _rojo, size: 16),
                   const SizedBox(width: 6),
                   Text(
                     'Recepción completada el ${item.fechaCompletado?.day ?? ""}/${item.fechaCompletado?.month ?? ""}',
@@ -699,9 +803,7 @@ class _SolicitudesAbastecimientoViewState
                 children: [
                   if (esPendiente)
                     FilledButton.icon(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _rojo,
-                      ),
+                      style: FilledButton.styleFrom(backgroundColor: _rojo),
                       onPressed: isSaving
                           ? null
                           : () =>
@@ -711,9 +813,7 @@ class _SolicitudesAbastecimientoViewState
                     ),
                   if (esEnPreparacion)
                     FilledButton.icon(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _rojo,
-                      ),
+                      style: FilledButton.styleFrom(backgroundColor: _rojo),
                       onPressed: isSaving
                           ? null
                           : () => _mostrarDialogoDespacho(item, loaded),
@@ -722,9 +822,7 @@ class _SolicitudesAbastecimientoViewState
                     ),
                   const SizedBox(height: 10),
                   OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: _rojo,
-                    ),
+                    style: OutlinedButton.styleFrom(foregroundColor: _rojo),
                     onPressed: isSaving
                         ? null
                         : () => _mostrarDialogoRechazo(item),
@@ -743,11 +841,7 @@ class _SolicitudesAbastecimientoViewState
             else if (esCompletado)
               Row(
                 children: [
-                  const Icon(
-                    Icons.verified_rounded,
-                    color: _rojo,
-                    size: 16,
-                  ),
+                  const Icon(Icons.verified_rounded, color: _rojo, size: 16),
                   const SizedBox(width: 6),
                   Text(
                     'Completado bilateralmente el ${item.fechaCompletado?.day}/${item.fechaCompletado?.month}',
@@ -769,28 +863,48 @@ class _SolicitudesAbastecimientoViewState
     final vm = context.read<AlmacenViewModel>();
     if (vm.isSaving) return;
     if (nuevoEstado == 'EN_PREPARACION') {
-      final confirmar = await _mostrarModal<bool>((ctx) => AlertDialog(
-        backgroundColor: _blanco,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-        contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-        actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        title: const Row(children: [
-          Icon(Icons.inventory_2_outlined, color: _rojo),
-          SizedBox(width: 10),
-          Expanded(child: Text('Confirmar toma de pedido',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700))),
-        ]),
-        content: const Text(
-          '¿Desea tomar este pedido y comenzar a prepararlo? Farmacia ya no podrá cancelarlo directamente.',
-          style: TextStyle(fontSize: 13, height: 1.5, color: _textoSecundario),
+      final confirmar = await _mostrarModal<bool>(
+        (ctx) => AlertDialog(
+          backgroundColor: _blanco,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+          title: const Row(
+            children: [
+              Icon(Icons.inventory_2_outlined, color: _rojo),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Confirmar toma de pedido',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            '¿Desea tomar este pedido y comenzar a prepararlo? Farmacia ya no podrá cancelarlo directamente.',
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.5,
+              color: _textoSecundario,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('No'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Sí, tomar pedido'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('No')),
-          FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Sí, tomar pedido')),
-        ],
-      ));
+      );
       if (confirmar != true || !mounted) return;
       final exito = await vm.tomarPedidoAbastecimiento(pedidoId);
       if (exito && mounted) {
@@ -890,13 +1004,17 @@ class _SolicitudesAbastecimientoViewState
     String? error;
     const color = _rojo;
     final vm = context.read<AlmacenViewModel>();
-    final resultado = await _mostrarModal<bool>( (ctx) => StatefulBuilder(
+    final resultado = await _mostrarModal<bool>(
+      (ctx) => StatefulBuilder(
         builder: (ctx, actualizar) => PopScope(
           canPop: !guardando,
           child: AlertDialog(
             backgroundColor: _blanco,
             surfaceTintColor: Colors.transparent,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 24,
+            ),
             titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
             contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
             actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
@@ -975,16 +1093,16 @@ class _SolicitudesAbastecimientoViewState
                     if (motivo == 'Otro motivo') ...[
                       const SizedBox(height: 12),
                       TextField(
-                              style: const TextStyle(fontSize: 14, color: _texto),
+                        style: const TextStyle(fontSize: 14, color: _texto),
                         controller: detalle,
                         enabled: !guardando,
                         maxLines: 2,
                         decoration: InputDecoration(
                           labelText: 'Detalle del motivo',
                           border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _grisBorde),
-                ),
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: _grisBorde),
+                          ),
                         ),
                       ),
                     ],
@@ -1025,9 +1143,7 @@ class _SolicitudesAbastecimientoViewState
                             : Icons.highlight_off_rounded,
                         size: 18,
                       ),
-                label: Text(
-                  cancelar ? 'Cancelar pedido' : 'Rechazar pedido',
-                ),
+                label: Text(cancelar ? 'Cancelar pedido' : 'Rechazar pedido'),
                 onPressed: guardando
                     ? null
                     : () async {
@@ -1110,7 +1226,8 @@ class _SolicitudesAbastecimientoViewState
     bool devolver = false;
     bool guardando = false;
     String? error;
-    final resultado = await _mostrarModal<bool>( (ctx) => StatefulBuilder(
+    final resultado = await _mostrarModal<bool>(
+      (ctx) => StatefulBuilder(
         builder: (ctx, actualizar) {
           final totalDevuelto = devolver
               ? item.items.fold<int>(
@@ -1128,22 +1245,22 @@ class _SolicitudesAbastecimientoViewState
           return PopScope(
             canPop: !guardando,
             child: AlertDialog(
-            backgroundColor: _blanco,
-            surfaceTintColor: Colors.transparent,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-            contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-            actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-            actionsOverflowButtonSpacing: 12,
+              backgroundColor: _blanco,
+              surfaceTintColor: Colors.transparent,
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 24,
+              ),
+              titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+              contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+              actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              actionsOverflowButtonSpacing: 12,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
               title: Row(
                 children: [
-                  const Icon(
-                    Icons.fact_check_outlined,
-                    color: _rojo,
-                  ),
+                  const Icon(Icons.fact_check_outlined, color: _rojo),
                   const SizedBox(width: 10),
                   const Expanded(
                     child: Text(
@@ -1174,7 +1291,7 @@ class _SolicitudesAbastecimientoViewState
                         ),
                         const SizedBox(height: 12),
                         const Text(
-                          'Verifique lo recibido y seleccione cómo cerrar el pedido.',
+                          'Cuente físicamente las unidades. Solo lo aceptado quedará disponible en Farmacia; las diferencias requieren un motivo.',
                           style: TextStyle(
                             fontSize: 13,
                             color: _textoSecundario,
@@ -1188,7 +1305,7 @@ class _SolicitudesAbastecimientoViewState
                             ChoiceChip(
                               label: const Text('Aceptar conforme'),
                               showCheckmark: false,
-                            avatar: const Icon(
+                              avatar: const Icon(
                                 Icons.check_circle_outline,
                                 size: 18,
                               ),
@@ -1203,7 +1320,7 @@ class _SolicitudesAbastecimientoViewState
                             ChoiceChip(
                               label: const Text('Devolver exceso'),
                               showCheckmark: false,
-                            avatar: const Icon(
+                              avatar: const Icon(
                                 Icons.assignment_return_outlined,
                                 size: 18,
                               ),
@@ -1226,13 +1343,9 @@ class _SolicitudesAbastecimientoViewState
                             margin: const EdgeInsets.only(bottom: 10),
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: _grisBorde.withValues(
-                                alpha: 0.4,
-                              ),
+                              color: _grisBorde.withValues(alpha: 0.4),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: _grisBorde,
-                              ),
+                              border: Border.all(color: _grisBorde),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1271,7 +1384,10 @@ class _SolicitudesAbastecimientoViewState
                                 if (devolver) ...[
                                   const SizedBox(height: 12),
                                   TextFormField(
-                                    style: const TextStyle(fontSize: 14, color: _texto),
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: _texto,
+                                    ),
                                     controller: cantidades[it.id],
                                     enabled: !guardando,
                                     keyboardType: TextInputType.number,
@@ -1279,9 +1395,11 @@ class _SolicitudesAbastecimientoViewState
                                       labelText: 'Unidades aceptadas',
                                       isDense: false,
                                       border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _grisBorde),
-                ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(
+                                          color: _grisBorde,
+                                        ),
+                                      ),
                                     ),
                                     onChanged: (_) => actualizar(() {}),
                                     validator: (texto) {
@@ -1308,7 +1426,7 @@ class _SolicitudesAbastecimientoViewState
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
-                                    style: const TextStyle(fontSize: 14, color: _texto),
+                            style: const TextStyle(fontSize: 14, color: _texto),
                             controller: motivo,
                             enabled: !guardando,
                             maxLines: 2,
@@ -1317,9 +1435,9 @@ class _SolicitudesAbastecimientoViewState
                               hintText:
                                   'Exceso solicitado por error de guardia',
                               border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _grisBorde),
-                ),
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: _grisBorde),
+                              ),
                             ),
                             validator: (texto) => (texto ?? '').trim().isEmpty
                                 ? 'Indique el motivo de devolución.'
@@ -1354,9 +1472,7 @@ class _SolicitudesAbastecimientoViewState
                   child: const Text('Volver'),
                 ),
                 FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _rojo,
-                  ),
+                  style: FilledButton.styleFrom(backgroundColor: _rojo),
                   icon: guardando
                       ? const SizedBox(
                           width: 16,
@@ -1469,13 +1585,17 @@ class _SolicitudesAbastecimientoViewState
       (it) => disponible(it.medicamentoId) < it.cantidadSolicitada,
     );
     String? error;
-    final resultado = await _mostrarModal<bool>( (ctx) => StatefulBuilder(
+    final resultado = await _mostrarModal<bool>(
+      (ctx) => StatefulBuilder(
         builder: (ctx, actualizar) => PopScope(
           canPop: !guardando,
           child: AlertDialog(
             backgroundColor: _blanco,
             surfaceTintColor: Colors.transparent,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 24,
+            ),
             titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
             contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
             actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
@@ -1485,10 +1605,7 @@ class _SolicitudesAbastecimientoViewState
             ),
             title: Row(
               children: [
-                const Icon(
-                  Icons.local_shipping_outlined,
-                  color: _rojo,
-                ),
+                const Icon(Icons.local_shipping_outlined, color: _rojo),
                 const SizedBox(width: 10),
                 const Expanded(
                   child: Text(
@@ -1517,10 +1634,7 @@ class _SolicitudesAbastecimientoViewState
                       const SizedBox(height: 12),
                       const Text(
                         'Indique las unidades alistadas y cómo llegarán a Farmacia.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: _textoSecundario,
-                        ),
+                        style: TextStyle(fontSize: 13, color: _textoSecundario),
                       ),
                       const SizedBox(height: 16),
                       if (hayFaltantes) ...[
@@ -1537,9 +1651,7 @@ class _SolicitudesAbastecimientoViewState
                           margin: const EdgeInsets.only(bottom: 10),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: _grisBorde.withValues(
-                              alpha: 0.4,
-                            ),
+                            color: _grisBorde.withValues(alpha: 0.4),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: _grisBorde),
                           ),
@@ -1563,16 +1675,21 @@ class _SolicitudesAbastecimientoViewState
                               ),
                               const SizedBox(height: 12),
                               TextFormField(
-                                    style: const TextStyle(fontSize: 14, color: _texto),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: _texto,
+                                ),
                                 controller: cantidades[it.id],
                                 enabled: !guardando,
                                 keyboardType: TextInputType.number,
                                 decoration: InputDecoration(
                                   labelText: 'Unidades a despachar',
                                   border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _grisBorde),
-                ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: _grisBorde,
+                                    ),
+                                  ),
                                   isDense: false,
                                 ),
                                 validator: (texto) {
@@ -1628,16 +1745,16 @@ class _SolicitudesAbastecimientoViewState
                       ),
                       const SizedBox(height: 12),
                       TextField(
-                              style: const TextStyle(fontSize: 14, color: _texto),
+                        style: const TextStyle(fontSize: 14, color: _texto),
                         controller: notas,
                         enabled: !guardando,
                         maxLines: 2,
                         decoration: InputDecoration(
                           labelText: 'Observaciones de despacho (opcional)',
                           border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _grisBorde),
-                ),
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: _grisBorde),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -1678,76 +1795,83 @@ class _SolicitudesAbastecimientoViewState
                     ),
                     icon: const Icon(Icons.highlight_off_rounded, size: 18),
                     label: const Text('Rechazar'),
-                    onPressed: guardando ? null : () async {
-                      actualizar(() => guardando = true);
-                      final rechazado = await _mostrarDialogoRechazo(item);
-                      if (!ctx.mounted) return;
-                      if (rechazado) {
-                        Navigator.of(ctx).pop(false);
-                      } else {
-                        actualizar(() => guardando = false);
-                      }
-                    },
+                    onPressed: guardando
+                        ? null
+                        : () async {
+                            actualizar(() => guardando = true);
+                            final rechazado = await _mostrarDialogoRechazo(
+                              item,
+                            );
+                            if (!ctx.mounted) return;
+                            if (rechazado) {
+                              Navigator.of(ctx).pop(false);
+                            } else {
+                              actualizar(() => guardando = false);
+                            }
+                          },
                   ),
                 ),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: _rojo,
-                ),
-                icon: guardando
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.local_shipping_outlined, size: 18),
-                label: const Text('Confirmar despacho'),
-                onPressed: guardando
-                    ? null
-                    : () async {
-                        if (!form.currentState!.validate()) {
-                          return;
-                        }
-                        final valores = {
-                          for (final it in item.items)
-                            it.id: int.parse(cantidades[it.id]!.text),
-                        };
-                        if (valores.values.every((cantidad) => cantidad == 0)) {
-                          actualizar(
-                            () => error =
-                                'No hay unidades a despachar. Si no puede atender el pedido, utilice Rechazar solicitud.',
-                          );
-                          return;
-                        }
-                        actualizar(() {
-                          guardando = true;
-                          error = null;
-                        });
-                        final exito = await vm.despacharPedidoAbastecimiento(
-                          pedidoId: item.id,
-                          cantidadesDespachadas: valores,
-                          modalidadEntrega: modalidad,
-                          notasDespacho: notas.text.trim(),
-                        );
-                        if (!ctx.mounted) return;
-                        if (exito) {
-                          Navigator.of(ctx).pop(true);
-                        } else {
+                  style: FilledButton.styleFrom(backgroundColor: _rojo),
+                  icon: guardando
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.local_shipping_outlined, size: 18),
+                  label: const Text('Confirmar despacho'),
+                  onPressed: guardando
+                      ? null
+                      : () async {
+                          if (!form.currentState!.validate()) {
+                            return;
+                          }
+                          final valores = {
+                            for (final it in item.items)
+                              it.id: int.parse(cantidades[it.id]!.text),
+                          };
+                          if (valores.values.every(
+                            (cantidad) => cantidad == 0,
+                          )) {
+                            actualizar(
+                              () => error =
+                                  'No hay unidades a despachar. Si no puede atender el pedido, utilice Rechazar solicitud.',
+                            );
+                            return;
+                          }
                           actualizar(() {
-                            guardando = false;
-                            error =
-                                vm.errorMessage ??
-                                'Actualice el stock e intente nuevamente.';
-                            hayFaltantes = hayFaltantes || error!.toLowerCase().contains('stock');
+                            guardando = true;
+                            error = null;
                           });
-                        }
-                      },
-              )),
+                          final exito = await vm.despacharPedidoAbastecimiento(
+                            pedidoId: item.id,
+                            cantidadesDespachadas: valores,
+                            modalidadEntrega: modalidad,
+                            notasDespacho: notas.text.trim(),
+                          );
+                          if (!ctx.mounted) return;
+                          if (exito) {
+                            Navigator.of(ctx).pop(true);
+                          } else {
+                            actualizar(() {
+                              guardando = false;
+                              error =
+                                  vm.errorMessage ??
+                                  'Actualice el stock e intente nuevamente.';
+                              hayFaltantes =
+                                  hayFaltantes ||
+                                  error!.toLowerCase().contains('stock');
+                            });
+                          }
+                        },
+                ),
+              ),
             ],
           ),
         ),

@@ -248,6 +248,8 @@ class AlmacenViewModel extends ChangeNotifier {
     required String justificacion,
     required String notas,
     required Map<String, int> items,
+    bool iniciadoPorAlmacen = false,
+    String modalidadEntrega = 'ENTREGA',
   }) async {
     if (_isSaving) return false;
     final sesionRevision = _sesionRevision;
@@ -257,6 +259,8 @@ class AlmacenViewModel extends ChangeNotifier {
       'turno': turno,
       'justificacion': justificacion,
       'notas': notas.trim(),
+      'iniciadoPorAlmacen': iniciadoPorAlmacen,
+      'modalidad': iniciadoPorAlmacen ? modalidadEntrega : null,
       'items': {for (final id in ordenados) id: items[id]},
     });
     if (_solicitudPendienteDatos != datos) {
@@ -276,6 +280,8 @@ class AlmacenViewModel extends ChangeNotifier {
         notas: notas,
         items: items,
         solicitudId: intentoId,
+        iniciadoPorAlmacen: iniciadoPorAlmacen,
+        modalidadEntrega: modalidadEntrega,
       );
       if (sesionRevision != _sesionRevision) return false;
 

@@ -32,6 +32,8 @@ class AlmacenRemoteDataSource {
     required String notas,
     required Map<String, int> items,
     String? solicitudId,
+    bool iniciadoPorAlmacen = false,
+    String modalidadEntrega = 'ENTREGA',
   }) async {
     if (_supabase.auth.currentUser == null) {
       throw const AlmacenException(
@@ -40,7 +42,9 @@ class AlmacenRemoteDataSource {
     }
     try {
       final response = await _supabase.rpc(
-        'crear_pedido_abastecimiento',
+        iniciadoPorAlmacen
+            ? 'iniciar_traslado_almacen'
+            : 'crear_pedido_abastecimiento',
         params: {
           'p_solicitud_id': solicitudId ?? generarSolicitudId(),
           'p_area_destino': areaDestino,
@@ -48,6 +52,7 @@ class AlmacenRemoteDataSource {
           'p_justificacion': justificacion,
           'p_notas': notas,
           'p_items': items,
+          if (iniciadoPorAlmacen) 'p_modalidad': modalidadEntrega,
         },
       );
       return PedidoAbastecimientoModel.fromMap(
@@ -87,10 +92,7 @@ class AlmacenRemoteDataSource {
           'Tu rol no tiene permiso para consultar este inventario.',
         );
       }
-      debugPrint(
-        '⚠️ Error al consultar inventario en Supabase: $e. Retornando datos base de contingencia.',
-      );
-      return _getMockInventario();
+      throw AlmacenException('No se pudo consultar el inventario real: $e');
     }
   }
 
@@ -113,10 +115,7 @@ class AlmacenRemoteDataSource {
           'Tu rol no tiene permiso para consultar el catálogo.',
         );
       }
-      debugPrint(
-        '⚠️ Error al consultar catálogo de medicamentos: $e. Usando catálogo de contingencia.',
-      );
-      return _getMockMedicamentos();
+      throw AlmacenException('No se pudo consultar el catálogo real: $e');
     }
   }
 
@@ -395,121 +394,5 @@ class AlmacenRemoteDataSource {
     throw const AlmacenException(
       'Utiliza Atender y Despachar para seleccionar cantidades y modalidad.',
     );
-  }
-
-  // --- Datos de contingencia / offline ---
-
-  List<MedicamentoModel> _getMockMedicamentos() {
-    return [
-      const MedicamentoModel(
-        id: 'mock-med-1',
-        gtin: '7750215001234',
-        nombreComercial: 'Amoxicilina 500mg',
-        principioActivo: 'Amoxicilina',
-        presentacion: 'Cápsula',
-        codArt: 'M-001',
-        registroSanitario: 'RS-EE-04812',
-        unidadPresentacion: 'cápsulas',
-        cantidadPorPresentacion: 100,
-        requiereCadenaFrio: false,
-      ),
-      const MedicamentoModel(
-        id: 'mock-med-2',
-        gtin: '7750215005678',
-        nombreComercial: 'Paracetamol 1g Inyectable',
-        principioActivo: 'Paracetamol',
-        presentacion: 'Ampolla',
-        codArt: 'M-002',
-        registroSanitario: 'RS-EN-01294',
-        unidadPresentacion: 'ampollas',
-        cantidadPorPresentacion: 1,
-        requiereCadenaFrio: false,
-      ),
-      const MedicamentoModel(
-        id: 'mock-med-3',
-        gtin: '7750215003456',
-        nombreComercial: 'Insulina NPH Humana 100 UI/ml',
-        principioActivo: 'Insulina Humana',
-        presentacion: 'Frasco',
-        codArt: 'M-003',
-        registroSanitario: 'RS-BE-01582',
-        unidadPresentacion: 'frascos',
-        cantidadPorPresentacion: 1,
-        requiereCadenaFrio: true,
-        temperaturaMin: 2.0,
-        temperaturaMax: 8.0,
-      ),
-      const MedicamentoModel(
-        id: 'mock-med-4',
-        gtin: '7750215009012',
-        nombreComercial: 'Fentanilo 0.5mg/10ml',
-        principioActivo: 'Citrato de Fentanilo',
-        presentacion: 'Ampolla',
-        codArt: 'M-004',
-        registroSanitario: 'RS-EE-09312',
-        unidadPresentacion: 'ampollas',
-        cantidadPorPresentacion: 5,
-        requiereCadenaFrio: false,
-      ),
-    ];
-  }
-
-  List<StockAlmacenModel> _getMockInventario() {
-    final meds = _getMockMedicamentos();
-    final hoy = DateTime.now();
-
-    return [
-      StockAlmacenModel(
-        id: 'mock-stock-1',
-        loteId: 'mock-lote-1',
-        areaCodigo: 'ALMACEN',
-        cantidad: 120,
-        updatedAt: hoy,
-        medicamento: meds[0],
-        lote: LoteModel(
-          id: 'mock-lote-1',
-          medicamentoId: meds[0].id,
-          numeroLote: 'L2026-A15',
-          fechaVencimiento: hoy.add(const Duration(days: 180)),
-          proveedor: 'Distribuidora Médica Sur',
-          activo: true,
-        ),
-      ),
-      StockAlmacenModel(
-        id: 'mock-stock-2',
-        loteId: 'mock-lote-2',
-        areaCodigo: 'ALMACEN',
-        cantidad: 15,
-        updatedAt: hoy,
-        medicamento: meds[1],
-        lote: LoteModel(
-          id: 'mock-lote-2',
-          medicamentoId: meds[1].id,
-          numeroLote: 'L2025-P02',
-          fechaVencimiento: hoy.add(
-            const Duration(days: 20),
-          ), // Crítico < 30 días
-          proveedor: 'Laboratorios Roche / Perú',
-          activo: true,
-        ),
-      ),
-      StockAlmacenModel(
-        id: 'mock-stock-3',
-        loteId: 'mock-lote-3',
-        areaCodigo: 'ALMACEN',
-        cantidad: 30,
-        updatedAt: hoy,
-        medicamento: meds[2],
-        lote: LoteModel(
-          id: 'mock-lote-3',
-          medicamentoId: meds[2].id,
-          numeroLote: 'L2027-INS8',
-          fechaVencimiento: hoy.add(const Duration(days: 300)),
-          proveedor: 'Novo Nordisk',
-          temperaturaRecepcion: 4.1,
-          activo: true,
-        ),
-      ),
-    ];
   }
 }

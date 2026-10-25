@@ -7,6 +7,7 @@ import '../../../almacen/presentation/states/almacen_state.dart';
 import '../../../almacen/presentation/viewmodels/almacen_viewmodel.dart';
 import '../../../almacen/presentation/views/crear_solicitud_abastecimiento_view.dart';
 import '../../../almacen/presentation/views/solicitudes_abastecimiento_view.dart';
+import '../../../almacen/presentation/views/stock_ubicaciones_view.dart';
 
 class FarmaciaDashboardView extends StatefulWidget {
   const FarmaciaDashboardView({super.key});
@@ -35,7 +36,8 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
   void _abrirMisSolicitudes() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => const SolicitudesAbastecimientoView(esModoFarmacia: true),
+        builder: (_) =>
+            const SolicitudesAbastecimientoView(esModoFarmacia: true),
       ),
     );
   }
@@ -71,7 +73,10 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
               isLabelVisible: listasParaRecepcion > 0,
               label: Text(
                 '$listasParaRecepcion',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                ),
               ),
               backgroundColor: AppColors.primary,
               child: Container(
@@ -137,15 +142,20 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.18),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Row(
                             children: [
-                              Icon(Icons.local_pharmacy_rounded,
-                                  color: Colors.white, size: 16),
+                              Icon(
+                                Icons.local_pharmacy_rounded,
+                                color: Colors.white,
+                                size: 16,
+                              ),
                               SizedBox(width: 6),
                               Text(
                                 'VENTANILLA & DISPENSACIÓN',
@@ -161,7 +171,9 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.amberAccent.withOpacity(0.9),
                             borderRadius: BorderRadius.circular(8),
@@ -208,7 +220,9 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                     borderRadius: BorderRadius.circular(14),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.blue.shade50,
                         borderRadius: BorderRadius.circular(14),
@@ -345,17 +359,23 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                 subtitle:
                     'Preparar coches de paro y botiquines para enfermería.',
                 color: AppColors.warning,
-                onTap: () => _showActionSnackbar(context, 'Atención a Botiquines'),
+                onTap: () =>
+                    _showActionSnackbar(context, 'Atención a Botiquines'),
               ),
               const SizedBox(height: 10),
 
               _buildModuleTile(
                 icon: Icons.search_rounded,
-                title: 'Consulta de Stock y Lotes en Farmacia',
+                title: 'Stock de Farmacia y Almacén',
                 subtitle:
-                    'Buscar principios activos, presentaciones, saldos y vencimientos.',
+                    'Consulta disponibilidad por ubicación y lo que aún está en tránsito.',
                 color: AppColors.primary,
-                onTap: () => _showActionSnackbar(context, 'Kardex de Farmacia'),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const StockUbicacionesView(puedeSolicitar: true),
+                  ),
+                ),
               ),
 
               const SizedBox(height: 40),
