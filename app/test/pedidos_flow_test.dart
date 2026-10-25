@@ -218,18 +218,23 @@ void main() {
     },
   );
 
-  testWidgets(
-    'Solo Farmacia completa un pedido listo y puede recibir conforme',
-    (tester) async {
-      final vm = await _abrir(tester, 'LISTO');
-      await tester.tap(find.text('Confirmar recepción física'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FilledButton, 'Aceptar conforme'));
-      await tester.pumpAndSettle();
-      expect(vm.accion, 'CONFORME');
-      expect(tester.takeException(), isNull);
-    },
-  );
+  testWidgets('Solo Farmacia completa un pedido listo y puede recibir conforme', (
+    tester,
+  ) async {
+    final vm = await _abrir(tester, 'LISTO');
+    await tester.tap(find.text('Confirmar recepción física'));
+    await tester.pumpAndSettle();
+    // FilledButton.icon utiliza una subclase: byType(FilledButton) no la encuentra.
+    // Se distingue el botón de confirmación del ChoiceChip con la misma etiqueta.
+    final aceptar = find.ancestor(
+      of: find.text('Aceptar conforme'),
+      matching: find.byWidgetPredicate((widget) => widget is FilledButton),
+    );
+    expect(aceptar, findsOneWidget);
+    await _tocarVisible(tester, aceptar);
+    expect(vm.accion, 'CONFORME');
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'Devuelve 40 de 50 y exige un motivo sin permitir aceptar más de lo despachado',
