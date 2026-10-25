@@ -2,6 +2,12 @@
 
 Fecha: 25 de octubre de 2026. Rama: Sprint-05.
 
+**Actualización posterior del mismo día:** los pendientes técnicos de creación
+atómica, stock y reintentos se resolvieron y desplegaron. Se aprobaron 30 pruebas
+SQL reales y 30 pruebas Flutter fuera del repositorio. El estado final y sus
+límites están en `docs/supabase/GUIA_HU029_HU030_ABASTECIMIENTO_ATOMICO_2026_10_25.md`.
+El resto de este documento conserva el diagnóstico de la revisión previa.
+
 ## Resultado y alcance
 
 Por solicitud del usuario se ejecutaron pruebas automatizadas por terminal.
