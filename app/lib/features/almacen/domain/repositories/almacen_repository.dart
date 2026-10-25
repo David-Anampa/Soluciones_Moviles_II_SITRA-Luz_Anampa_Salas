@@ -54,6 +54,7 @@ abstract class AlmacenRepository {
     required String justificacion,
     required String notas,
     required Map<String, int> items,
+    String? solicitudId,
   });
 
   /// Registra un ingreso de lote y agrega el stock correspondiente en Almacén

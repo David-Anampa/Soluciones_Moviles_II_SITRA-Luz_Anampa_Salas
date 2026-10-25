@@ -11,7 +11,7 @@ class AlmacenRepositoryImpl implements AlmacenRepository {
   final AlmacenRemoteDataSource _dataSource;
 
   AlmacenRepositoryImpl({AlmacenRemoteDataSource? dataSource})
-      : _dataSource = dataSource ?? AlmacenRemoteDataSource();
+    : _dataSource = dataSource ?? AlmacenRemoteDataSource();
 
   @override
   Future<List<StockAlmacenEntity>> getInventarioAlmacen() async {
@@ -151,6 +151,7 @@ class AlmacenRepositoryImpl implements AlmacenRepository {
     required String justificacion,
     required String notas,
     required Map<String, int> items,
+    String? solicitudId,
   }) async {
     return await _dataSource.crearPedidoAbastecimiento(
       areaDestino: areaDestino,
@@ -158,11 +159,13 @@ class AlmacenRepositoryImpl implements AlmacenRepository {
       justificacion: justificacion,
       notas: notas,
       items: items,
+      solicitudId: solicitudId,
     );
   }
 
   @override
-  Future<List<PedidoAbastecimientoEntity>> getSolicitudesAbastecimiento() async {
+  Future<List<PedidoAbastecimientoEntity>>
+  getSolicitudesAbastecimiento() async {
     return await _dataSource.getSolicitudesAbastecimiento();
   }
 

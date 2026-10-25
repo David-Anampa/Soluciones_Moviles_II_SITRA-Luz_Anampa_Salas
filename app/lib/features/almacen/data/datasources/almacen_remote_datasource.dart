@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../domain/solicitud_id.dart';
 import '../models/lote_model.dart';
 import '../models/medicamento_model.dart';
 import '../models/pedido_abastecimiento_model.dart';
@@ -22,67 +23,45 @@ class AlmacenRemoteDataSource {
 
   SupabaseClient get _supabase => _customClient ?? Supabase.instance.client;
 
-  /// HU-029: Registra una nueva solicitud de abastecimiento.
+  /// HU-029: una única transacción guarda solicitud, ítems y auditoría.
+  /// La clave de envío permite recuperar el mismo pedido después de un corte de red.
   Future<PedidoAbastecimientoModel> crearPedidoAbastecimiento({
     required String areaDestino,
     required String turno,
     required String justificacion,
     required String notas,
-    required Map<String, int> items, // medicamentoId : cantidadSolicitada
+    required Map<String, int> items,
+    String? solicitudId,
   }) async {
+    if (_supabase.auth.currentUser == null) {
+      throw const AlmacenException(
+        'Inicia sesión antes de crear una solicitud.',
+      );
+    }
     try {
-      final currentUserId = _supabase.auth.currentUser?.id;
-      if (currentUserId == null) {
-        throw const AlmacenException('Inicia sesión antes de crear una solicitud.');
+      final response = await _supabase.rpc(
+        'crear_pedido_abastecimiento',
+        params: {
+          'p_solicitud_id': solicitudId ?? generarSolicitudId(),
+          'p_area_destino': areaDestino,
+          'p_turno': turno,
+          'p_justificacion': justificacion,
+          'p_notas': notas,
+          'p_items': items,
+        },
+      );
+      return PedidoAbastecimientoModel.fromMap(
+        Map<String, dynamic>.from(response as Map),
+      );
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') {
+        throw const AlmacenException(
+          'Falta aplicar la migración de abastecimiento atómico HU-029/HU-030.',
+        );
       }
-
-      // 1. Crear la cabecera del pedido
-      final response = await _supabase
-          .from('pedidos_abastecimiento')
-          .insert({
-            'codigo': 'REQ-${DateTime.now().millisecondsSinceEpoch}',
-            'area_origen': 'FARMACIA', // Desde donde se pide
-            'area_destino': areaDestino, // A donde se pide (Almacen)
-            'solicitante_id': currentUserId,
-            'estado': 'PENDIENTE',
-            'turno': turno,
-            'justificacion': justificacion,
-            'notas': notas.isEmpty ? null : notas,
-          })
-          .select()
-          .single();
-
-      final pedidoId = response['id'];
-
-      // 2. Insertar los ítems
-      final itemsToInsert = items.entries.map((entry) {
-        return {
-          'pedido_id': pedidoId,
-          'medicamento_id': entry.key,
-          'cantidad_solicitada': entry.value,
-        };
-      }).toList();
-
-      await _supabase
-          .from('pedidos_abastecimiento_items')
-          .insert(itemsToInsert);
-
-      // 3. Auditoría del pedido creado
-      await _supabase.from('auditoria_trazabilidad').insert({
-        'tipo_evento': 'CREACION_PEDIDO',
-        'entidad_referencia_id': pedidoId,
-        'tabla_referencia': 'pedidos_abastecimiento',
-        'usuario_id': currentUserId,
-        'area_origen': 'FARMACIA',
-        'area_destino': areaDestino,
-        'descripcion':
-            'Se ha creado un pedido de abastecimiento ($turno) con ${items.length} ítems. Justificación: $justificacion',
-      });
-
-      return PedidoAbastecimientoModel.fromMap(response);
+      throw AlmacenException(e.message);
     } catch (e) {
-      debugPrint('⚠️ Error al crear pedido de abastecimiento: $e');
-      throw AlmacenException('Error al crear la solicitud: $e');
+      throw AlmacenException('No se pudo registrar la solicitud: $e');
     }
   }
 
@@ -104,7 +83,9 @@ class AlmacenRemoteDataSource {
           .toList();
     } catch (e) {
       if (e is PostgrestException && e.code == '42501') {
-        throw const AlmacenException('Tu rol no tiene permiso para consultar este inventario.');
+        throw const AlmacenException(
+          'Tu rol no tiene permiso para consultar este inventario.',
+        );
       }
       debugPrint(
         '⚠️ Error al consultar inventario en Supabase: $e. Retornando datos base de contingencia.',
@@ -128,7 +109,9 @@ class AlmacenRemoteDataSource {
           .toList();
     } catch (e) {
       if (e is PostgrestException && e.code == '42501') {
-        throw const AlmacenException('Tu rol no tiene permiso para consultar el catálogo.');
+        throw const AlmacenException(
+          'Tu rol no tiene permiso para consultar el catálogo.',
+        );
       }
       debugPrint(
         '⚠️ Error al consultar catálogo de medicamentos: $e. Usando catálogo de contingencia.',
@@ -288,96 +271,17 @@ class AlmacenRemoteDataSource {
     }
   }
 
-  /// Transfiere stock de un lote específico desde Almacén hacia Farmacia Central.
+  /// Ruta antigua retirada: toda salida a Farmacia debe pasar por una solicitud
+  /// y su despacho transaccional, para mantener recepción y auditoría por lote.
   Future<void> transferirStockAFarmacia({
     required String loteId,
     required String medicamentoId,
     required int cantidad,
     String? motivo,
   }) async {
-    try {
-      // 1. Obtener el stock actual en Almacén
-      final stockAlmacenResp = await _supabase
-          .from('inventario_stock')
-          .select('id, cantidad')
-          .eq('lote_id', loteId)
-          .eq('area_codigo', 'ALMACEN')
-          .maybeSingle();
-
-      if (stockAlmacenResp == null) {
-        throw const AlmacenException(
-          'No se encontró stock registrado para este lote en Almacén.',
-        );
-      }
-
-      final int stockActual = stockAlmacenResp['cantidad'] as int? ?? 0;
-      if (stockActual < cantidad) {
-        throw AlmacenException(
-          'Stock insuficiente en Almacén. Disponible: $stockActual, solicitado: $cantidad.',
-        );
-      }
-
-      // 2. Decrementar stock en Almacén
-      final nuevoStockAlmacen = stockActual - cantidad;
-      await _supabase
-          .from('inventario_stock')
-          .update({
-            'cantidad': nuevoStockAlmacen,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', stockAlmacenResp['id']);
-
-      // 3. Incrementar o insertar stock en Farmacia
-      final stockFarmaciaResp = await _supabase
-          .from('inventario_stock')
-          .select('id, cantidad')
-          .eq('lote_id', loteId)
-          .eq('area_codigo', 'FARMACIA')
-          .maybeSingle();
-
-      if (stockFarmaciaResp != null) {
-        final int stockFarmaciaActual =
-            stockFarmaciaResp['cantidad'] as int? ?? 0;
-        await _supabase
-            .from('inventario_stock')
-            .update({
-              'cantidad': stockFarmaciaActual + cantidad,
-              'updated_at': DateTime.now().toIso8601String(),
-            })
-            .eq('id', stockFarmaciaResp['id']);
-      } else {
-        await _supabase.from('inventario_stock').insert({
-          'lote_id': loteId,
-          'area_codigo': 'FARMACIA',
-          'cantidad': cantidad,
-        });
-      }
-
-      // 4. Registrar en auditoría inmutable
-      final currentUserId = _supabase.auth.currentUser?.id;
-      await _supabase.from('auditoria_trazabilidad').insert({
-        'tipo_evento': 'TRANSFERENCIA_FARMACIA',
-        'medicamento_id': medicamentoId,
-        'lote_id': loteId,
-        'usuario_id': currentUserId,
-        'area_origen': 'ALMACEN',
-        'area_destino': 'FARMACIA',
-        'cantidad': cantidad,
-        'descripcion':
-            'Transferencia de $cantidad unidades hacia Farmacia Central. ${motivo != null && motivo.isNotEmpty ? "Motivo: $motivo" : ""}',
-      });
-
-      debugPrint(
-        '✅ Transferencia a Farmacia completada exitosamente: $cantidad unidades.',
-      );
-    } on PostgrestException catch (e) {
-      throw AlmacenException(
-        'Error al transferir stock en Supabase: ${e.message}',
-      );
-    } catch (e) {
-      if (e is AlmacenException) rethrow;
-      throw AlmacenException('Error al procesar la transferencia de stock: $e');
-    }
+    throw const AlmacenException(
+      'Abre Solicitudes de abastecimiento para despachar y confirmar la recepción.',
+    );
   }
 
   /// HU-030: Obtiene la lista de solicitudes de abastecimiento enviadas por Farmacia.

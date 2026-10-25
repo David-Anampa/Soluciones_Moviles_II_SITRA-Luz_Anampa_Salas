@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'dart:convert';
+import '../../domain/solicitud_id.dart';
 import '../../domain/repositories/almacen_repository.dart';
 import '../states/almacen_state.dart';
 
@@ -15,18 +17,23 @@ class AlmacenViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
   int _loadRevision = 0;
+  int _sesionRevision = 0;
+  String? _solicitudPendienteId, _solicitudPendienteDatos;
 
   /// HU-002: Invalida datos y respuestas pendientes del usuario anterior.
   void limpiarSesion() {
+    _sesionRevision++;
     _loadRevision++;
     _state = const AlmacenInitial();
     _isSaving = false;
     _errorMessage = null;
+    _solicitudPendienteId = null;
+    _solicitudPendienteDatos = null;
     notifyListeners();
   }
 
   AlmacenViewModel({required AlmacenRepository repository})
-      : _repository = repository;
+    : _repository = repository;
 
   /// Carga el inventario y el catálogo de medicamentos desde Supabase
   Future<void> cargarInventario() async {
@@ -242,6 +249,21 @@ class AlmacenViewModel extends ChangeNotifier {
     required String notas,
     required Map<String, int> items,
   }) async {
+    if (_isSaving) return false;
+    final sesionRevision = _sesionRevision;
+    final ordenados = items.keys.toList()..sort();
+    final datos = jsonEncode({
+      'destino': areaDestino,
+      'turno': turno,
+      'justificacion': justificacion,
+      'notas': notas.trim(),
+      'items': {for (final id in ordenados) id: items[id]},
+    });
+    if (_solicitudPendienteDatos != datos) {
+      _solicitudPendienteDatos = datos;
+      _solicitudPendienteId = generarSolicitudId();
+    }
+    final intentoId = _solicitudPendienteId!;
     _isSaving = true;
     _errorMessage = null;
     notifyListeners();
@@ -253,17 +275,27 @@ class AlmacenViewModel extends ChangeNotifier {
         justificacion: justificacion,
         notas: notas,
         items: items,
+        solicitudId: intentoId,
       );
+      if (sesionRevision != _sesionRevision) return false;
+
+      // Solo limpiar el intento completado, sin afectar una sesión nueva.
+      if (_solicitudPendienteId == intentoId) {
+        _solicitudPendienteId = null;
+        _solicitudPendienteDatos = null;
+      }
 
       // Recargar para tener el nuevo pedido
       await cargarInventario();
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      if (sesionRevision == _sesionRevision) _errorMessage = e.toString();
       return false;
     } finally {
-      _isSaving = false;
-      notifyListeners();
+      if (sesionRevision == _sesionRevision) {
+        _isSaving = false;
+        notifyListeners();
+      }
     }
   }
 

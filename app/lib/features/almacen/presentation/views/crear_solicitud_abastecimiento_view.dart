@@ -118,6 +118,7 @@ class _CrearSolicitudAbastecimientoViewState
   }
 
   Future<void> _enviarSolicitud() async {
+    if (context.read<AlmacenViewModel>().isSaving) return;
     if (_itemsSeleccionados.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -133,7 +134,9 @@ class _CrearSolicitudAbastecimientoViewState
     if (_itemsSeleccionados.values.any((cantidad) => cantidad <= 0)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Escribe una cantidad mayor que cero para cada medicamento.'),
+          content: Text(
+            'Escribe una cantidad mayor que cero para cada medicamento.',
+          ),
           backgroundColor: Color(0xFFC62828),
         ),
       );
@@ -190,49 +193,57 @@ class _CrearSolicitudAbastecimientoViewState
     final baseTheme = Theme.of(context);
     final pedidoTheme = baseTheme.copyWith(
       colorScheme: baseTheme.colorScheme.copyWith(
-        primary: brandRed, secondary: brandRed, surface: brandWhite,
+        primary: brandRed,
+        secondary: brandRed,
+        surface: brandWhite,
         surfaceTint: Colors.transparent,
       ),
       inputDecorationTheme: baseTheme.inputDecorationTheme.copyWith(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: brandRed, width: 1.5),
         ),
       ),
     );
-    return Theme(data: pedidoTheme, child: Scaffold(
-      backgroundColor: brandGrey,
-      appBar: AppBar(
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Nueva Solicitud',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+    return Theme(
+      data: pedidoTheme,
+      child: Scaffold(
+        backgroundColor: brandGrey,
+        appBar: AppBar(
+          title: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Nueva Solicitud',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            Text(
-              'Abastecimiento Farmacia → Almacén',
-              style: TextStyle(fontSize: 11, color: Colors.white70),
-            ),
-          ],
+              Text(
+                'Abastecimiento Farmacia → Almacén',
+                style: TextStyle(fontSize: 11, color: Colors.white70),
+              ),
+            ],
+          ),
+          backgroundColor: brandRed,
+          foregroundColor: brandWhite,
+          iconTheme: const IconThemeData(color: Colors.white),
+          elevation: 0,
         ),
-        backgroundColor: brandRed,
-        foregroundColor: brandWhite,
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
+        body: state is AlmacenLoaded
+            ? _buildForm(context, state.catalogo, brandRed, brandWhite)
+            : const Center(child: CircularProgressIndicator(color: brandRed)),
+        bottomNavigationBar: state is AlmacenLoaded
+            ? _buildBottomBar(brandRed, brandWhite, vm.isSaving)
+            : null,
       ),
-      body: state is AlmacenLoaded
-          ? _buildForm(context, state.catalogo, brandRed, brandWhite)
-          : const Center(child: CircularProgressIndicator(color: brandRed)),
-      bottomNavigationBar: state is AlmacenLoaded
-          ? _buildBottomBar(brandRed, brandWhite, vm.isSaving)
-          : null,
-    ));
+    );
   }
 
   Widget _buildForm(

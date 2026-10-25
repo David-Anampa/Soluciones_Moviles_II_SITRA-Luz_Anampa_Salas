@@ -8,7 +8,6 @@ import '../../../almacen/presentation/states/almacen_state.dart';
 import '../../../almacen/presentation/viewmodels/almacen_viewmodel.dart';
 import '../../../almacen/domain/entities/medicamento_entity.dart';
 import '../../../almacen/presentation/views/ingreso_lote_view.dart';
-import '../../../almacen/presentation/views/dialogs/transferir_a_farmacia_dialog.dart';
 import '../../../almacen/presentation/views/editar_medicamento_view.dart';
 import '../../../almacen/presentation/views/escaner_gtin_view.dart';
 import '../../../almacen/presentation/views/registro_medicamento_view.dart';
@@ -55,15 +54,15 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
   }
 
   void _abrirEscanerCamara() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const EscanerGtinView()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const EscanerGtinView()));
   }
 
   void _abrirRegistroMedicamento() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const RegistroMedicamentoView()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const RegistroMedicamentoView()));
   }
 
   void _mostrarOpcionesRegistro() {
@@ -97,10 +96,18 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                     color: AppColors.almacenColor.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.qr_code_scanner_rounded, color: AppColors.almacenColor),
+                  child: const Icon(
+                    Icons.qr_code_scanner_rounded,
+                    color: AppColors.almacenColor,
+                  ),
                 ),
-                title: const Text('Escanear con Cámara (ML Kit + IA)', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('Lectura instantánea de GTIN + foto opcional de caja para extracción asistida'),
+                title: const Text(
+                  'Escanear con Cámara (ML Kit + IA)',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: const Text(
+                  'Lectura instantánea de GTIN + foto opcional de caja para extracción asistida',
+                ),
                 trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
                 onTap: () {
                   Navigator.of(ctx).pop();
@@ -116,10 +123,18 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                     color: AppColors.surfaceVariant,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.edit_note_rounded, color: AppColors.textPrimary),
+                  child: const Icon(
+                    Icons.edit_note_rounded,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-                title: const Text('Ingreso Manual', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('Completar formulario técnico de medicamento y lote paso a paso'),
+                title: const Text(
+                  'Ingreso Manual',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: const Text(
+                  'Completar formulario técnico de medicamento y lote paso a paso',
+                ),
                 trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
                 onTap: () {
                   Navigator.of(ctx).pop();
@@ -142,12 +157,12 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
     );
   }
 
-  void _abrirTransferenciaAFarmacia(AlmacenLoaded loaded, {StockAlmacenEntity? itemInicial}) {
-    showDialog(
-      context: context,
-      builder: (_) => TransferirAFarmaciaDialog(
-        inventario: loaded.inventario,
-        itemInicial: itemInicial,
+  /// El traslado se atiende desde su solicitud y conserva el ciclo de recepción.
+  void _abrirAbastecimiento() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const SolicitudesAbastecimientoView(esModoFarmacia: false),
       ),
     );
   }
@@ -162,14 +177,18 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
         ? state.inventario.where((item) {
             final query = _searchController.text.trim().toLowerCase();
             if (query.isNotEmpty) {
-              final coincideNombre =
-                  item.medicamento.nombreComercial.toLowerCase().contains(query);
-              final coincideDci =
-                  item.medicamento.principioActivo.toLowerCase().contains(query);
-              final coincideGtin =
-                  item.medicamento.gtin.toLowerCase().contains(query);
-              final coincideLote =
-                  item.lote.numeroLote.toLowerCase().contains(query);
+              final coincideNombre = item.medicamento.nombreComercial
+                  .toLowerCase()
+                  .contains(query);
+              final coincideDci = item.medicamento.principioActivo
+                  .toLowerCase()
+                  .contains(query);
+              final coincideGtin = item.medicamento.gtin.toLowerCase().contains(
+                query,
+              );
+              final coincideLote = item.lote.numeroLote.toLowerCase().contains(
+                query,
+              );
               if (!coincideNombre &&
                   !coincideDci &&
                   !coincideGtin &&
@@ -201,10 +220,14 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
           IconButton(
             tooltip: 'Solicitudes de Farmacia',
             icon: Badge(
-              isLabelVisible: state is AlmacenLoaded && state.solicitudesPendientes > 0,
+              isLabelVisible:
+                  state is AlmacenLoaded && state.solicitudesPendientes > 0,
               label: Text(
                 '${state is AlmacenLoaded ? state.solicitudesPendientes : 0}',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                ),
               ),
               backgroundColor: AppColors.error,
               child: Container(
@@ -229,7 +252,10 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
         foregroundColor: Colors.white,
         onPressed: _mostrarOpcionesRegistro,
         icon: const Icon(Icons.qr_code_scanner_rounded),
-        label: const Text('Ingresar Medicamento', style: TextStyle(fontWeight: FontWeight.bold)),
+        label: const Text(
+          'Ingresar Medicamento',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: RefreshIndicator(
         color: AppColors.almacenColor,
@@ -266,14 +292,21 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Row(
                             children: [
-                              Icon(Icons.inventory_2_rounded, color: Colors.white, size: 16),
+                              Icon(
+                                Icons.inventory_2_rounded,
+                                color: Colors.white,
+                                size: 16,
+                              ),
                               SizedBox(width: 6),
                               Text(
                                 'ALMACÉN DE LA CLÍNICA',
@@ -311,7 +344,8 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
               ),
 
               // HU-030: Solicitudes pendientes de Farmacia.
-              if (state is AlmacenLoaded && state.solicitudesPendientes > 0) ...[
+              if (state is AlmacenLoaded &&
+                  state.solicitudesPendientes > 0) ...[
                 const SizedBox(height: 14),
                 Material(
                   color: Colors.transparent,
@@ -319,7 +353,10 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                     onTap: _abrirSolicitudesAbastecimiento,
                     borderRadius: BorderRadius.circular(14),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.farmaciaColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(14),
@@ -358,7 +395,10 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                                 const SizedBox(height: 2),
                                 const Text(
                                   'Farmacia Central requiere abastecimiento de stock. Toca para revisar y despachar.',
-                                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                               ],
                             ),
@@ -422,7 +462,9 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                         value: '${state.lotesCriticos}',
                         subtitle: 'Vence < 30 días',
                         icon: Icons.warning_amber_rounded,
-                        color: state.lotesCriticos > 0 ? AppColors.error : AppColors.success,
+                        color: state.lotesCriticos > 0
+                            ? AppColors.error
+                            : AppColors.success,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -441,7 +483,9 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                 const Center(
                   child: Padding(
                     padding: EdgeInsets.all(24),
-                    child: CircularProgressIndicator(color: AppColors.almacenColor),
+                    child: CircularProgressIndicator(
+                      color: AppColors.almacenColor,
+                    ),
                   ),
                 ),
               ] else ...[
@@ -469,20 +513,32 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                         backgroundColor: AppColors.surface,
                         foregroundColor: AppColors.almacenColor,
                         fixedSize: const Size.fromHeight(48),
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 8,
+                        ),
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(color: AppColors.almacenColor, width: 1.5),
+                          side: const BorderSide(
+                            color: AppColors.almacenColor,
+                            width: 1.5,
+                          ),
                         ),
                       ),
                       onPressed: _abrirRegistroMedicamento,
-                      icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+                      icon: const Icon(
+                        Icons.add_circle_outline_rounded,
+                        size: 18,
+                      ),
                       label: const Text(
                         'Nuevo',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ),
@@ -493,20 +549,31 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                         backgroundColor: AppColors.surface,
                         foregroundColor: AppColors.primary,
                         fixedSize: const Size.fromHeight(48),
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 8,
+                        ),
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(color: AppColors.primary, width: 1.5),
+                          side: const BorderSide(
+                            color: AppColors.primary,
+                            width: 1.5,
+                          ),
                         ),
                       ),
-                      onPressed: state is AlmacenLoaded ? () => _abrirIngresoLote(state) : null,
+                      onPressed: state is AlmacenLoaded
+                          ? () => _abrirIngresoLote(state)
+                          : null,
                       icon: const Icon(Icons.playlist_add_rounded, size: 18),
                       label: const Text(
                         'Ingreso',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ),
@@ -517,20 +584,31 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                         backgroundColor: AppColors.surface,
                         foregroundColor: AppColors.farmaciaColor,
                         fixedSize: const Size.fromHeight(48),
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 8,
+                        ),
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(color: AppColors.farmaciaColor, width: 1.5),
+                          side: const BorderSide(
+                            color: AppColors.farmaciaColor,
+                            width: 1.5,
+                          ),
                         ),
                       ),
-                      onPressed: state is AlmacenLoaded ? () => _abrirTransferenciaAFarmacia(state) : null,
+                      onPressed: state is AlmacenLoaded
+                          ? _abrirAbastecimiento
+                          : null,
                       icon: const Icon(Icons.swap_horiz_rounded, size: 18),
                       label: const Text(
-                        'Transferir',
+                        'Despachar',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ),
@@ -580,8 +658,15 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                       onChanged: (_) => setState(() {}),
                       decoration: InputDecoration(
                         hintText: 'Buscar por nombre, DCI, GTIN o lote...',
-                        hintStyle: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                        prefixIcon: const Icon(Icons.search_rounded, color: AppColors.almacenColor, size: 20),
+                        hintStyle: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search_rounded,
+                          color: AppColors.almacenColor,
+                          size: 20,
+                        ),
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
                                 icon: const Icon(Icons.clear_rounded, size: 18),
@@ -592,7 +677,10 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                               )
                             : null,
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -632,9 +720,12 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                           label: 'Bajo Stock',
                           icon: Icons.inventory_2_outlined,
                           iconColor: AppColors.warning,
-                          count: state.inventario.where((i) => i.cantidad <= 20).length,
+                          count: state.inventario
+                              .where((i) => i.cantidad <= 20)
+                              .length,
                           isSelected: _filtroRapido == 'BAJO_STOCK',
-                          onTap: () => setState(() => _filtroRapido = 'BAJO_STOCK'),
+                          onTap: () =>
+                              setState(() => _filtroRapido = 'BAJO_STOCK'),
                         ),
                       ],
                     ),
@@ -653,7 +744,11 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                     ),
                     child: Column(
                       children: [
-                        const Icon(Icons.inbox_rounded, size: 48, color: AppColors.textSecondary),
+                        const Icon(
+                          Icons.inbox_rounded,
+                          size: 48,
+                          color: AppColors.textSecondary,
+                        ),
                         const SizedBox(height: 10),
                         const Text(
                           'No hay medicamentos en Almacén',
@@ -662,11 +757,16 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                         const SizedBox(height: 4),
                         const Text(
                           'Registra tu primer artículo con el botón inferior.',
-                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                         const SizedBox(height: 14),
                         FilledButton.icon(
-                          style: FilledButton.styleFrom(backgroundColor: AppColors.almacenColor),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.almacenColor,
+                          ),
                           onPressed: _abrirRegistroMedicamento,
                           icon: const Icon(Icons.add_rounded),
                           label: const Text('Registrar Primer Medicamento'),
@@ -685,17 +785,27 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                     ),
                     child: Column(
                       children: [
-                        const Icon(Icons.search_off_rounded, size: 44, color: AppColors.textSecondary),
+                        const Icon(
+                          Icons.search_off_rounded,
+                          size: 44,
+                          color: AppColors.textSecondary,
+                        ),
                         const SizedBox(height: 10),
                         const Text(
                           'No se encontraron medicamentos',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         const Text(
                           'No hay coincidencias para los filtros o término de búsqueda ingresado.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                         const SizedBox(height: 14),
                         OutlinedButton.icon(
@@ -715,8 +825,10 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                   ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _searchController.text.trim().isEmpty 
-                        ? (itemsFiltrados.length > 5 ? 5 : itemsFiltrados.length) 
+                    itemCount: _searchController.text.trim().isEmpty
+                        ? (itemsFiltrados.length > 5
+                              ? 5
+                              : itemsFiltrados.length)
                         : itemsFiltrados.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
@@ -788,9 +900,10 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                     Text(
                       (lote.laboratorio != null && lote.laboratorio!.isNotEmpty)
                           ? lote.laboratorio!
-                          : (med.laboratorio != null && med.laboratorio!.isNotEmpty)
-                              ? med.laboratorio!
-                              : 'Laboratorio no especificado',
+                          : (med.laboratorio != null &&
+                                med.laboratorio!.isNotEmpty)
+                          ? med.laboratorio!
+                          : 'Laboratorio no especificado',
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,
@@ -800,7 +913,10 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.almacenColor.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(8),
@@ -878,9 +994,14 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.textPrimary,
-                  side: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                  side: BorderSide(
+                    color: AppColors.textSecondary.withOpacity(0.3),
+                  ),
                   visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                 ),
                 onPressed: () => _abrirEdicionMedicamento(med),
                 icon: const Icon(Icons.edit_outlined, size: 15),
@@ -916,7 +1037,9 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
               : AppColors.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.almacenColor : AppColors.surfaceVariant,
+            color: isSelected
+                ? AppColors.almacenColor
+                : AppColors.surfaceVariant,
             width: isSelected ? 1.5 : 1.0,
           ),
         ),
@@ -927,7 +1050,9 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
               Icon(
                 icon,
                 size: 14,
-                color: isSelected ? AppColors.almacenColor : (iconColor ?? AppColors.textSecondary),
+                color: isSelected
+                    ? AppColors.almacenColor
+                    : (iconColor ?? AppColors.textSecondary),
               ),
               const SizedBox(width: 6),
             ],
@@ -936,7 +1061,9 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? AppColors.almacenColor : AppColors.textPrimary,
+                color: isSelected
+                    ? AppColors.almacenColor
+                    : AppColors.textPrimary,
               ),
             ),
             const SizedBox(width: 6),
