@@ -28,6 +28,7 @@ class UsuarioAdministrativo {
   final List<String> areas;
   final bool activo;
   final DateTime? creado, actualizado;
+  final bool puedeGestionarKits;
   final String colegioCodigo,
       numeroColegiatura,
       especialidadCodigo,
@@ -47,6 +48,7 @@ class UsuarioAdministrativo {
     required this.rol,
     required this.areas,
     required this.activo,
+    this.puedeGestionarKits = false,
     this.creado,
     this.actualizado,
     this.colegioCodigo = '',
@@ -108,6 +110,7 @@ class UsuarioAdministrativo {
             .map((a) => a.toString())
             .toList(),
         activo: m['activo'] as bool? ?? false,
+        puedeGestionarKits: m['puede_gestionar_kits'] == true,
         creado: DateTime.tryParse(m['created_at']?.toString() ?? ''),
         actualizado: DateTime.tryParse(m['updated_at']?.toString() ?? ''),
       );
@@ -189,6 +192,21 @@ class UsuariosRepository {
     }
     var pendiente = false;
     final usuarios = <UsuarioAdministrativo>[];
+    // Consulta explícita del contrato de permisos; si falta la migración se informa.
+    final permisos = <String, bool>{};
+    for (var desde = 0; ; desde += 200) {
+      final filas =
+          (await _client.rpc(
+                    'listar_permisos_kits',
+                    params: {'p_desde': desde, 'p_limite': 200},
+                  )
+                  as List)
+              .cast<Map<String, dynamic>>();
+      for (final fila in filas) {
+        permisos[fila['id'] as String] = fila['puede_gestionar_kits'] == true;
+      }
+      if (filas.length < 200) break;
+    }
     try {
       for (var desde = 0; ; desde += 200) {
         // RPC de solo lectura: el servidor vuelve a exigir Administrador activo
@@ -198,7 +216,14 @@ class UsuariosRepository {
           params: {'p_desde': desde, 'p_limite': 200},
         );
         final rows = (data as List<dynamic>).cast<Map<String, dynamic>>();
-        usuarios.addAll(rows.map(UsuarioAdministrativo.fromMap));
+        usuarios.addAll(
+          rows.map(
+            (fila) => UsuarioAdministrativo.fromMap({
+              ...fila,
+              'puede_gestionar_kits': permisos[fila['id']] == true,
+            }),
+          ),
+        );
         if (rows.length < 200) break;
       }
     } on PostgrestException catch (e) {
@@ -289,7 +314,7 @@ class UsuariosRepository {
   ) async {
     if (accion == 'EDITAR') await _verificarContratoProfesional();
     await _client.rpc(
-      'administrar_usuario_hu020',
+      'administrar_usuario_con_kits',
       params: {'p_accion': accion, 'p_id': id, 'p_datos': datos},
     );
   }
@@ -297,6 +322,11 @@ class UsuariosRepository {
   /// Evita que las RPC antiguas ignoren silenciosamente la colegiatura enviada.
   /// El Administrador autenticado debe aparecer al menos en una fila del listado.
   Future<void> _verificarContratoProfesional() async {
+    // Evita que una función antigua ignore silenciosamente el permiso enviado.
+    await _client.rpc(
+      'listar_permisos_kits',
+      params: {'p_desde': 0, 'p_limite': 1},
+    );
     final filas = await _client.rpc(
       'listar_usuarios_hu020',
       params: {'p_desde': 0, 'p_limite': 1},
@@ -339,6 +369,10 @@ class UsuariosRepository {
     }
     if (error is PostgrestException &&
         (error.code == 'PGRST202' || error.code == '42883')) {
+      if (error.message.contains('listar_permisos_kits') ||
+          error.message.contains('administrar_usuario_con_kits')) {
+        return 'Aplica migracion_kits_por_area_2026_10_26.sql en Supabase para gestionar los permisos de kits.';
+      }
       return 'Falta aplicar la migración HU-021/HU-022 en Supabase.';
     }
     return CatalogosRepository.mensajeError(error);

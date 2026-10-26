@@ -3,6 +3,7 @@ import '../../data/usuarios_repository.dart';
 import '../../domain/usuario_borrador.dart';
 import '../../domain/usuario_validadores.dart';
 import '../../domain/catalogos_profesionales.dart';
+import '../../domain/permiso_kits.dart';
 import '../widgets/catalogo_estilo.dart';
 
 /// HU-021 (crear) y HU-022 (editar): formulario de usuario.
@@ -45,6 +46,8 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
   late String? _rol;
   late final Set<String> _areasSeleccionadas;
   bool _verClave = false, _guardando = false;
+  bool _puedeGestionarKits = false;
+  bool get _cargoConKits => cargoPermiteKits(_cargo.text);
   String? _error;
 
   /// Indica si el formulario edita un perfil existente.
@@ -66,6 +69,8 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
     _correo = TextEditingController(text: u?.correo ?? '');
     _clave = TextEditingController();
     _cargo = TextEditingController(text: u?.cargo ?? '');
+    _puedeGestionarKits = u?.puedeGestionarKits ?? false;
+    _cargo.addListener(_actualizarPermisoCargo);
     _colegiatura = TextEditingController(text: u?.numeroColegiatura ?? '');
     _colegioCodigo = u?.colegioCodigo ?? '';
     _especialidadCodigo = u?.especialidadCodigo ?? '';
@@ -100,9 +105,17 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
     }
   }
 
+  /// Retira el permiso al cambiar a un cargo no elegible y actualiza el checkbox.
+  void _actualizarPermisoCargo() {
+    setState(() {
+      if (!_cargoConKits) _puedeGestionarKits = false;
+    });
+  }
+
   /// Libera todos los controladores de texto.
   @override
   void dispose() {
+    _cargo.removeListener(_actualizarPermisoCargo);
     for (final c in [
       _nombres,
       _apellidos,
@@ -151,6 +164,8 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
     cargo: _cargo.text,
     rol: _rol!,
     areas: _areasSeleccionadas.toList()..sort(),
+    puedeGestionarKits:
+        _cargoConKits && _rol == 'ENFERMERIA' && _puedeGestionarKits,
     colegioCodigo: _colegioCodigo,
     numeroColegiatura: _colegiatura.text,
     especialidadCodigo: _especialidadCodigo,
@@ -163,6 +178,16 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
         _cargandoCatalogos ||
         _catalogos == null ||
         !_formKey.currentState!.validate()) {
+      return;
+    }
+    if (_cargoConKits &&
+        _rol == 'ENFERMERIA' &&
+        _puedeGestionarKits &&
+        _areasSeleccionadas.isEmpty) {
+      setState(
+        () => _error =
+            'Asigna al menos un área para habilitar la gestión de kits.',
+      );
       return;
     }
     setState(() {
@@ -275,6 +300,28 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
                   _seccion('Rol y áreas', [
                     _selectorRol(),
                     _selectorAreas(),
+                    if (_cargoConKits)
+                      CheckboxListTile(
+                        contentPadding: EdgeInsets.zero,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        activeColor: CatalogoEstilo.rojo,
+                        title: const Text(
+                          'Puede gestionar kits',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        subtitle: Text(
+                          _rol == 'ENFERMERIA'
+                              ? 'Solo en sus áreas asignadas. Requiere al menos un área.'
+                              : 'Disponible con el rol Enfermería / Técnico.',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        value: _rol == 'ENFERMERIA' && _puedeGestionarKits,
+                        onChanged: _guardando || _rol != 'ENFERMERIA'
+                            ? null
+                            : (valor) => setState(
+                                () => _puedeGestionarKits = valor == true,
+                              ),
+                      ),
                   ], icono: Icons.admin_panel_settings_outlined),
                   if (_error != null) ...[
                     CatalogoEstilo.nota(
@@ -337,20 +384,16 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
         'Completa estos datos cuando correspondan a su ocupación.',
         style: TextStyle(fontSize: 13, height: 1.5, color: Color(0xFF64646D)),
       ),
-      _selectorProfesional(
-        'Colegio profesional',
-        _colegioCodigo,
-        colegios,
-        (valor) {
-          if (valor == _colegioCodigo) return;
-          setState(() {
-            _colegioCodigo = valor;
-            _especialidadCodigo = '';
-            _colegiatura.clear();
-          });
-        },
-        icono: Icons.account_balance_outlined,
-      ),
+      _selectorProfesional('Colegio profesional', _colegioCodigo, colegios, (
+        valor,
+      ) {
+        if (valor == _colegioCodigo) return;
+        setState(() {
+          _colegioCodigo = valor;
+          _especialidadCodigo = '';
+          _colegiatura.clear();
+        });
+      }, icono: Icons.account_balance_outlined),
       if (_colegioCodigo.isNotEmpty) ...[
         _campo(
           _colegiatura,
@@ -554,7 +597,10 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
     ],
     onChanged: (_guardando || _esCuentaPropia)
         ? null
-        : (v) => setState(() => _rol = v),
+        : (v) => setState(() {
+            _rol = v;
+            if (v != 'ENFERMERIA') _puedeGestionarKits = false;
+          }),
   );
 
   /// Mensaje de ayuda del selector de rol, según el contexto.

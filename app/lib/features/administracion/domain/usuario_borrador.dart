@@ -7,6 +7,7 @@ class UsuarioBorrador {
   final String nombres, apellidos, nombreUsuario, cargo, rol;
   final List<String> areas;
   final String colegioCodigo, numeroColegiatura, especialidadCodigo;
+  final bool puedeGestionarKits;
 
   /// Construye el borrador; los textos se limpian en [toJson] antes de enviarse.
   const UsuarioBorrador({
@@ -19,6 +20,7 @@ class UsuarioBorrador {
     this.colegioCodigo = '',
     this.numeroColegiatura = '',
     this.especialidadCodigo = '',
+    this.puedeGestionarKits = false,
   });
 
   /// Convierte el borrador al JSON que esperan las RPC `administrar_usuario_hu020`
@@ -30,6 +32,7 @@ class UsuarioBorrador {
     'cargo': cargo.trim(),
     'rol': rol,
     'areas': areas,
+    'puede_gestionar_kits': puedeGestionarKits,
     'colegio_codigo': colegioCodigo.isEmpty ? null : colegioCodigo,
     'numero_colegiatura': numeroColegiatura.trim().isEmpty
         ? null
