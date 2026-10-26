@@ -2,17 +2,21 @@
 
 ## Estado de este avance
 
-Implementado y validado en entorno local aislado. La migración
-`migracion_stock_transito_y_envios_almacen_2026_10_25.sql` todavía **no se aplicó
-a Supabase remoto**. Requiere la migración de abastecimiento atómico del 25/10.
+**Actualización del 26/10/2026:** las dos migraciones ya se aplicaron en Supabase,
+incluida la gestión de faltantes con revisión y preconfirmación.
+Consultar [la guía de diferencias](GUIA_DIFERENCIAS_ABASTECIMIENTO_2026_10_26.md)
+para el comportamiento final, validaciones y evidencia del despliegue.
+
+Implementado, validado en entorno local aislado y desplegado. La migración
+`migracion_stock_transito_y_envios_almacen_2026_10_25.sql` requiere la migración
+de abastecimiento atómico del 25/10 y se complementa con diferencias del 26/10.
 No ejecutar el setup completo sobre una base existente.
 
-Antes de publicar este flujo queda una decisión del usuario: qué hacer cuando
-el conteo físico es menor que el despacho y las unidades faltantes **no** están
-siendo devueltas físicamente. El flujo de devolución conservado solo corresponde
-a una devolución real. No se debe usar para registrar pérdidas o faltantes, pues
-eso produciría existencias ficticias en Almacén. Se propuso dejar ese caso
-pendiente de revisión con justificación, sin reponer stock automáticamente.
+Si el conteo físico es menor que el despacho y las unidades faltantes no se
+devuelven físicamente, Farmacia reporta la diferencia y el pedido queda pendiente
+de revisión sin mover stock. Almacén revisa y propone o aplica la solución con
+justificación y preconfirmación; los cambios al conteo requieren confirmación de
+Farmacia. La opción de devolución conservada corresponde a una devolución real.
 
 ## Reglas acordadas
 
