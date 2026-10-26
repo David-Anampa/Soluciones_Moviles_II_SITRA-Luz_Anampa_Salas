@@ -8,8 +8,33 @@ const stockFondo = Color(0xFFF5F5F5);
 ThemeData temaStock(BuildContext context) => Theme.of(context).copyWith(
   colorScheme: Theme.of(context).colorScheme.copyWith(
     primary: stockRojo,
+    secondary: stockRojo,
     onPrimary: Colors.white,
     surface: Colors.white,
+    surfaceTint: Colors.transparent,
+  ),
+  filledButtonTheme: FilledButtonThemeData(
+    style: FilledButton.styleFrom(
+      backgroundColor: stockRojo,
+      foregroundColor: Colors.white,
+      minimumSize: const Size(0, 48),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+  ),
+  textButtonTheme: TextButtonThemeData(
+    style: TextButton.styleFrom(foregroundColor: stockRojo),
+  ),
+  outlinedButtonTheme: OutlinedButtonThemeData(
+    style: OutlinedButton.styleFrom(foregroundColor: stockRojo),
+  ),
+  chipTheme: Theme.of(context).chipTheme.copyWith(
+    selectedColor: stockPastel,
+    backgroundColor: Colors.white,
+    checkmarkColor: stockRojo,
+  ),
+  dialogTheme: const DialogThemeData(
+    backgroundColor: Colors.white,
+    surfaceTintColor: Colors.transparent,
   ),
   appBarTheme: const AppBarTheme(
     backgroundColor: stockRojo,

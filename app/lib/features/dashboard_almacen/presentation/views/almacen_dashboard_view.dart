@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../almacen/presentation/views/diferencias_abastecimiento_view.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/sitra_app_bar.dart';
@@ -663,6 +664,15 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                   label: const Text('Stock por ubicación'),
                 ),
               ),
+              const SizedBox(height: 12),
+              SizedBox(width: double.infinity, child: OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const DiferenciasAbastecimientoView())),
+                icon: const Icon(Icons.fact_check_outlined),
+                label: const Text('Diferencias por resolver e historial'),
+                style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFC62828),
+                  padding: const EdgeInsets.symmetric(vertical: 16)),
+              )),
               const SizedBox(height: 24),
               // HU-013 / HU-023: Inventario físico con búsqueda y filtros.
               Row(

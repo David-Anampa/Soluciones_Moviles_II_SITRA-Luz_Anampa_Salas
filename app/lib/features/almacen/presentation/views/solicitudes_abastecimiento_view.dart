@@ -5,6 +5,7 @@ import '../../domain/entities/pedido_abastecimiento_entity.dart';
 import '../states/almacen_state.dart';
 import '../viewmodels/almacen_viewmodel.dart';
 import 'crear_solicitud_abastecimiento_view.dart';
+import 'diferencias_abastecimiento_view.dart';
 
 /// HU-029 / HU-030: Visualización, despacho y seguimiento de solicitudes de abastecimiento.
 /// Utilizable tanto por Almacén General (HU-030) como por Farmacia Central.
@@ -176,6 +177,14 @@ class _SolicitudesAbastecimientoViewState
           foregroundColor: Colors.white,
           iconTheme: const IconThemeData(color: Colors.white),
           elevation: 0,
+          actions: [IconButton(tooltip: 'Diferencias e historial',
+            icon: const Icon(Icons.fact_check_outlined),
+            onPressed: () async {
+              final vm = context.read<AlmacenViewModel>();
+              await Navigator.of(context).push(MaterialPageRoute(builder: (_) =>
+                DiferenciasAbastecimientoView(esFarmacia: widget.esModoFarmacia)));
+              if (mounted) await vm.cargarInventario();
+            })],
         ),
         floatingActionButton: widget.esModoFarmacia
             ? FloatingActionButton.extended(
@@ -1216,6 +1225,7 @@ class _SolicitudesAbastecimientoViewState
   }
 
   Future<void> _mostrarDialogoRecepcion(PedidoAbastecimientoEntity item) async {
+    bool abrirReporte = false;
     final cantidades = {
       for (final it in item.items)
         it.id: TextEditingController(text: '${it.cantidadDespachada}'),
@@ -1465,6 +1475,14 @@ class _SolicitudesAbastecimientoViewState
                 ),
               ),
               actions: [
+                if (item.despachoEnTransito) OutlinedButton.icon(
+                  onPressed: guardando ? null : () {
+                    abrirReporte = true;
+                    Navigator.of(ctx).pop(false);
+                  },
+                  icon: const Icon(Icons.report_problem_outlined),
+                  label: const Text('Reportar diferencia'),
+                ),
                 TextButton(
                   onPressed: guardando
                       ? null
@@ -1541,6 +1559,11 @@ class _SolicitudesAbastecimientoViewState
     motivo.dispose();
     for (final controller in cantidades.values) {
       controller.dispose();
+    }
+    if (abrirReporte && mounted) {
+      final registrado = await reportarDiferencia(context, item);
+      if (registrado && mounted) await vm.cargarInventario();
+      return;
     }
     if (resultado == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

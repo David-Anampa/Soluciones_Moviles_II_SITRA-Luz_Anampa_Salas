@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../almacen/presentation/views/diferencias_abastecimiento_view.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/sitra_app_bar.dart';
@@ -343,6 +344,15 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
               const SizedBox(height: 10),
 
               // MIS SOLICITUDES Y RECEPCIÓN FÍSICA
+              _buildModuleTile(
+                icon: Icons.fact_check_outlined,
+                title: 'Mis reportes e historial',
+                subtitle: 'Sigue diferencias, revisa propuestas y consulta sus justificaciones.',
+                color: AppColors.primary,
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const DiferenciasAbastecimientoView(esFarmacia: true))),
+              ),
+              const SizedBox(height: 10),
               _buildModuleTile(
                 icon: Icons.download_done_rounded,
                 title: 'Mis Solicitudes y Recepción de Mercadería',

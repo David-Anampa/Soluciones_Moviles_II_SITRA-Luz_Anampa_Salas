@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../almacen/presentation/views/diferencias_abastecimiento_view.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/sitra_app_bar.dart';
@@ -22,6 +23,13 @@ class JefaturaDashboardView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            SizedBox(width: double.infinity, child: OutlinedButton.icon(
+              icon: const Icon(Icons.fact_check_outlined),
+              label: const Text('Auditoría de diferencias e historial'),
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const DiferenciasAbastecimientoView(soloLectura: true))),
+            )),
+            const SizedBox(height: 16),
             // Banner de la Jefatura
             Container(
               width: double.infinity,
