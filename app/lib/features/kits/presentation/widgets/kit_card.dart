@@ -23,6 +23,7 @@ class _KitCardState extends State<KitCard> {
   static const rojo = Color(0xFFC62828);
   bool _expandido = false;
 
+  /// Solicita confirmación antes de cambiar la disponibilidad para pedidos nuevos.
   void _confirmarCambioEstado(bool nuevoEstado) {
     final accion = nuevoEstado ? 'habilitar' : 'inhabilitar';
     showDialog<bool>(
@@ -32,11 +33,13 @@ class _KitCardState extends State<KitCard> {
         title: Row(
           children: [
             Icon(
-              nuevoEstado ? Icons.check_circle_outline_rounded : Icons.pause_circle_outline_rounded,
-              color: nuevoEstado ? Colors.teal : Colors.orange,
+              nuevoEstado
+                  ? Icons.check_circle_outline_rounded
+                  : Icons.pause_circle_outline_rounded,
+              color: rojo,
             ),
             const SizedBox(width: 10),
-            Text('¿Deseas $accion este kit?'),
+            Expanded(child: Text('¿Deseas $accion este kit?')),
           ],
         ),
         content: Text(
@@ -48,12 +51,18 @@ class _KitCardState extends State<KitCard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancelar', style: TextStyle(color: Color(0xFF616161))),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: Color(0xFF616161)),
+            ),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: nuevoEstado ? Colors.teal : Colors.orange,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              backgroundColor: rojo,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(nuevoEstado ? 'Habilitar Kit' : 'Inhabilitar Kit'),
@@ -61,12 +70,13 @@ class _KitCardState extends State<KitCard> {
         ],
       ),
     ).then((confirmado) {
-      if (confirmado == true) {
+      if (mounted && confirmado == true) {
         widget.onCambiarEstado(nuevoEstado);
       }
     });
   }
 
+  /// Confirma el borrado; el servidor conserva los kits que tengan historial.
   void _confirmarEliminacion() {
     showDialog<bool>(
       context: context,
@@ -76,7 +86,7 @@ class _KitCardState extends State<KitCard> {
           children: [
             Icon(Icons.delete_outline_rounded, color: rojo),
             SizedBox(width: 10),
-            Text('Eliminar borrador de kit'),
+            Expanded(child: Text('Eliminar borrador de kit')),
           ],
         ),
         content: Text(
@@ -87,12 +97,17 @@ class _KitCardState extends State<KitCard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancelar', style: TextStyle(color: Color(0xFF616161))),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: Color(0xFF616161)),
+            ),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: rojo,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('Eliminar'),
@@ -100,7 +115,7 @@ class _KitCardState extends State<KitCard> {
         ],
       ),
     ).then((confirmado) {
-      if (confirmado == true) {
+      if (mounted && confirmado == true) {
         widget.onEliminar();
       }
     });
@@ -141,7 +156,9 @@ class _KitCardState extends State<KitCard> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: activo ? const Color(0xFFFFF0F0) : const Color(0xFFF0F0F0),
+                        color: activo
+                            ? const Color(0xFFFFF0F0)
+                            : const Color(0xFFF0F0F0),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -160,7 +177,9 @@ class _KitCardState extends State<KitCard> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
-                              color: activo ? const Color(0xFF212121) : const Color(0xFF757575),
+                              color: activo
+                                  ? const Color(0xFF212121)
+                                  : const Color(0xFF757575),
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -169,34 +188,44 @@ class _KitCardState extends State<KitCard> {
                             runSpacing: 4,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFE8F5E9),
+                                  color: const Color(0xFFFFF0F0),
                                   borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: const Color(0xFFC8E6C9)),
+                                  border: Border.all(
+                                    color: const Color(0xFFFFCDD2),
+                                  ),
                                 ),
                                 child: Text(
                                   'Área: ${kit.areaNombre}',
                                   style: const TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
-                                    color: Color(0xFF2E7D32),
+                                    color: rojo,
                                   ),
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFEDE7F6),
+                                  color: const Color(0xFFF5F5F5),
                                   borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: const Color(0xFFD1C4E9)),
+                                  border: Border.all(
+                                    color: const Color(0xFFE0E0E0),
+                                  ),
                                 ),
                                 child: Text(
                                   '${kit.totalItems} insumos',
                                   style: const TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
-                                    color: Color(0xFF512DA8),
+                                    color: Color(0xFF616161),
                                   ),
                                 ),
                               ),
@@ -207,9 +236,14 @@ class _KitCardState extends State<KitCard> {
                     ),
                     // Badge Estado
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: activo ? const Color(0xFFE8F5E9) : const Color(0xFFEEEEEE),
+                        color: activo
+                            ? const Color(0xFFFFF0F0)
+                            : const Color(0xFFEEEEEE),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -217,13 +251,14 @@ class _KitCardState extends State<KitCard> {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: activo ? const Color(0xFF2E7D32) : const Color(0xFF757575),
+                          color: activo ? rojo : const Color(0xFF757575),
                         ),
                       ),
                     ),
                   ],
                 ),
-                if (kit.descripcion != null && kit.descripcion!.trim().isNotEmpty) ...[
+                if (kit.descripcion != null &&
+                    kit.descripcion!.trim().isNotEmpty) ...[
                   const SizedBox(height: 12),
                   Text(
                     kit.descripcion!,
@@ -250,23 +285,24 @@ class _KitCardState extends State<KitCard> {
               child: Row(
                 children: [
                   Icon(
-                    _expandido ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                    _expandido
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
                     color: rojo,
                     size: 20,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    _expandido ? 'Ocultar composición del kit' : 'Ver ${kit.items.length} insumos incluidos',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: rojo,
+                  Expanded(
+                    child: Text(
+                      _expandido
+                          ? 'Ocultar composición'
+                          : 'Ver ${kit.items.length} insumos incluidos',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: rojo,
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    'Plantilla de Quirófano / Área',
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                   ),
                 ],
               ),
@@ -300,24 +336,55 @@ class _KitCardState extends State<KitCard> {
                               ),
                               const SizedBox(width: 10),
                               Expanded(
-                                child: Text(
-                                  item.medicamentoNombre,
-                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.medicamentoNombre,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    if ([
+                                      item.presentacion,
+                                      item.laboratorio,
+                                    ].any(
+                                      (valor) =>
+                                          valor != null &&
+                                          valor.trim().isNotEmpty,
+                                    ))
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 4),
+                                        child: Text(
+                                          [item.presentacion, item.laboratorio]
+                                              .whereType<String>()
+                                              .where(
+                                                (valor) =>
+                                                    valor.trim().isNotEmpty,
+                                              )
+                                              .join(' · '),
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Color(0xFF757575),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               ),
-                              if (item.presentacion != null && item.presentacion!.isNotEmpty) ...[
-                                Text(
-                                  '(${item.presentacion})',
-                                  style: const TextStyle(fontSize: 11, color: Color(0xFF757575)),
-                                ),
-                                const SizedBox(width: 8),
-                              ],
+                              const SizedBox(width: 12),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: const Color(0xFFDDDDDD)),
+                                  border: Border.all(
+                                    color: const Color(0xFFDDDDDD),
+                                  ),
                                 ),
                                 child: Text(
                                   'Cant: ${item.cantidad}',
@@ -336,53 +403,62 @@ class _KitCardState extends State<KitCard> {
             ),
           ],
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
-          // Barra de acciones
+          // Acciones del mismo ancho, con etiquetas accesibles y respuesta al hover.
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             child: Row(
               children: [
-                IconButton(
-                  tooltip: 'Eliminar borrador de kit',
-                  icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFF9E9E9E), size: 20),
-                  onPressed: _confirmarEliminacion,
-                ),
-                const Spacer(),
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFFDDDDDD)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                Expanded(
+                  child: _accion(
+                    'Editar kit',
+                    Icons.edit_outlined,
+                    widget.onEditar,
                   ),
-                  icon: const Icon(Icons.edit_rounded, size: 16, color: Color(0xFF424242)),
-                  label: const Text(
-                    'Editar',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF424242)),
-                  ),
-                  onPressed: widget.onEditar,
                 ),
                 const SizedBox(width: 8),
-                FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: activo ? const Color(0xFFFFF0F0) : const Color(0xFFE8F5E9),
-                    foregroundColor: activo ? rojo : const Color(0xFF2E7D32),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                Expanded(
+                  child: _accion(
+                    activo ? 'Inhabilitar kit' : 'Habilitar kit',
+                    activo
+                        ? Icons.pause_circle_outline_rounded
+                        : Icons.play_circle_outline_rounded,
+                    () => _confirmarCambioEstado(!activo),
                   ),
-                  icon: Icon(
-                    activo ? Icons.pause_circle_outline_rounded : Icons.check_circle_outline_rounded,
-                    size: 16,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _accion(
+                    'Eliminar borrador de kit',
+                    Icons.delete_outline_rounded,
+                    _confirmarEliminacion,
                   ),
-                  label: Text(
-                    activo ? 'Desactivar' : 'Activar',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                  onPressed: () => _confirmarCambioEstado(!activo),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Mantiene iguales las zonas táctiles y explica los iconos al mantener pulsado.
+  Widget _accion(String etiqueta, IconData icono, VoidCallback accion) {
+    return Tooltip(
+      message: etiqueta,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: rojo,
+          backgroundColor: const Color(0xFFFFFAFA),
+          side: const BorderSide(color: Color(0xFFFFCDD2)),
+          minimumSize: const Size(48, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          overlayColor: rojo.withValues(alpha: 0.08),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        onPressed: accion,
+        child: Semantics(label: etiqueta, child: Icon(icono, size: 21)),
       ),
     );
   }
