@@ -315,7 +315,9 @@ class _SolicitudesAbastecimientoViewState
               separatorBuilder: (_, __) => const SizedBox(height: 16),
               itemBuilder: (context, index) {
                 final item = filtradas[index];
-                return _buildSolicitudCard(context, item, loaded, isSaving);
+                return _buildSolicitudCard(
+                  context, item, loaded, isSaving, numero: index + 1,
+                );
               },
             ),
         ],
@@ -414,12 +416,14 @@ class _SolicitudesAbastecimientoViewState
     ),
   );
 
+  /// Numera la posición en el filtro actual sin cambiar el código ni el ID del pedido.
   Widget _buildSolicitudCard(
     BuildContext context,
     PedidoAbastecimientoEntity item,
     AlmacenLoaded loaded,
-    bool isSaving,
-  ) {
+    bool isSaving, {
+    required int numero,
+  }) {
     final esPendiente = item.esPendiente;
     final esEnPreparacion = item.esEnPreparacion;
     final esListo = item.esListo;
@@ -474,16 +478,20 @@ class _SolicitudesAbastecimientoViewState
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                width: 44,
+                height: 44,
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: estadoColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  Icons.receipt_long_outlined,
-                  color: estadoColor,
-                  size: 22,
-                ),
+                child: Center(child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('#$numero',
+                    semanticsLabel: 'Solicitud número $numero',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700,
+                      color: estadoColor)),
+                )),
               ),
               const SizedBox(width: 12),
               Expanded(
