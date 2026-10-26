@@ -64,13 +64,25 @@ class _KitFormularioViewState extends State<KitFormularioView> {
       final areas = await widget.repository.cargarAreasActivas();
       if (mounted) {
         setState(() {
-          _areas = areas;
+          // El selector necesita un único elemento por código operativo.
+          _areas = {
+            for (final area in areas)
+              if (area.codigo.trim().isNotEmpty) area.codigo: area,
+          }.values.toList();
           _cargandoAreas = false;
-          // Si el área seleccionada no está o está vacía, preseleccionar la primera
-          if (_areaSeleccionada == null || _areaSeleccionada!.isEmpty) {
-            if (_areas.isNotEmpty) {
-              _areaSeleccionada = _areas.first.codigo;
-            }
+          // No sustituir silenciosamente el destino histórico por otra área.
+          if (_areaSeleccionada != null &&
+              !_areas.any((area) => area.codigo == _areaSeleccionada)) {
+            _areaSeleccionada = null;
+            _errorMensaje =
+                'El área original del kit (${widget.kitExistente?.areaNombre ?? ''}) '
+                'no está disponible entre las áreas habilitadas. '
+                'Selecciona un área habilitada para guardar los cambios. '
+                'El kit original todavía no se ha modificado.';
+          } else if (_areas.isEmpty) {
+            _errorMensaje =
+                'No hay áreas habilitadas disponibles. Habilita un área en '
+                'Gestión administrativa antes de guardar el kit.';
           }
         });
       }
@@ -127,6 +139,14 @@ class _KitFormularioViewState extends State<KitFormularioView> {
 
   /// Valida los datos y solicita al repositorio guardar cabecera e ítems juntos.
   Future<void> _guardar() async {
+    if (_guardando || _cargandoAreas) return;
+    if (!_areas.any((area) => area.codigo == _areaSeleccionada)) {
+      setState(() {
+        _errorMensaje =
+            'Selecciona un área habilitada antes de guardar el kit.';
+      });
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
 
     final borrador = KitBorrador(
@@ -329,7 +349,16 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                 )
                               : DropdownButtonFormField<String>(
                                   isExpanded: true,
-                                  value: _areaSeleccionada,
+                                  // También evita el valor histórico inválido si
+                                  // falla la carga o durante una reconstrucción.
+                                  value:
+                                      _areas.any(
+                                        (area) =>
+                                            area.codigo == _areaSeleccionada,
+                                      )
+                                      ? _areaSeleccionada
+                                      : null,
+                                  hint: const Text('Selecciona un área'),
                                   decoration: InputDecoration(
                                     labelText: 'Área de Destino *',
                                     filled: true,
