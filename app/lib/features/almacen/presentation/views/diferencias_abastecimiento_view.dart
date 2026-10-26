@@ -556,14 +556,34 @@ class _SolucionState extends State<_SolucionView> {
                       i['nombre'],
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    Text(
-                      'Farmacia: antes ${i['farmacia']} / después ${(i['farmacia'] as num) + cantidades[i['id']]!}',
-                    ),
-                    Text(
-                      'Almacén: antes ${i['almacen']} / después ${(i['almacen'] as num) + (_destino == 'ALMACEN' ? (i['despachado'] as num) - cantidades[i['id']]! : 0)}',
-                    ),
-                    Text(
-                      'En tránsito del pedido: antes ${i['despachado']} / después 0',
+                    const SizedBox(height: 12),
+                    _ComparacionCantidades(
+                      filas: [
+                        (
+                          nombre: 'Farmacia',
+                          icono: Icons.local_pharmacy_outlined,
+                          antes: i['farmacia'] as num,
+                          despues:
+                              (i['farmacia'] as num) + cantidades[i['id']]!,
+                        ),
+                        (
+                          nombre: 'Almacén',
+                          icono: Icons.warehouse_outlined,
+                          antes: i['almacen'] as num,
+                          despues:
+                              (i['almacen'] as num) +
+                              (_destino == 'ALMACEN'
+                                  ? (i['despachado'] as num) -
+                                        cantidades[i['id']]!
+                                  : 0),
+                        ),
+                        (
+                          nombre: 'En tránsito',
+                          icono: Icons.local_shipping_outlined,
+                          antes: i['despachado'] as num,
+                          despues: 0,
+                        ),
+                      ],
                     ),
                     if (_destino == 'PERDIDA')
                       Text(
@@ -572,10 +592,24 @@ class _SolucionState extends State<_SolucionView> {
                       ),
                   ],
                 if (cambio)
-                  for (final i in r['items'])
+                  for (final i in r['items']) ...[
+                    const SizedBox(height: 16),
                     Text(
-                      '${i['nombre']}: de ${i['contado']} a ${cantidades[i['id']]} unidades recibidas',
+                      i['nombre'],
+                      style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
+                    const SizedBox(height: 12),
+                    _ComparacionCantidades(
+                      filas: [
+                        (
+                          nombre: 'Conteo',
+                          icono: Icons.fact_check_outlined,
+                          antes: i['contado'] as num,
+                          despues: cantidades[i['id']]!,
+                        ),
+                      ],
+                    ),
+                  ],
                 const SizedBox(height: 16),
                 Text(
                   'Justificación: ${_motivo.text.trim()}',
@@ -626,6 +660,96 @@ class _SolucionState extends State<_SolucionView> {
       if (mounted) setState(() => _guardando = false);
     }
   }
+}
+
+/// Tres columnas que conservan su alineación incluso con saldos largos.
+class _ComparacionCantidades extends StatelessWidget {
+  final List<({String nombre, IconData icono, num antes, num despues})> filas;
+  const _ComparacionCantidades({required this.filas});
+  @override
+  Widget build(BuildContext context) => Container(
+    decoration: BoxDecoration(
+      border: Border.all(color: const Color(0xFFE8DADA)),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    clipBehavior: Clip.antiAlias,
+    child: Table(
+      columnWidths: const {
+        0: FlexColumnWidth(1.5),
+        1: FlexColumnWidth(),
+        2: FlexColumnWidth(1.2),
+      },
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      border: const TableBorder(
+        horizontalInside: BorderSide(color: Color(0xFFF0E5E5)),
+      ),
+      children: [
+        TableRow(
+          decoration: const BoxDecoration(color: stockRojo),
+          children: [
+            for (final titulo in ['Ubicación', 'Antes', 'Después'])
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 12,
+                ),
+                child: Text(
+                  titulo,
+                  textAlign: titulo == 'Ubicación'
+                      ? TextAlign.left
+                      : TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        for (final f in filas)
+          TableRow(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 14,
+                ),
+                child: Row(
+                  children: [
+                    Icon(f.icono, color: stockRojo, size: 16),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        f.nombre,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(height: 1.4),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _numero(context, f.antes, false),
+              _numero(context, f.despues, true),
+            ],
+          ),
+      ],
+    ),
+  );
+  Widget _numero(BuildContext context, num n, bool finalizado) => Container(
+    color: finalizado ? stockPastel : Colors.white,
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        '$n',
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: finalizado ? FontWeight.w700 : FontWeight.w500,
+          color: finalizado ? stockRojo : Colors.black54,
+        ),
+      ),
+    ),
+  );
 }
 
 String _destinoTexto(String d) => switch (d) {

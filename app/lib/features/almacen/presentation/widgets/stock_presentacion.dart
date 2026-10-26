@@ -32,9 +32,11 @@ ThemeData temaStock(BuildContext context) => Theme.of(context).copyWith(
     backgroundColor: Colors.white,
     checkmarkColor: stockRojo,
   ),
-  dialogTheme: const DialogThemeData(
+  dialogTheme: DialogThemeData(
     backgroundColor: Colors.white,
     surfaceTintColor: Colors.transparent,
+    titleTextStyle: Theme.of(context).textTheme.titleLarge,
+    contentTextStyle: Theme.of(context).textTheme.bodyMedium,
   ),
   appBarTheme: const AppBarTheme(
     backgroundColor: stockRojo,
