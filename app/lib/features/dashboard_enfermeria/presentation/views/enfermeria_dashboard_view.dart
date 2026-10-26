@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/sitra_app_bar.dart';
@@ -25,6 +26,19 @@ class EnfermeriaDashboardView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFC62828),
+                  minimumSize: const Size(48, 48),
+                ),
+                icon: const Icon(Icons.medical_services_outlined),
+                label: const Text('Kits de mi área'),
+                onPressed: () => context.push('/kits'),
+              ),
+            ),
+            const SizedBox(height: 16),
             // Banner de Enfermería
             Container(
               width: double.infinity,
@@ -52,15 +66,20 @@ class EnfermeriaDashboardView extends StatelessWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.health_and_safety_rounded,
-                                color: Colors.white, size: 16),
+                            const Icon(
+                              Icons.health_and_safety_rounded,
+                              color: Colors.white,
+                              size: 16,
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               'SERVICIO: ${areaAsignada.toUpperCase()}',
@@ -76,7 +95,9 @@ class EnfermeriaDashboardView extends StatelessWidget {
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.25),
                           borderRadius: BorderRadius.circular(8),
@@ -153,11 +174,11 @@ class EnfermeriaDashboardView extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: _buildMetricCard(
-                    title: 'Stock Crítico',
-                    value: '2',
-                    subtitle: 'Atropina y Midazolam',
-                    icon: Icons.error_outline_rounded,
-                    color: AppColors.error,
+                title: 'Stock Crítico',
+                value: '2',
+                subtitle: 'Atropina y Midazolam',
+                icon: Icons.error_outline_rounded,
+                color: AppColors.error,
               ),
             ),
 
@@ -181,7 +202,10 @@ class EnfermeriaDashboardView extends StatelessWidget {
                   letterSpacing: 0.5,
                 ),
               ),
-              onPressed: () => _showActionSnackbar(context, 'Solicitud Urgente de Reposición'),
+              onPressed: () => _showActionSnackbar(
+                context,
+                'Solicitud Urgente de Reposición',
+              ),
             ),
 
             const SizedBox(height: 24),
@@ -200,17 +224,21 @@ class EnfermeriaDashboardView extends StatelessWidget {
             _buildModuleTile(
               icon: Icons.medication_liquid_rounded,
               title: 'Kardex y Stock del Coche de Paro',
-              subtitle: 'Revisión periódica de ampollas, jeringas y fármacos de emergencia.',
+              subtitle:
+                  'Revisión periódica de ampollas, jeringas y fármacos de emergencia.',
               color: AppColors.primary,
-              onTap: () => _showActionSnackbar(context, 'Kardex del Coche de Paro'),
+              onTap: () =>
+                  _showActionSnackbar(context, 'Kardex del Coche de Paro'),
             ),
             const SizedBox(height: 10),
             _buildModuleTile(
               icon: Icons.reply_all_rounded,
               title: 'Devolución de Sobrantes / Mermas',
-              subtitle: 'Coordinar el retorno de medicamentos e insumos no utilizados por el servicio.',
+              subtitle:
+                  'Coordinar el retorno de medicamentos e insumos no utilizados por el servicio.',
               color: AppColors.secondary,
-              onTap: () => _showActionSnackbar(context, 'Devolución de Sobrantes'),
+              onTap: () =>
+                  _showActionSnackbar(context, 'Devolución de Sobrantes'),
             ),
 
             const SizedBox(height: 24),

@@ -42,7 +42,8 @@ class KitItemEntity {
     return KitItemEntity(
       id: map['id']?.toString() ?? '',
       medicamentoId: map['medicamento_id']?.toString() ?? '',
-      medicamentoNombre: map['nombre_comercial']?.toString() ??
+      medicamentoNombre:
+          map['nombre_comercial']?.toString() ??
           map['medicamento_nombre']?.toString() ??
           'Medicamento sin nombre',
       principioActivo: map['principio_activo']?.toString(),
@@ -53,9 +54,6 @@ class KitItemEntity {
   }
 
   Map<String, dynamic> toMap() {
-    return {
-      'medicamento_id': medicamentoId,
-      'cantidad': cantidad,
-    };
+    return {'medicamento_id': medicamentoId, 'cantidad': cantidad};
   }
 }

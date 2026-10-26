@@ -1,5 +1,17 @@
 # Acuerdos de kits por área — 26/10/2026
 
+## Actualización local posterior — implementación de plantillas
+
+Se implementaron permisos por área y el checkbox «Puede gestionar kits» solo para cargo Técnica/Enfermera con rol Enfermería / Técnico; selección del área de trabajo, lectura para Jefatura/Farmacia, duplicación con nombre nuevo y disponibilidad real/laboratorio. Se retiraron fallbacks, se corrigió el selector histórico y se sustituyeron las RPC de kits con control de sesión/rol/pertenencia y códigos canónicos. Esta actualización sustituye los hallazgos previos correspondientes que siguen más abajo como antecedente.
+
+La migración actual es `docs/supabase/migracion_kits_por_area_2026_10_26.sql`; está incluida al final del setup. **No se ejecutó en Supabase en esta entrega.** No volver a aplicar la migración de kits del 22/10 después de ella. Guía y revisión manual: `docs/supabase/GUIA_KITS_POR_AREA_2026_10_26.md`.
+
+El código de HU-017/HU-018/HU-019 queda preparado para migración y aceptación manual. No se ejecutaron suites, emulador ni capturas. El permiso se consulta de nuevo desde el servidor, y las áreas se vinculan por UUID de `profile_areas`. El área de trabajo se elige al entrar en Kits; el permiso no representa otro cargo.
+
+HU-003 a HU-011 siguen pendientes: pedir el kit, seguro/médico en la ficha, notificaciones, confirmación de incompleto, reserva/preparación y consumo final no pertenecen a este CRUD de plantillas. No se declara cerrado el Sprint 5 por el análisis de Dart ni por esta documentación.
+
+---
+
 Fuente: decisiones del usuario en la conversación. Documento de requisitos;
 no certifica implementación, despliegue ni aceptación funcional de kits.
 Actualizado con las respuestas y datos del pedido confirmados el 26/10/2026.

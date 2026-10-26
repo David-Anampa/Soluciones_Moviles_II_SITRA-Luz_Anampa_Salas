@@ -1,5 +1,4 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../administracion/data/catalogos_repository.dart';
 import '../../domain/entities/kit_entity.dart';
 import '../../domain/kit_borrador.dart';
 
@@ -19,12 +18,54 @@ class AreaKit {
   });
 
   factory AreaKit.fromMap(Map<String, dynamic> row) => AreaKit(
-        id: row['id'] as String,
-        codigo: row['codigo'] as String? ?? row['codigo_interno'] as String,
-        codigoInterno: row['codigo_interno'] as String? ?? row['codigo'] as String,
-        nombre: row['nombre'] as String,
-        activo: row['activo'] as bool? ?? true,
-      );
+    id: row['id'] as String,
+    codigo: row['codigo'] as String? ?? row['codigo_interno'] as String,
+    codigoInterno: row['codigo_interno'] as String? ?? row['codigo'] as String,
+    nombre: row['nombre'] as String,
+    activo: row['activo'] as bool? ?? true,
+  );
+}
+
+/// Áreas y permiso obtenidos del servidor, nunca deducidos del nombre del usuario.
+class ContextoKits {
+  final String rol;
+  final bool puedeGestionar;
+  final List<AreaKit> areas;
+  const ContextoKits(this.rol, this.puedeGestionar, this.areas);
+  factory ContextoKits.fromMap(Map<String, dynamic> datos) => ContextoKits(
+    datos['rol'] as String,
+    datos['puede_gestionar'] == true,
+    (datos['areas'] as List)
+        .map((a) => AreaKit.fromMap(Map<String, dynamic>.from(a)))
+        .toList(),
+  );
+}
+
+/// Cantidades disponibles en cada ubicación; un kit nunca consume este catálogo.
+class MedicamentoKit {
+  final String id, nombre, presentacion, laboratorio;
+  final int farmacia, almacen, transito;
+  final bool activo;
+  const MedicamentoKit({
+    required this.id,
+    required this.nombre,
+    required this.presentacion,
+    required this.laboratorio,
+    required this.farmacia,
+    required this.almacen,
+    required this.transito,
+    required this.activo,
+  });
+  factory MedicamentoKit.fromMap(Map<String, dynamic> m) => MedicamentoKit(
+    id: m['id'] as String,
+    nombre: m['nombre'] as String,
+    presentacion: m['presentacion'] as String? ?? '',
+    laboratorio: m['laboratorio'] as String? ?? '',
+    farmacia: (m['farmacia'] as num).toInt(),
+    almacen: (m['almacen'] as num).toInt(),
+    transito: (m['transito'] as num).toInt(),
+    activo: m['activo'] == true,
+  );
 }
 
 class KitsRepository {
@@ -34,7 +75,7 @@ class KitsRepository {
   static String mensajeError(Object e) {
     if (e is PostgrestException) {
       if (e.code == 'PGRST202' || e.code == '42883') {
-        return 'Falta actualizar las funciones de kits en Supabase. No se realizó una operación alternativa; aplica la migración del módulo y vuelve a intentar.';
+        return 'Aplica migracion_kits_por_area_2026_10_26.sql en Supabase y vuelve a intentar. No se guardaron datos mediante operaciones alternativas.';
       }
       final msg = e.message.trim();
       if (msg.contains('No tienes permisos')) {
@@ -65,10 +106,10 @@ class KitsRepository {
   /// reemplaza los resultados por consultas con permisos diferentes.
   Future<List<KitEntity>> listarKits({String? area, bool? soloActivos}) async {
     try {
-      final data = await _client.rpc('listar_kits_hu017', params: {
-        'p_area': area,
-        'p_solo_activos': soloActivos,
-      });
+      final data = await _client.rpc(
+        'listar_kits_hu017',
+        params: {'p_area': area, 'p_solo_activos': soloActivos},
+      );
       final rows = (data as List<dynamic>).cast<Map<String, dynamic>>();
       return rows.map(KitEntity.fromMap).toList();
     } on PostgrestException catch (e) {
@@ -78,52 +119,51 @@ class KitsRepository {
     }
   }
 
-  /// Carga el catálogo dinámico de áreas activas para el selector de área destino
+  /// Consulta los permisos vigentes y las áreas propias; incluye asignaciones históricas.
+  Future<ContextoKits> contexto() async {
+    final datos = await _client.rpc('contexto_kits_por_area');
+    return ContextoKits.fromMap(Map<String, dynamic>.from(datos));
+  }
+
+  /// Ofrece solo áreas habilitadas y autorizadas, sin consultar el catálogo global.
   Future<List<AreaKit>> cargarAreasActivas() async {
-    try {
-      final rows = await _client
-          .from('areas')
-          .select('id, codigo, codigo_interno, nombre, activo')
-          .eq('activo', true)
-          .order('nombre');
-      return (rows as List<dynamic>)
-          .map((r) => AreaKit.fromMap(r as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      throw Exception(mensajeError(e));
-    }
+    return (await contexto()).areas.where((a) => a.activo).toList();
   }
 
   /// Busca medicamentos reales en el catálogo maestro para agregar al kit
-  Future<List<MedicamentoCobertura>> buscarMedicamentos({String query = ''}) async {
-    try {
-      var builder = _client
-          .from('medicamentos')
-          .select('id, nombre_comercial, presentacion, precio_kairos, activo')
-          .eq('activo', true);
-
-      if (query.trim().isNotEmpty) {
-        builder = builder.ilike('nombre_comercial', '%${query.trim()}%');
-      }
-
-      final rows = await builder.order('nombre_comercial').limit(60);
-      return (rows as List<dynamic>)
-          .map((r) => MedicamentoCobertura.fromMap(r as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      throw Exception(mensajeError(e));
+  Future<List<MedicamentoKit>> buscarMedicamentos({String query = ''}) async {
+    final resultado = <MedicamentoKit>[];
+    for (var desde = 0; ; desde += 100) {
+      final datos = await _client.rpc(
+        'medicamentos_para_kits',
+        params: {'p_busqueda': query.trim(), 'p_desde': desde, 'p_limite': 100},
+      );
+      final filas = (datos as List).cast<Map<String, dynamic>>();
+      resultado.addAll(filas.map(MedicamentoKit.fromMap));
+      if (filas.length < 100) break;
     }
+    return resultado;
   }
 
   /// HU-018 (Crear kit) y HU-019 (Editar kit):
   /// Guarda atómicamente la plantilla de kit mediante la RPC transaccional.
-  Future<String> guardarKit(KitBorrador borrador, {String? id}) async {
+  Future<String> guardarKit(
+    KitBorrador borrador, {
+    String? id,
+    String? origenId,
+  }) async {
     try {
-      final result = await _client.rpc('administrar_kit_hu018', params: {
-        'p_accion': 'GUARDAR',
-        'p_id': id,
-        'p_datos': borrador.toMap(),
-      });
+      final result = await _client.rpc(
+        'administrar_kit_hu018',
+        params: {
+          'p_accion': 'GUARDAR',
+          'p_id': id,
+          'p_datos': {
+            ...borrador.toMap(),
+            if (origenId != null) 'kit_origen_id': origenId,
+          },
+        },
+      );
       return result.toString();
     } on PostgrestException catch (e) {
       throw Exception(mensajeError(e));
@@ -135,11 +175,14 @@ class KitsRepository {
   /// HU-017: Habilita o inhabilita un kit para futuras dispensaciones conservando su historial.
   Future<void> cambiarEstado(String id, bool activo) async {
     try {
-      await _client.rpc('administrar_kit_hu018', params: {
-        'p_accion': 'ESTADO',
-        'p_id': id,
-        'p_datos': {'activo': activo},
-      });
+      await _client.rpc(
+        'administrar_kit_hu018',
+        params: {
+          'p_accion': 'ESTADO',
+          'p_id': id,
+          'p_datos': {'activo': activo},
+        },
+      );
     } on PostgrestException catch (e) {
       throw Exception(mensajeError(e));
     } catch (e) {
@@ -150,10 +193,10 @@ class KitsRepository {
   /// Eliminación controlada de un kit (solo si no tiene dispensaciones previas).
   Future<void> eliminarKit(String id) async {
     try {
-      await _client.rpc('administrar_kit_hu018', params: {
-        'p_accion': 'ELIMINAR',
-        'p_id': id,
-      });
+      await _client.rpc(
+        'administrar_kit_hu018',
+        params: {'p_accion': 'ELIMINAR', 'p_id': id},
+      );
     } on PostgrestException catch (e) {
       throw Exception(mensajeError(e));
     } catch (e) {

@@ -1,284 +1,326 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../../administracion/data/catalogos_repository.dart';
+import 'package:flutter/services.dart';
+import '../../../administracion/presentation/widgets/catalogo_estilo.dart';
 import '../../data/repositories/kits_repository.dart';
 import '../../domain/entities/kit_item_entity.dart';
+import 'disponibilidad_kit.dart';
 
 class SelectorMedicamentoDialog extends StatefulWidget {
   final KitsRepository repository;
   final Set<String> idsYaSeleccionados;
-
   const SelectorMedicamentoDialog({
     super.key,
     required this.repository,
     this.idsYaSeleccionados = const {},
   });
-
   @override
-  State<SelectorMedicamentoDialog> createState() => _SelectorMedicamentoDialogState();
+  State<SelectorMedicamentoDialog> createState() =>
+      _SelectorMedicamentoDialogState();
 }
 
 class _SelectorMedicamentoDialogState extends State<SelectorMedicamentoDialog> {
-  static const rojo = Color(0xFFC62828);
-
-  final TextEditingController _searchCtrl = TextEditingController();
-  List<MedicamentoCobertura> _medicamentos = [];
+  final _busqueda = TextEditingController(),
+      _cantidad = TextEditingController(text: '1');
+  Timer? _espera;
+  int _revision = 0;
+  List<MedicamentoKit> _medicamentos = [];
+  MedicamentoKit? _seleccionado;
   bool _cargando = true;
   String? _error;
-
-  MedicamentoCobertura? _seleccionado;
-  int _cantidad = 1;
+  int get _unidades => int.tryParse(_cantidad.text) ?? 0;
 
   @override
   void initState() {
     super.initState();
-    _buscar('');
+    _buscar();
   }
 
   @override
   void dispose() {
-    _searchCtrl.dispose();
+    _espera?.cancel();
+    _busqueda.dispose();
+    _cantidad.dispose();
     super.dispose();
   }
 
-  Future<void> _buscar(String query) async {
+  /// Agrupa la escritura y descarta respuestas antiguas para no mostrar otra búsqueda.
+  void _programarBusqueda(String texto) {
+    _espera?.cancel();
+    _revision++;
+    setState(() {
+      _cargando = true;
+      _error = null;
+      _seleccionado = null;
+    });
+    _espera = Timer(const Duration(milliseconds: 300), _buscar);
+  }
+
+  /// Obtiene medicamentos y disponibilidad vigentes; no inventa stock ante errores.
+  Future<void> _buscar() async {
+    final revision = ++_revision;
     setState(() {
       _cargando = true;
       _error = null;
     });
-
     try {
-      final list = await widget.repository.buscarMedicamentos(query: query);
-      if (mounted) {
-        setState(() {
-          _medicamentos = list;
-          _cargando = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = KitsRepository.mensajeError(e);
-          _cargando = false;
-        });
-      }
+      final datos = await widget.repository.buscarMedicamentos(
+        query: _busqueda.text,
+      );
+      if (!mounted || revision != _revision) return;
+      setState(() {
+        _medicamentos = datos.where((m) => m.activo).toList();
+        _cargando = false;
+      });
+    } catch (error) {
+      if (!mounted || revision != _revision) return;
+      setState(() {
+        _error = KitsRepository.mensajeError(error);
+        _cargando = false;
+      });
     }
   }
 
+  /// Conserva los botones táctiles y permite escribir con teclado numérico.
+  void _ajustarCantidad(int delta) {
+    final valor = (_unidades + delta).clamp(1, 999999999);
+    setState(() => _cantidad.text = '$valor');
+  }
+
   @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+  Widget build(BuildContext context) => Theme(
+    data: CatalogoEstilo.tema(context),
+    child: Dialog(
       backgroundColor: Colors.white,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 550, maxHeight: 650),
+        constraints: const BoxConstraints(maxWidth: 550, maxHeight: 680),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF0F0),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.medication_rounded, color: rojo, size: 22),
+                  const Icon(
+                    Icons.medication_outlined,
+                    color: CatalogoEstilo.rojo,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Agregar Insumo o Medicamento',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                        ),
-                        Text(
-                          'Selecciona del catálogo maestro de la clínica',
-                          style: TextStyle(fontSize: 12, color: Color(0xFF757575)),
-                        ),
-                      ],
+                    child: Text(
+                      'Agregar medicamento',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   IconButton(
+                    tooltip: 'Cerrar',
+                    onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.close_rounded),
-                    onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               TextField(
-                controller: _searchCtrl,
-                onChanged: (val) => _buscar(val),
-                decoration: InputDecoration(
-                  hintText: 'Buscar por nombre comercial...',
-                  prefixIcon: const Icon(Icons.search_rounded, color: rojo),
-                  filled: true,
-                  fillColor: const Color(0xFFF7F7F7),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
+                controller: _busqueda,
+                onChanged: _programarBusqueda,
+                decoration: const InputDecoration(
+                  hintText: 'Nombre o principio activo',
+                  prefixIcon: Icon(Icons.search_rounded),
                 ),
               ),
               const SizedBox(height: 12),
               Expanded(
                 child: _cargando
-                    ? const Center(child: CircularProgressIndicator(color: rojo))
+                    ? const Center(child: CircularProgressIndicator())
                     : _error != null
-                        ? Center(
-                            child: Text(
-                              _error!,
-                              style: const TextStyle(color: Colors.red, fontSize: 13),
-                              textAlign: TextAlign.center,
-                            ),
-                          )
-                        : _medicamentos.isEmpty
-                            ? const Center(
-                                child: Text(
-                                  'No se encontraron medicamentos activos con ese criterio.',
-                                  style: TextStyle(color: Colors.grey, fontSize: 13),
-                                  textAlign: TextAlign.center,
-                                ),
-                              )
-                            : ListView.separated(
-                                itemCount: _medicamentos.length,
-                                separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFEEEEEE)),
-                                itemBuilder: (context, index) {
-                                  final med = _medicamentos[index];
-                                  final yaEsta = widget.idsYaSeleccionados.contains(med.id);
-                                  final esSeleccionado = _seleccionado?.id == med.id;
-
-                                  return ListTile(
-                                    dense: true,
-                                    selected: esSeleccionado,
-                                    selectedTileColor: const Color(0xFFFFF0F0),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                    title: Text(
-                                      med.nombre,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: yaEsta ? Colors.grey : const Color(0xFF212121),
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      med.presentacion.isNotEmpty ? med.presentacion : 'Presentación estándar',
-                                      style: const TextStyle(fontSize: 11, color: Color(0xFF757575)),
-                                    ),
-                                    trailing: yaEsta
-                                        ? const Text(
-                                            'Ya agregado',
-                                            style: TextStyle(fontSize: 11, color: Colors.orange, fontWeight: FontWeight.bold),
-                                          )
-                                        : esSeleccionado
-                                            ? const Icon(Icons.check_circle_rounded, color: rojo, size: 20)
-                                            : null,
-                                    onTap: yaEsta
-                                        ? null
-                                        : () {
-                                            setState(() {
-                                              _seleccionado = med;
-                                            });
-                                          },
-                                  );
-                                },
-                              ),
-              ),
-              const SizedBox(height: 12),
-              if (_seleccionado != null) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF9F9F9),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE0E0E0)),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
+                    ? SingleChildScrollView(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              _seleccionado!.nombre,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            CatalogoEstilo.nota(
+                              _error!,
+                              icono: Icons.error_outline,
                             ),
-                            const Text(
-                              'Cantidad requerida en el kit:',
-                              style: TextStyle(fontSize: 11, color: Color(0xFF616161)),
+                            TextButton(
+                              onPressed: _buscar,
+                              child: const Text('Reintentar'),
                             ),
                           ],
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.remove_circle_outline_rounded, color: rojo),
-                        onPressed: _cantidad > 1
-                            ? () {
-                                setState(() {
-                                  _cantidad--;
-                                });
-                              }
-                            : null,
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: const Color(0xFFCCCCCC)),
-                        ),
-                        child: Text(
-                          '$_cantidad',
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.add_circle_outline_rounded, color: rojo),
-                        onPressed: () {
-                          setState(() {
-                            _cantidad++;
-                          });
+                      )
+                    : _medicamentos.isEmpty
+                    ? const Center(
+                        child: Text('Sin medicamentos para esta búsqueda.'),
+                      )
+                    : ListView.separated(
+                        itemCount: _medicamentos.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        itemBuilder: (context, indice) {
+                          final m = _medicamentos[indice];
+                          final agregado = widget.idsYaSeleccionados.contains(
+                            m.id,
+                          );
+                          final seleccionado = _seleccionado?.id == m.id;
+                          return Material(
+                            color: seleccionado
+                                ? CatalogoEstilo.pastel
+                                : const Color(0xFFF8F8F8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(
+                                color: seleccionado
+                                    ? CatalogoEstilo.rojo
+                                    : const Color(0xFFE5E5E5),
+                              ),
+                            ),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: agregado
+                                  ? null
+                                  : () => setState(() => _seleccionado = m),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            m.nombre,
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                        if (agregado)
+                                          const Padding(
+                                            padding: EdgeInsets.only(left: 8),
+                                            child: Icon(
+                                              Icons.playlist_add_check_rounded,
+                                              color: Color(0xFF757575),
+                                            ),
+                                          )
+                                        else if (seleccionado)
+                                          const Icon(
+                                            Icons.check_circle_rounded,
+                                            color: CatalogoEstilo.rojo,
+                                          ),
+                                      ],
+                                    ),
+                                    if (m.laboratorio.isNotEmpty)
+                                      Text(
+                                        m.laboratorio,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFF757575),
+                                        ),
+                                      ),
+                                    if (m.presentacion.isNotEmpty)
+                                      Text(
+                                        m.presentacion,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFF757575),
+                                        ),
+                                      ),
+                                    const SizedBox(height: 6),
+                                    DisponibilidadKit(
+                                      medicamento: m,
+                                      cantidad: seleccionado ? _unidades : 1,
+                                    ),
+                                    if (agregado)
+                                      const Text(
+                                        'Ya incluido en el kit',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
                         },
                       ),
-                    ],
-                  ),
-                ),
+              ),
+              if (_seleccionado != null) ...[
                 const SizedBox(height: 12),
-              ],
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancelar', style: TextStyle(color: Color(0xFF616161))),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: rojo,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text('Cantidad', style: TextStyle(fontSize: 13)),
                     ),
-                    icon: const Icon(Icons.check_rounded, size: 18),
-                    label: const Text('Agregar al Kit'),
-                    onPressed: _seleccionado == null
-                        ? null
-                        : () {
-                            final item = KitItemEntity(
-                              id: '',
-                              medicamentoId: _seleccionado!.id,
-                              medicamentoNombre: _seleccionado!.nombre,
-                              presentacion: _seleccionado!.presentacion,
-                              cantidad: _cantidad,
-                            );
-                            Navigator.of(context).pop(item);
-                          },
+                    IconButton(
+                      tooltip: 'Disminuir cantidad',
+                      onPressed: _unidades > 1
+                          ? () => _ajustarCantidad(-1)
+                          : null,
+                      icon: const Icon(Icons.remove_rounded),
+                    ),
+                    SizedBox(
+                      width: 92,
+                      child: TextField(
+                        controller: _cantidad,
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(9),
+                        ],
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(
+                          errorText: _unidades < 1 ? 'Mínimo 1' : null,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Aumentar cantidad',
+                      onPressed: () => _ajustarCantidad(1),
+                      icon: const Icon(Icons.add_rounded),
+                    ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      icon: const Icon(Icons.add_rounded, size: 20),
+                      label: const Text('Agregar'),
+                      onPressed:
+                          _cargando ||
+                              _error != null ||
+                              _seleccionado == null ||
+                              _unidades < 1
+                          ? null
+                          : () {
+                              final m = _seleccionado!;
+                              Navigator.pop(
+                                context,
+                                KitItemEntity(
+                                  id: '',
+                                  medicamentoId: m.id,
+                                  medicamentoNombre: m.nombre,
+                                  presentacion: m.presentacion,
+                                  laboratorio: m.laboratorio,
+                                  cantidad: _unidades,
+                                ),
+                              );
+                            },
+                    ),
                   ),
                 ],
               ),
@@ -286,6 +328,6 @@ class _SelectorMedicamentoDialogState extends State<SelectorMedicamentoDialog> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }

@@ -21,6 +21,10 @@ class _KitsAdminViewState extends State<KitsAdminView> {
 
   List<KitEntity> _todosLosKits = [];
   List<AreaKit> _areas = [];
+  ContextoKits? _contexto;
+  Map<String, MedicamentoKit> _disponibilidad = {};
+  bool _operando = false;
+  bool get _puedeGestionar => _contexto?.puedeGestionar == true;
   bool _cargando = true;
   String? _error;
 
@@ -49,13 +53,23 @@ class _KitsAdminViewState extends State<KitsAdminView> {
     });
 
     try {
+      final contexto = await _repository.contexto();
       final kits = await _repository.listarKits();
-      final areas = await _repository.cargarAreasActivas();
+      final disponibilidad = await _repository.buscarMedicamentos();
 
       if (mounted) {
         setState(() {
           _todosLosKits = kits;
-          _areas = areas;
+          _contexto = contexto;
+          _areas = contexto.areas;
+          _disponibilidad = {for (final m in disponibilidad) m.id: m};
+          if (!_areas.any((a) => a.codigo == _filtroArea)) _filtroArea = null;
+          // Solo una asignación permite preselección sin ambigüedad.
+          if (contexto.rol == 'ENFERMERIA' &&
+              _filtroArea == null &&
+              _areas.length == 1) {
+            _filtroArea = _areas.single.codigo;
+          }
           _cargando = false;
         });
       }
@@ -71,8 +85,12 @@ class _KitsAdminViewState extends State<KitsAdminView> {
 
   /// Guarda la disponibilidad del kit y recarga los resultados desde el servidor.
   Future<void> _cambiarEstado(KitEntity kit, bool nuevoEstado) async {
+    if (_operando || _cargando || !_puedeGestionar) return;
+    setState(() => _operando = true);
     try {
-      await _repository.cambiarEstado(kit.id, nuevoEstado);
+      await _repository.cambiarEstado(kit.id, nuevoEstado).whenComplete(() {
+        if (mounted) setState(() => _operando = false);
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -113,8 +131,12 @@ class _KitsAdminViewState extends State<KitsAdminView> {
 
   /// Solicita el borrado al servidor, que decide si el historial permite eliminarlo.
   Future<void> _eliminarKit(KitEntity kit) async {
+    if (_operando || _cargando || !_puedeGestionar) return;
+    setState(() => _operando = true);
     try {
-      await _repository.eliminarKit(kit.id);
+      await _repository.eliminarKit(kit.id).whenComplete(() {
+        if (mounted) setState(() => _operando = false);
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -137,11 +159,33 @@ class _KitsAdminViewState extends State<KitsAdminView> {
   }
 
   /// Abre el formulario y actualiza la lista únicamente cuando se guardó un kit.
-  void _abrirFormulario({KitEntity? kit}) async {
+  void _abrirFormulario({KitEntity? kit, bool duplicar = false}) async {
+    if (!_puedeGestionar || _operando || _cargando || _error != null) return;
+    if (duplicar &&
+        !_areas.any((area) => area.codigo == kit?.areaDestino && area.activo)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Habilita primero el área original para crear una variante.',
+          ),
+        ),
+      );
+      return;
+    }
+    if (kit == null && _contexto?.rol == 'ENFERMERIA' && _filtroArea == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecciona tu área de trabajo.')),
+      );
+      return;
+    }
     final guardado = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) =>
-            KitFormularioView(repository: _repository, kitExistente: kit),
+        builder: (_) => KitFormularioView(
+          repository: _repository,
+          kitExistente: duplicar ? null : kit,
+          duplicarDe: duplicar ? kit : null,
+          areaInicial: _filtroArea,
+        ),
       ),
     );
 
@@ -152,6 +196,7 @@ class _KitsAdminViewState extends State<KitsAdminView> {
 
   /// Combina búsqueda, estado y área sobre los kits obtenidos de la base de datos.
   List<KitEntity> get _kitsFiltrados {
+    if (_contexto?.rol == 'ENFERMERIA' && _filtroArea == null) return [];
     return _todosLosKits.where((kit) {
       // Filtro de texto
       if (_filtroTexto.isNotEmpty) {
@@ -190,7 +235,18 @@ class _KitsAdminViewState extends State<KitsAdminView> {
           leading: IconButton(
             tooltip: 'Volver al menú',
             icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: () => context.go('/admin'),
+            onPressed: () {
+              final rol = _contexto?.rol;
+              context.go(
+                rol == 'ENFERMERIA'
+                    ? '/enfermeria'
+                    : rol == 'JEFATURA_FARMACIA'
+                    ? '/jefatura'
+                    : rol == 'FARMACIA'
+                    ? '/farmacia'
+                    : '/admin',
+              );
+            },
           ),
           title: const Text(
             'Gestión de kits',
@@ -201,16 +257,23 @@ class _KitsAdminViewState extends State<KitsAdminView> {
             ),
           ),
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          backgroundColor: rojo,
-          foregroundColor: Colors.white,
-          icon: const Icon(Icons.add_rounded),
-          label: const Text(
-            'Nuevo Kit',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          onPressed: () => _abrirFormulario(),
-        ),
+        floatingActionButton: !_puedeGestionar || _cargando || _error != null
+            ? null
+            : FloatingActionButton.extended(
+                backgroundColor: rojo,
+                foregroundColor: Colors.white,
+                icon: const Icon(Icons.add_rounded),
+                label: const Text(
+                  'Nuevo Kit',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onPressed:
+                    _operando ||
+                        !_areas.any((a) => a.activo) ||
+                        (_contexto?.rol == 'ENFERMERIA' && _filtroArea == null)
+                    ? null
+                    : () => _abrirFormulario(),
+              ),
         body: RefreshIndicator(
           color: rojo,
           onRefresh: _cargarDatos,
@@ -390,7 +453,11 @@ class _KitsAdminViewState extends State<KitsAdminView> {
                                 ),
                                 const SizedBox(width: 8),
                                 ChoiceChip(
-                                  label: const Text('Todas'),
+                                  label: Text(
+                                    _contexto?.rol == 'ENFERMERIA'
+                                        ? 'Seleccionar área'
+                                        : 'Todas',
+                                  ),
                                   selected: _filtroArea == null,
                                   onSelected: (_) {
                                     setState(() {
@@ -402,12 +469,16 @@ class _KitsAdminViewState extends State<KitsAdminView> {
                                   return Padding(
                                     padding: const EdgeInsets.only(left: 6),
                                     child: ChoiceChip(
-                                      label: Text(area.nombre),
+                                      label: Text(
+                                        '${area.nombre}${area.activo ? '' : ' (deshabilitada)'}',
+                                      ),
                                       selected: _filtroArea == area.codigo,
                                       onSelected: (_) {
                                         setState(() {
                                           _filtroArea =
-                                              _filtroArea == area.codigo
+                                              _contexto?.rol == 'ENFERMERIA'
+                                              ? area.codigo
+                                              : _filtroArea == area.codigo
                                               ? null
                                               : area.codigo;
                                         });
@@ -487,7 +558,7 @@ class _KitsAdminViewState extends State<KitsAdminView> {
                             ),
                             const SizedBox(height: 12),
                             const Text(
-                              'No se encontraron kits con los filtros seleccionados',
+                              'Selecciona un área o ajusta los filtros para consultar sus kits.',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -496,7 +567,7 @@ class _KitsAdminViewState extends State<KitsAdminView> {
                             ),
                             const SizedBox(height: 6),
                             const Text(
-                              'Prueba cambiando el término de búsqueda o crea una nueva plantilla con el botón (+).',
+                              'La consulta conserva las plantillas deshabilitadas y sus componentes.',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Color(0xFF9E9E9E),
@@ -504,14 +575,15 @@ class _KitsAdminViewState extends State<KitsAdminView> {
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 16),
-                            FilledButton.icon(
-                              style: FilledButton.styleFrom(
-                                backgroundColor: rojo,
+                            if (_puedeGestionar && _areas.any((a) => a.activo))
+                              FilledButton.icon(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: rojo,
+                                ),
+                                icon: const Icon(Icons.add_rounded),
+                                label: const Text('Crear Primer Kit'),
+                                onPressed: () => _abrirFormulario(),
                               ),
-                              icon: const Icon(Icons.add_rounded),
-                              label: const Text('Crear Primer Kit'),
-                              onPressed: () => _abrirFormulario(),
-                            ),
                           ],
                         ),
                       ),
@@ -534,6 +606,11 @@ class _KitsAdminViewState extends State<KitsAdminView> {
                           return KitCard(
                             key: ValueKey(kit.id),
                             kit: kit,
+                            puedeGestionar: _puedeGestionar,
+                            bloqueada: _operando || _cargando,
+                            disponibilidad: _disponibilidad,
+                            onDuplicar: () =>
+                                _abrirFormulario(kit: kit, duplicar: true),
                             onEditar: () => _abrirFormulario(kit: kit),
                             onCambiarEstado: (nuevoEstado) =>
                                 _cambiarEstado(kit, nuevoEstado),

@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/kit_entity.dart';
+import '../../data/repositories/kits_repository.dart';
+import 'disponibilidad_kit.dart';
 
 class KitCard extends StatefulWidget {
   final KitEntity kit;
   final VoidCallback onEditar;
   final ValueChanged<bool> onCambiarEstado;
   final VoidCallback onEliminar;
+  final VoidCallback? onDuplicar;
+  final bool puedeGestionar;
+  final bool bloqueada;
+  final Map<String, MedicamentoKit> disponibilidad;
 
   const KitCard({
     super.key,
@@ -13,6 +19,10 @@ class KitCard extends StatefulWidget {
     required this.onEditar,
     required this.onCambiarEstado,
     required this.onEliminar,
+    this.onDuplicar,
+    this.puedeGestionar = true,
+    this.bloqueada = false,
+    this.disponibilidad = const {},
   });
 
   @override
@@ -70,7 +80,7 @@ class _KitCardState extends State<KitCard> {
         ],
       ),
     ).then((confirmado) {
-      if (mounted && confirmado == true) {
+      if (mounted && confirmado == true && !widget.bloqueada) {
         widget.onCambiarEstado(nuevoEstado);
       }
     });
@@ -115,7 +125,7 @@ class _KitCardState extends State<KitCard> {
         ],
       ),
     ).then((confirmado) {
-      if (mounted && confirmado == true) {
+      if (mounted && confirmado == true && !widget.bloqueada) {
         widget.onEliminar();
       }
     });
@@ -370,6 +380,12 @@ class _KitCardState extends State<KitCard> {
                                           ),
                                         ),
                                       ),
+                                    const SizedBox(height: 6),
+                                    DisponibilidadKit(
+                                      medicamento: widget
+                                          .disponibilidad[item.medicamentoId],
+                                      cantidad: item.cantidad,
+                                    ),
                                   ],
                                 ),
                               ),
@@ -402,47 +418,57 @@ class _KitCardState extends State<KitCard> {
                     ),
             ),
           ],
-          const Divider(height: 1, color: Color(0xFFEEEEEE)),
-          // Acciones del mismo ancho, con etiquetas accesibles y respuesta al hover.
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _accion(
-                    'Editar kit',
-                    Icons.edit_outlined,
-                    widget.onEditar,
+          if (widget.puedeGestionar) ...[
+            const Divider(height: 1, color: Color(0xFFEEEEEE)),
+            // Acciones del mismo ancho, con etiquetas accesibles y respuesta al hover.
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _accion(
+                      'Editar kit',
+                      Icons.edit_outlined,
+                      widget.onEditar,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _accion(
-                    activo ? 'Inhabilitar kit' : 'Habilitar kit',
-                    activo
-                        ? Icons.pause_circle_outline_rounded
-                        : Icons.play_circle_outline_rounded,
-                    () => _confirmarCambioEstado(!activo),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _accion(
+                      'Duplicar como variante',
+                      Icons.copy_all_outlined,
+                      widget.onDuplicar,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _accion(
-                    'Eliminar borrador de kit',
-                    Icons.delete_outline_rounded,
-                    _confirmarEliminacion,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _accion(
+                      activo ? 'Inhabilitar kit' : 'Habilitar kit',
+                      activo
+                          ? Icons.pause_circle_outline_rounded
+                          : Icons.play_circle_outline_rounded,
+                      () => _confirmarCambioEstado(!activo),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _accion(
+                      'Eliminar borrador de kit',
+                      Icons.delete_outline_rounded,
+                      _confirmarEliminacion,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 
   /// Mantiene iguales las zonas táctiles y explica los iconos al mantener pulsado.
-  Widget _accion(String etiqueta, IconData icono, VoidCallback accion) {
+  Widget _accion(String etiqueta, IconData icono, VoidCallback? accion) {
     return Tooltip(
       message: etiqueta,
       child: OutlinedButton(
@@ -457,7 +483,7 @@ class _KitCardState extends State<KitCard> {
             borderRadius: BorderRadius.circular(10),
           ),
         ),
-        onPressed: accion,
+        onPressed: widget.bloqueada ? null : accion,
         child: Semantics(label: etiqueta, child: Icon(icono, size: 21)),
       ),
     );

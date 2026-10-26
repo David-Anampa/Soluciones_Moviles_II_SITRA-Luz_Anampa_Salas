@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../almacen/presentation/views/diferencias_abastecimiento_view.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -116,6 +117,19 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFC62828),
+                    minimumSize: const Size(48, 48),
+                  ),
+                  icon: const Icon(Icons.medical_services_outlined),
+                  label: const Text('Consultar kits por área'),
+                  onPressed: () => context.push('/kits'),
+                ),
+              ),
+              const SizedBox(height: 16),
               // 1. Banner de Farmacia
               Container(
                 width: double.infinity,
@@ -347,10 +361,15 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
               _buildModuleTile(
                 icon: Icons.fact_check_outlined,
                 title: 'Mis reportes e historial',
-                subtitle: 'Sigue diferencias, revisa propuestas y consulta sus justificaciones.',
+                subtitle:
+                    'Sigue diferencias, revisa propuestas y consulta sus justificaciones.',
                 color: AppColors.primary,
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const DiferenciasAbastecimientoView(esFarmacia: true))),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const DiferenciasAbastecimientoView(esFarmacia: true),
+                  ),
+                ),
               ),
               const SizedBox(height: 10),
               _buildModuleTile(

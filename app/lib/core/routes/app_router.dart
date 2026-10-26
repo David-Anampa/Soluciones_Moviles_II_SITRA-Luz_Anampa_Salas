@@ -21,6 +21,7 @@ class AppRoutes {
   static const String catalogos = '/admin/catalogos';
   static const String usuarios = '/admin/usuarios';
   static const String kits = '/admin/kits';
+  static const String kitsArea = '/kits';
   static const String jefatura = '/jefatura';
   static const String farmacia = '/farmacia';
   static const String almacen = '/almacen';
@@ -34,7 +35,9 @@ class AppRoutes {
       almacen: UserRole.almacen,
       enfermeria: UserRole.enfermeria,
     }.entries) {
-      if (path == entry.key || path.startsWith('${entry.key}/')) return entry.value;
+      if (path == entry.key || path.startsWith('${entry.key}/')) {
+        return entry.value;
+      }
     }
     return null;
   }
@@ -87,6 +90,10 @@ GoRouter createRouter(AuthViewModel authViewModel) {
         builder: (context, state) => const KitsAdminView(),
       ),
       GoRoute(
+        path: AppRoutes.kitsArea,
+        builder: (context, state) => const KitsAdminView(),
+      ),
+      GoRoute(
         path: AppRoutes.farmacia,
         builder: (context, state) => const FarmaciaDashboardView(),
       ),
@@ -106,7 +113,9 @@ GoRouter createRouter(AuthViewModel authViewModel) {
 
       // Si no está autenticado, redirigir a login
       final isAuthenticated =
-          authState is AuthStateAuthenticated && currentUser != null && currentUser.activo;
+          authState is AuthStateAuthenticated &&
+          currentUser != null &&
+          currentUser.activo;
 
       if (!isAuthenticated) {
         return isLoggingIn ? null : AppRoutes.login;
@@ -118,7 +127,19 @@ GoRouter createRouter(AuthViewModel authViewModel) {
       }
 
       final requiredRole = AppRoutes.roleForPath(state.uri.path);
-      if (currentUser.rol != UserRole.administrador && requiredRole != currentUser.rol) {
+      // Acceso compartido de consulta; las RPC comprueban área y permiso de gestión.
+      if (state.uri.path == AppRoutes.kitsArea) {
+        return const {
+              UserRole.administrador,
+              UserRole.jefaturaFarmacia,
+              UserRole.farmacia,
+              UserRole.enfermeria,
+            }.contains(currentUser.rol)
+            ? null
+            : AppRoutes.routeForRole(currentUser.rol);
+      }
+      if (currentUser.rol != UserRole.administrador &&
+          requiredRole != currentUser.rol) {
         return AppRoutes.routeForRole(currentUser.rol);
       }
 

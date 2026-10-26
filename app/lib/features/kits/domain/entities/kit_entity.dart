@@ -71,8 +71,14 @@ class KitEntity {
       nombre: map['nombre']?.toString() ?? '',
       descripcion: map['descripcion']?.toString(),
       areaDestino: map['area_destino']?.toString() ?? '',
-      areaNombre: map['area_nombre']?.toString() ?? map['area_destino']?.toString() ?? '',
-      areaCodigoInterno: map['area_codigo_interno']?.toString() ?? map['area_destino']?.toString() ?? '',
+      areaNombre:
+          map['area_nombre']?.toString() ??
+          map['area_destino']?.toString() ??
+          '',
+      areaCodigoInterno:
+          map['area_codigo_interno']?.toString() ??
+          map['area_destino']?.toString() ??
+          '',
       activo: map['activo'] as bool? ?? true,
       createdAt: DateTime.tryParse(map['created_at']?.toString() ?? ''),
       updatedAt: DateTime.tryParse(map['updated_at']?.toString() ?? ''),

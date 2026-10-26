@@ -29,11 +29,15 @@ class KitBorrador {
 
   /// Agrega un ítem o actualiza su cantidad si ya existe en la lista
   KitBorrador agregarOActualizarItem(KitItemEntity nuevoItem) {
-    final index = items.indexWhere((i) => i.medicamentoId == nuevoItem.medicamentoId);
+    final index = items.indexWhere(
+      (i) => i.medicamentoId == nuevoItem.medicamentoId,
+    );
     if (index >= 0) {
       final updatedList = List<KitItemEntity>.from(items);
       final actual = updatedList[index];
-      updatedList[index] = actual.copyWith(cantidad: actual.cantidad + nuevoItem.cantidad);
+      updatedList[index] = actual.copyWith(
+        cantidad: actual.cantidad + nuevoItem.cantidad,
+      );
       return copyWith(items: updatedList);
     } else {
       return copyWith(items: [...items, nuevoItem]);

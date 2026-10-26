@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../almacen/presentation/views/diferencias_abastecimiento_view.dart';
 import '../../../almacen/presentation/views/ingresos_correcciones_view.dart';
 import 'package:provider/provider.dart';
@@ -24,20 +25,47 @@ class JefaturaDashboardView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(width: double.infinity, child: OutlinedButton.icon(
-              icon: const Icon(Icons.fact_check_outlined),
-              label: const Text('Auditoría de diferencias e historial'),
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => const DiferenciasAbastecimientoView(soloLectura: true))),
-            )),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFC62828),
+                  minimumSize: const Size(48, 48),
+                ),
+                icon: const Icon(Icons.medical_services_outlined),
+                label: const Text('Consultar kits por área'),
+                onPressed: () => context.push('/kits'),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.fact_check_outlined),
+                label: const Text('Auditoría de diferencias e historial'),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const DiferenciasAbastecimientoView(soloLectura: true),
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
             // Banner de la Jefatura
-            SizedBox(width: double.infinity, child: OutlinedButton.icon(
-              icon: const Icon(Icons.receipt_long_outlined),
-              label: const Text('Historial de ingresos y correcciones'),
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => const IngresosCorreccionesView(soloLectura: true))),
-            )),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.receipt_long_outlined),
+                label: const Text('Historial de ingresos y correcciones'),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const IngresosCorreccionesView(soloLectura: true),
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
             Container(
               width: double.infinity,
@@ -65,15 +93,20 @@ class JefaturaDashboardView extends StatelessWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Row(
                           children: [
-                            Icon(Icons.shield_rounded,
-                                color: Colors.amberAccent, size: 16),
+                            Icon(
+                              Icons.shield_rounded,
+                              color: Colors.amberAccent,
+                              size: 16,
+                            ),
                             SizedBox(width: 6),
                             Text(
                               'CONTROL FARMACÉUTICO',
@@ -89,15 +122,20 @@ class JefaturaDashboardView extends StatelessWidget {
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.warning.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Row(
                           children: [
-                            Icon(Icons.warning_amber_rounded,
-                                color: Colors.white, size: 14),
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: Colors.white,
+                              size: 14,
+                            ),
                             SizedBox(width: 4),
                             Text(
                               '3 Lotes Críticos',
@@ -206,8 +244,11 @@ class JefaturaDashboardView extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.notification_important_rounded,
-                      color: AppColors.warning, size: 28),
+                  const Icon(
+                    Icons.notification_important_rounded,
+                    color: AppColors.warning,
+                    size: 28,
+                  ),
                   const SizedBox(width: 12),
                   const Expanded(
                     child: Column(
@@ -236,8 +277,14 @@ class JefaturaDashboardView extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       backgroundColor: const Color(0xFFFFE0B2),
                     ),
-                    onPressed: () => _showActionSnackbar(context, 'Revisión de Lote Crítico'),
-                    child: const Text('Revisar', style: TextStyle(fontSize: 12)),
+                    onPressed: () => _showActionSnackbar(
+                      context,
+                      'Revisión de Lote Crítico',
+                    ),
+                    child: const Text(
+                      'Revisar',
+                      style: TextStyle(fontSize: 12),
+                    ),
                   ),
                 ],
               ),
@@ -259,7 +306,8 @@ class JefaturaDashboardView extends StatelessWidget {
             _buildModuleTile(
               icon: Icons.auto_graph_rounded,
               title: 'Matriz de Trazabilidad y Rotación FEFO',
-              subtitle: 'Visualización de lotes, antigüedad y flujo entre almacén y servicios.',
+              subtitle:
+                  'Visualización de lotes, antigüedad y flujo entre almacén y servicios.',
               color: AppColors.jefaturaColor,
               onTap: () => _showActionSnackbar(context, 'Matriz FEFO'),
             ),
@@ -267,15 +315,18 @@ class JefaturaDashboardView extends StatelessWidget {
             _buildModuleTile(
               icon: Icons.approval_rounded,
               title: 'Aprobación de Solicitudes Especiales',
-              subtitle: 'Antibióticos de reserva, quimioterápicos y medicamentos controlados.',
+              subtitle:
+                  'Antibióticos de reserva, quimioterápicos y medicamentos controlados.',
               color: AppColors.secondary,
-              onTap: () => _showActionSnackbar(context, 'Aprobaciones de Alto Costo'),
+              onTap: () =>
+                  _showActionSnackbar(context, 'Aprobaciones de Alto Costo'),
             ),
             const SizedBox(height: 10),
             _buildModuleTile(
               icon: Icons.pie_chart_rounded,
               title: 'Reporte de Consumo por Servicio Clínico',
-              subtitle: 'Análisis comparativo: UCI vs Emergencia vs Hospitalización.',
+              subtitle:
+                  'Análisis comparativo: UCI vs Emergencia vs Hospitalización.',
               color: AppColors.primary,
               onTap: () => _showActionSnackbar(context, 'Reporte por Servicio'),
             ),
@@ -283,7 +334,8 @@ class JefaturaDashboardView extends StatelessWidget {
             _buildModuleTile(
               icon: Icons.assignment_late_rounded,
               title: 'Auditoría de Mermas y Devoluciones',
-              subtitle: 'Control de frascos abiertos, roturas y medicamentos devueltos.',
+              subtitle:
+                  'Control de frascos abiertos, roturas y medicamentos devueltos.',
               color: AppColors.error,
               onTap: () => _showActionSnackbar(context, 'Auditoría de Mermas'),
             ),

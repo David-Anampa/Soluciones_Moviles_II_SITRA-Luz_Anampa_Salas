@@ -6,15 +6,20 @@ import '../../domain/entities/kit_item_entity.dart';
 import '../../domain/kit_borrador.dart';
 import '../../domain/kit_validadores.dart';
 import '../widgets/selector_medicamento_dialog.dart';
+import '../widgets/disponibilidad_kit.dart';
 
 class KitFormularioView extends StatefulWidget {
   final KitEntity? kitExistente;
   final KitsRepository repository;
+  final KitEntity? duplicarDe;
+  final String? areaInicial;
 
   const KitFormularioView({
     super.key,
     this.kitExistente,
     required this.repository,
+    this.duplicarDe,
+    this.areaInicial,
   });
 
   @override
@@ -32,6 +37,8 @@ class _KitFormularioViewState extends State<KitFormularioView> {
   String? _areaSeleccionada;
   List<AreaKit> _areas = [];
   bool _cargandoAreas = true;
+  bool _autorizado = false;
+  Map<String, MedicamentoKit> _disponibilidad = {};
 
   List<KitItemEntity> _items = [];
   bool _guardando = false;
@@ -42,10 +49,13 @@ class _KitFormularioViewState extends State<KitFormularioView> {
   @override
   void initState() {
     super.initState();
-    final kit = widget.kitExistente;
-    _nombreCtrl = TextEditingController(text: kit?.nombre ?? '');
+    final kit = widget.kitExistente ?? widget.duplicarDe;
+    // La variante pide otro nombre y se guarda con identidad propia.
+    _nombreCtrl = TextEditingController(
+      text: widget.duplicarDe != null ? '' : kit?.nombre ?? '',
+    );
     _descripcionCtrl = TextEditingController(text: kit?.descripcion ?? '');
-    _areaSeleccionada = kit?.areaDestino;
+    _areaSeleccionada = kit?.areaDestino ?? widget.areaInicial;
     _items = kit != null ? List<KitItemEntity>.from(kit.items) : [];
 
     _cargarAreas();
@@ -61,7 +71,16 @@ class _KitFormularioViewState extends State<KitFormularioView> {
   /// Consulta las áreas habilitadas para asignar la plantilla a un destino válido.
   Future<void> _cargarAreas() async {
     try {
-      final areas = await widget.repository.cargarAreasActivas();
+      final contexto = await widget.repository.contexto();
+      if (!contexto.puedeGestionar) {
+        throw StateError('No tienes permisos para gestionar kits.');
+      }
+      final areas = contexto.areas
+          .where(
+            (a) => a.activo || a.codigo == widget.kitExistente?.areaDestino,
+          )
+          .toList();
+      final disponibilidad = await widget.repository.buscarMedicamentos();
       if (mounted) {
         setState(() {
           // El selector necesita un único elemento por código operativo.
@@ -70,14 +89,16 @@ class _KitFormularioViewState extends State<KitFormularioView> {
               if (area.codigo.trim().isNotEmpty) area.codigo: area,
           }.values.toList();
           _cargandoAreas = false;
+          _autorizado = true;
+          _disponibilidad = {for (final m in disponibilidad) m.id: m};
           // No sustituir silenciosamente el destino histórico por otra área.
           if (_areaSeleccionada != null &&
               !_areas.any((area) => area.codigo == _areaSeleccionada)) {
             _areaSeleccionada = null;
             _errorMensaje =
                 'El área original del kit (${widget.kitExistente?.areaNombre ?? ''}) '
-                'no está disponible entre las áreas habilitadas. '
-                'Selecciona un área habilitada para guardar los cambios. '
+                'no está disponible para tu perfil. '
+                'Selecciona un área habilitada y autorizada para guardar los cambios. '
                 'El kit original todavía no se ha modificado.';
           } else if (_areas.isEmpty) {
             _errorMensaje =
@@ -139,7 +160,7 @@ class _KitFormularioViewState extends State<KitFormularioView> {
 
   /// Valida los datos y solicita al repositorio guardar cabecera e ítems juntos.
   Future<void> _guardar() async {
-    if (_guardando || _cargandoAreas) return;
+    if (_guardando || _cargandoAreas || !_autorizado) return;
     if (!_areas.any((area) => area.codigo == _areaSeleccionada)) {
       setState(() {
         _errorMensaje =
@@ -170,7 +191,11 @@ class _KitFormularioViewState extends State<KitFormularioView> {
     });
 
     try {
-      await widget.repository.guardarKit(borrador, id: widget.kitExistente?.id);
+      await widget.repository.guardarKit(
+        borrador,
+        id: widget.kitExistente?.id,
+        origenId: widget.duplicarDe?.id,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -215,7 +240,11 @@ class _KitFormularioViewState extends State<KitFormularioView> {
           backgroundColor: rojo,
           foregroundColor: Colors.white,
           title: Text(
-            _esEdicion ? 'Editar Plantilla de Kit' : 'Crear Nuevo Kit Clínico',
+            _esEdicion
+                ? 'Editar kit'
+                : widget.duplicarDe != null
+                ? 'Duplicar kit'
+                : 'Nuevo kit',
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
@@ -250,7 +279,9 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                             child: Text(
                               _esEdicion
                                   ? 'Los cambios se aplican a futuros pedidos. Las fichas anteriores conservan sus medicamentos y cantidades.'
-                                  : 'Define el área, los medicamentos y las cantidades que se incluirán en esta plantilla.',
+                                  : widget.duplicarDe != null
+                                  ? 'Copia de «${widget.duplicarDe!.nombre}». Escribe otro nombre y ajusta su composición. El original se conserva.'
+                                  : 'Crea un kit personalizado: elige el área, los medicamentos y las cantidades.',
                               style: const TextStyle(
                                 fontSize: 12,
                                 height: 1.4,
@@ -376,15 +407,18 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                     return DropdownMenuItem<String>(
                                       value: area.codigo,
                                       child: Text(
-                                        '${area.nombre} (${area.codigoInterno})',
+                                        '${area.nombre} (${area.codigoInterno})${area.activo ? '' : ' · Deshabilitada (histórica)'}',
                                       ),
                                     );
                                   }).toList(),
-                                  onChanged: (val) {
-                                    setState(() {
-                                      _areaSeleccionada = val;
-                                    });
-                                  },
+                                  onChanged:
+                                      _guardando || widget.duplicarDe != null
+                                      ? null
+                                      : (val) {
+                                          setState(() {
+                                            _areaSeleccionada = val;
+                                          });
+                                        },
                                 ),
                           const SizedBox(height: 16),
                           TextFormField(
@@ -598,6 +632,12 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                         ],
                                       ),
                                       const SizedBox(height: 8),
+                                      DisponibilidadKit(
+                                        medicamento:
+                                            _disponibilidad[item.medicamentoId],
+                                        cantidad: item.cantidad,
+                                      ),
+                                      const SizedBox(height: 8),
                                       Row(
                                         children: [
                                           const Spacer(),
@@ -739,7 +779,10 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            onPressed: _guardando ? null : _guardar,
+                            onPressed:
+                                _guardando || _cargandoAreas || !_autorizado
+                                ? null
+                                : _guardar,
                           ),
                         ),
                       ],

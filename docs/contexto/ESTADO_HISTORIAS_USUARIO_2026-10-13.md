@@ -28,15 +28,15 @@ Actualización posterior del 13 de octubre: por solicitud del usuario se ejecut�
 
 | HU | Historia | Estado y observación |
 |---|---|---|
-| HU-023 | Visualizar stock de Farmacia y Almacén | **Parcial.** La consulta operativa obtiene stock de Almacén. Falta la vista consolidada con cantidades de ambas ubicaciones. |
-| HU-024 | Registrar entrada de stock | **Parcial.** Se registran lotes y entradas en Almacén. Falta cubrir Farmacia y guardar lote, stock y auditoría en una operación atómica. |
+| HU-023 | Visualizar stock de Farmacia y Almacén | **Implementada; pendiente de aceptación funcional.** Existencias separadas de Farmacia, Almacén y En tránsito. Ver acuerdos del 26/10. |
+| HU-024 | Registrar entrada de stock | **Implementada; pendiente de aceptación funcional.** Ingreso atómico de medicamento/lote, stock y auditoría; correcciones justificadas. Entradas externas en Almacén; Farmacia se abastece por traslado y recepción, sin duplicar una compra. Ver guía HU-024 del 26/10. |
 | HU-025 | Visualizar trazabilidad de un ítem | **Parcial.** Se registran movimientos, pero falta la pantalla para consultar el historial completo por medicamento o insumo. |
 
 ## 4. Abastecimiento Farmacia → Almacén
 
 | HU | Historia | Estado y observación |
 |---|---|---|
-| HU-029 | Registrar solicitud por faltantes de guardia | **Implementada con ajustes pendientes.** Incluye selección de medicamentos, cantidades, turno, justificación, solicitante y cancelación con motivo. La creación de cabecera, ítems y auditoría todavía ocurre mediante llamadas separadas. |
+| HU-029 | Registrar solicitud por faltantes de guardia | **Implementada; pendiente de aceptación funcional.** Creación atómica de cabecera, ítems y auditoría, con reintentos; conserva cancelación con motivo y solicitante desde sesión. Ver guía de abastecimiento del 25/10. |
 | HU-030 | Visualizar y atender solicitudes | **Implementada; pendiente de validación funcional.** Incluye toma confirmada, preparación, rechazo, despacho, modalidad ENTREGA/RECOJO, recepción conforme, devolución por lote y auditoría mediante función transaccional. |
 
 ## 5. Fichas y pedidos Áreas → Farmacia
@@ -65,7 +65,7 @@ Existen tablas base de dispensación, pero no el flujo completo de estas histori
 | HU-018 | Crear kit | **Implementada en código el 22 de octubre por David Anampa.** Formulario reutilizable con selector dinámico de áreas activas y buscador de medicamentos del catálogo maestro de Supabase; guardado atómico mediante RPC transaccional `administrar_kit_hu018` con auditoría. |
 | HU-019 | Editar kit | **Implementada en código el 22 de octubre por David Anampa.** Reutiliza el formulario de HU-018 con carga previa de ítems y cantidades. Cumple la regla de preservación estricta de historial clínico: la edición de la plantilla no altera las fichas o dispensaciones pasadas ni sus ítems previamente despachados; bloquea la eliminación si existen dispensaciones asociadas. |
 
-Las tablas `kits` y `kit_items` cuentan con migración dedicada `migracion_hu017_hu018_hu019_kits_2026_10_22.sql`, RPCs atómicas, modelo limpio en `lib/features/kits` y 100% de tests unitarios aprobados.
+**Actualización del 26/10 que sustituye el alcance de las filas anteriores:** HU-017/HU-018/HU-019 incluyen ahora permisos por área, checkbox para Técnica/Enfermera, selección de área de trabajo, lectura para Jefatura/Farmacia, variantes por duplicación, personalizados y consulta real de disponibilidad/laboratorio. Se corrigieron RPC ausente sin fallback, rol nulo y código canónico de área. La edición conserva el área histórica deshabilitada; no permite nuevas asignaciones allí. Migración vigente: `migracion_kits_por_area_2026_10_26.sql`, incluida al final del setup. **Implementación local terminada, pendiente de migración y validación manual; no marcar Listo todavía.** Ver `docs/supabase/GUIA_KITS_POR_AREA_2026_10_26.md`. No se ejecutaron suites de pruebas para esta actualización ni se certifica cobertura del 100%.
 
 ## 7. Administración
 
