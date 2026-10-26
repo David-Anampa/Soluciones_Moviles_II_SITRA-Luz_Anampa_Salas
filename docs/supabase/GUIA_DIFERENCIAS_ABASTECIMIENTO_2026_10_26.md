@@ -109,7 +109,8 @@ Las pruebas están fuera del proyecto, bajo
 
 ## Alcance
 
-Este avance cubre diferencias en recepción Almacén → Farmacia. No implementa
-la corrección general de ingresos y lotes, los acuerdos pendientes de kits ni
-la pantalla integral de toda la auditoría de la aplicación. No declara cerrado
-todo el Sprint 5.
+Este avance cubre diferencias en recepción Almacén → Farmacia. La corrección de
+cantidades de ingreso se completó posteriormente en
+[HU-024](GUIA_HU024_INGRESOS_ATOMICOS_2026_10_26.md). Los acuerdos pendientes de
+kits y la pantalla integral de toda la auditoría mantienen su alcance separado.
+No se declara cerrado todo el Sprint 5.
