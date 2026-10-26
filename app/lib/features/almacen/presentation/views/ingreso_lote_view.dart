@@ -121,6 +121,11 @@ class _IngresoLoteViewState extends State<IngresoLoteView> {
     final partes = _fechaController.text.split('/');
     try {
       fechaVenc = DateTime(int.parse(partes[2]), int.parse(partes[1]), int.parse(partes[0]));
+      final hoy = DateTime.now();
+      if (fechaVenc.day != int.parse(partes[0]) || fechaVenc.month != int.parse(partes[1]) ||
+          fechaVenc.year != int.parse(partes[2]) || !fechaVenc.isAfter(DateTime(hoy.year,hoy.month,hoy.day))) {
+        throw const FormatException('Fecha inválida o vencida');
+      }
     } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('❌ Fecha inválida. Usa DD/MM/AAAA'), backgroundColor: Colors.red),
@@ -128,7 +133,14 @@ class _IngresoLoteViewState extends State<IngresoLoteView> {
       return;
     }
 
+    final precioTexto = _precioCompraController.text.trim().replaceAll(',', '.');
+    final precio = precioTexto.isEmpty ? null : double.tryParse(precioTexto);
+    if (precioTexto.isNotEmpty && (precio == null || !precio.isFinite || precio < 0 || precio > 99999999.99)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Revisa el precio de compra.')));
+      return;
+    }
     final vm = context.read<AlmacenViewModel>();
+    if (vm.isSaving) return;
     final exito = await vm.registrarLoteParaMedicamentoExistente(
       medicamentoId: _selectedMedicamento!.id,
       numeroLote: _loteController.text.trim(),
@@ -136,7 +148,7 @@ class _IngresoLoteViewState extends State<IngresoLoteView> {
       laboratorio: _laboratorioController.text.trim().isNotEmpty ? _laboratorioController.text.trim() : null,
       proveedor: _proveedorController.text.trim().isNotEmpty ? _proveedorController.text.trim() : null,
       numBoleta: _numBoletaController.text.trim().isNotEmpty ? _numBoletaController.text.trim() : null,
-      precioCompra: double.tryParse(_precioCompraController.text.trim()),
+      precioCompra: precio,
       justificacion: _justificacion,
       cantidadInicial: int.tryParse(_cantidadController.text.trim()) ?? 0,
     );

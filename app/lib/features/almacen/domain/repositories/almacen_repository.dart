@@ -5,6 +5,9 @@ import '../entities/stock_almacen_entity.dart';
 
 /// Contrato del Repositorio de Almacén (Capa de Dominio)
 abstract class AlmacenRepository {
+  /// HU-024: catálogo nuevo, lote, stock y auditoría en una misma transacción.
+  Future<void> registrarMedicamentoConIngreso({required Map<String,dynamic> medicamento,
+    required Map<String,dynamic> ingreso});
   /// Obtiene la lista completa de stock disponible en el Almacén General
   Future<List<StockAlmacenEntity>> getInventarioAlmacen();
 

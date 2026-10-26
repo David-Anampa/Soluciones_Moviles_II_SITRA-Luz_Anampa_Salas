@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../almacen/presentation/views/diferencias_abastecimiento_view.dart';
+import '../../../almacen/presentation/views/ingresos_correcciones_view.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/sitra_app_bar.dart';
@@ -31,6 +32,13 @@ class JefaturaDashboardView extends StatelessWidget {
             )),
             const SizedBox(height: 16),
             // Banner de la Jefatura
+            SizedBox(width: double.infinity, child: OutlinedButton.icon(
+              icon: const Icon(Icons.receipt_long_outlined),
+              label: const Text('Historial de ingresos y correcciones'),
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const IngresosCorreccionesView(soloLectura: true))),
+            )),
+            const SizedBox(height: 16),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),

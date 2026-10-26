@@ -95,38 +95,23 @@ class AlmacenViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 1. Crear el medicamento maestro
-      final nuevoMed = await _repository.registrarMedicamento(
-        gtin: gtin,
-        nombreComercial: nombreComercial,
-        principioActivo: principioActivo,
-        presentacion: presentacion,
-        laboratorio: laboratorio,
-        codArt: codArt,
-        precioKairos: precioKairos,
-        registroSanitario: registroSanitario,
-        unidadPresentacion: unidadPresentacion,
-        cantidadPorPresentacion: cantidadPorPresentacion,
-        requiereCadenaFrio: requiereCadenaFrio,
-        temperaturaMin: temperaturaMin,
-        temperaturaMax: temperaturaMax,
-      );
-
-      // 2. Crear el lote inicial con el stock en Almacén
-      await _repository.registrarIngresoLote(
-        medicamentoId: nuevoMed.id,
-        numeroLote: numeroLote,
-        fechaVencimiento: fechaVencimiento,
-        fechaFabricacion: fechaFabricacion,
-        proveedor: proveedor,
-        precioCompra: precioCompra,
-        precioVenta: precioVenta,
-        numBoleta: numBoleta,
-        justificacion: justificacion,
-        temperaturaRecepcion: temperaturaRecepcion,
-        observaciones: observaciones,
-        cantidadInicial: cantidadInicial,
-      );
+      // Si falla el ingreso tampoco queda un medicamento creado a medias.
+      await _repository.registrarMedicamentoConIngreso(medicamento: {
+        'gtin': gtin, 'nombre_comercial': nombreComercial,
+        'principio_activo': principioActivo, 'presentacion': presentacion,
+        'laboratorio': laboratorio, 'cod_art': codArt, 'precio_kairos': precioKairos,
+        'registro_sanitario': registroSanitario, 'unidad_presentacion': unidadPresentacion,
+        'cantidad_por_presentacion': cantidadPorPresentacion,
+        'requiere_cadena_frio': requiereCadenaFrio,
+        'temperatura_min': temperaturaMin, 'temperatura_max': temperaturaMax,
+      }, ingreso: {
+        'numero_lote': numeroLote, 'fecha_vencimiento': fechaVencimiento.toIso8601String().split('T').first,
+        'fecha_fabricacion': fechaFabricacion?.toIso8601String().split('T').first,
+        'laboratorio': laboratorio, 'proveedor': proveedor, 'precio_compra': precioCompra,
+        'precio_venta': precioVenta, 'num_boleta': numBoleta,
+        'justificacion': justificacion ?? 'Compra', 'temperatura_recepcion': temperaturaRecepcion,
+        'observaciones': observaciones, 'cantidad': cantidadInicial,
+      });
 
       // 3. Recargar el inventario
       await cargarInventario();

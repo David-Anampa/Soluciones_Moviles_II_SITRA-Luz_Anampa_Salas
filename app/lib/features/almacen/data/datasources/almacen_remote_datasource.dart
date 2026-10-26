@@ -5,6 +5,7 @@ import '../models/lote_model.dart';
 import '../models/medicamento_model.dart';
 import '../models/pedido_abastecimiento_model.dart';
 import '../models/stock_almacen_model.dart';
+import '../repositories/ingresos_repository.dart';
 
 /// Excepción de operaciones en el módulo de Almacén
 class AlmacenException implements Exception {
@@ -22,6 +23,12 @@ class AlmacenRemoteDataSource {
   AlmacenRemoteDataSource({SupabaseClient? client}) : _customClient = client;
 
   SupabaseClient get _supabase => _customClient ?? Supabase.instance.client;
+  late final _ingresos = IngresosRepository(client: _supabase);
+
+  Future<void> registrarMedicamentoConIngreso({required Map<String,dynamic> medicamento,
+    required Map<String,dynamic> ingreso}) async {
+    await _ingresos.registrar(ingreso, medicamento: medicamento);
+  }
 
   /// HU-029: una única transacción guarda solicitud, ítems y auditoría.
   /// La clave de envío permite recuperar el mismo pedido después de un corte de red.
@@ -195,7 +202,7 @@ class AlmacenRemoteDataSource {
     required int cantidadInicial,
   }) async {
     try {
-      // 1. Insertar el lote en public.lotes
+      // El servidor guarda lote, saldo inicial y auditoría juntos.
       final loteData = {
         'medicamento_id': medicamentoId,
         'numero_lote': numeroLote.trim().toUpperCase(),
@@ -216,49 +223,17 @@ class AlmacenRemoteDataSource {
         if (precioVenta != null) 'precio_venta': precioVenta,
         if (numBoleta != null && numBoleta.isNotEmpty)
           'num_boleta': numBoleta.trim(),
-        if (justificacion != null && justificacion.isNotEmpty)
-          'justificacion': justificacion.trim(),
+        'justificacion': justificacion?.trim().isNotEmpty == true ? justificacion!.trim() : 'Compra',
         if (temperaturaRecepcion != null)
           'temperatura_recepcion': temperaturaRecepcion,
         if (observaciones != null && observaciones.isNotEmpty)
           'observaciones': observaciones.trim(),
         'activo': true,
+        'cantidad': cantidadInicial,
       };
-
-      final loteInsertResponse = await _supabase
-          .from('lotes')
-          .insert(loteData)
-          .select()
-          .single();
-
-      final loteModel = LoteModel.fromMap(loteInsertResponse);
-
-      // 2. Insertar el stock inicial en public.inventario_stock para Almacén General
-      await _supabase.from('inventario_stock').insert({
-        'lote_id': loteModel.id,
-        'area_codigo': 'ALMACEN',
-        'cantidad': cantidadInicial,
-      });
-
-      // 3. Registrar auditoría inmutable
-      final currentUserId = _supabase.auth.currentUser?.id;
-      await _supabase.from('auditoria_trazabilidad').insert({
-        'tipo_evento': 'INGRESO_ALMACEN',
-        'medicamento_id': medicamentoId,
-        'lote_id': loteModel.id,
-        'usuario_id': currentUserId,
-        'area_destino': 'ALMACEN',
-        'cantidad': cantidadInicial,
-        'descripcion':
-            'Ingreso de mercadería: Lote ${loteModel.numeroLote} con $cantidadInicial unidades. Proveedor: ${proveedor ?? "Directo"}',
-      });
-
-      debugPrint(
-        '✅ Ingreso de lote registrado exitosamente: ${loteModel.numeroLote}',
-      );
-      return loteModel;
+      return LoteModel.fromMap(await _ingresos.registrar(loteData));
     } on PostgrestException catch (e) {
-      if (e.message.contains('numero_lote') || e.code == '23505') {
+      if (e.code == '23505') {
         throw const AlmacenException(
           'Ese número de lote ya se encuentra registrado para este medicamento.',
         );

@@ -14,6 +14,11 @@ class AlmacenRepositoryImpl implements AlmacenRepository {
     : _dataSource = dataSource ?? AlmacenRemoteDataSource();
 
   @override
+  Future<void> registrarMedicamentoConIngreso({required Map<String,dynamic> medicamento,
+    required Map<String,dynamic> ingreso}) => _dataSource.registrarMedicamentoConIngreso(
+      medicamento: medicamento, ingreso: ingreso);
+
+  @override
   Future<List<StockAlmacenEntity>> getInventarioAlmacen() async {
     return await _dataSource.getInventarioAlmacen();
   }
