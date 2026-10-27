@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/widgets/mensajes_app.dart';
 import 'package:go_router/go_router.dart';
 import '../../data/usuarios_repository.dart';
@@ -238,6 +239,10 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                 child: const Icon(Icons.person_add_alt_1_rounded),
               ),
         appBar: AppBar(
+          toolbarHeight: DisenoAdaptable.altoCabecera(
+            context,
+            base: kToolbarHeight,
+          ),
           backgroundColor: CatalogoEstilo.rojo,
           foregroundColor: Colors.white,
           iconTheme: const IconThemeData(color: Colors.white),
@@ -255,178 +260,196 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
             ),
           ),
         ),
-        body: _cargando
-            ? const Center(
-                child: CircularProgressIndicator(color: CatalogoEstilo.rojo),
-              )
-            : _error != null
-            ? _pantallaError()
-            : RefreshIndicator(
-                color: CatalogoEstilo.rojo,
-                onRefresh: _cargar,
-                child: CustomScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: _centrado(
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Equipo y accesos',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: CatalogoEstilo.texto,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              const Text(
-                                'Consulta al personal, sus roles y áreas asignadas.',
-                                style: TextStyle(fontSize: 13, height: 1.5),
-                              ),
-                              const SizedBox(height: 18),
-                              Row(
+        body: ContenidoAdaptable(
+          anchoMaximo: 1100,
+          padding: EdgeInsets.zero,
+          child: SafeArea(
+            child: _cargando
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: CatalogoEstilo.rojo,
+                    ),
+                  )
+                : _error != null
+                ? _pantallaError()
+                : RefreshIndicator(
+                    color: CatalogoEstilo.rojo,
+                    onRefresh: _cargar,
+                    child: CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: _centrado(
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(
-                                    child: _contador(
-                                      'Todos',
-                                      _usuarios.length,
-                                      'TODOS',
-                                      Icons.groups_outlined,
+                                  const Text(
+                                    'Equipo y accesos',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: CatalogoEstilo.texto,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: _contador(
-                                      'Habilitados',
-                                      _usuarios.where((u) => u.activo).length,
-                                      'ACTIVOS',
-                                      Icons.person_outline_rounded,
-                                    ),
+                                  const SizedBox(height: 6),
+                                  const Text(
+                                    'Consulta al personal, sus roles y áreas asignadas.',
+                                    style: TextStyle(fontSize: 13, height: 1.5),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: _contador(
-                                      'Deshabilitados',
-                                      _usuarios.where((u) => !u.activo).length,
-                                      'INACTIVOS',
-                                      Icons.person_off_outlined,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 18),
-                              TextField(
-                                controller: _buscador,
-                                onChanged: (_) => setState(() {}),
-                                decoration: InputDecoration(
-                                  hintText: 'Buscar nombre, usuario o correo',
-                                  prefixIcon: const Icon(Icons.search_rounded),
-                                  suffixIcon: _buscador.text.isEmpty
-                                      ? null
-                                      : IconButton(
-                                          tooltip: 'Limpiar búsqueda',
-                                          onPressed: () =>
-                                              setState(() => _buscador.clear()),
-                                          icon: const Icon(Icons.close_rounded),
-                                        ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      '${lista.length} de ${_usuarios.length} usuarios',
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
+                                  const SizedBox(height: 18),
+                                  AccionesAdaptables(
+                                    anchoMinimo: 150,
+                                    acciones: [
+                                      _contador(
+                                        'Todos',
+                                        _usuarios.length,
+                                        'TODOS',
+                                        Icons.groups_outlined,
                                       ),
+                                      _contador(
+                                        'Habilitados',
+                                        _usuarios.where((u) => u.activo).length,
+                                        'ACTIVOS',
+                                        Icons.person_outline_rounded,
+                                      ),
+                                      _contador(
+                                        'Deshabilitados',
+                                        _usuarios
+                                            .where((u) => !u.activo)
+                                            .length,
+                                        'INACTIVOS',
+                                        Icons.person_off_outlined,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 18),
+                                  TextField(
+                                    controller: _buscador,
+                                    onChanged: (_) => setState(() {}),
+                                    decoration: InputDecoration(
+                                      hintText:
+                                          'Buscar nombre, usuario o correo',
+                                      prefixIcon: const Icon(
+                                        Icons.search_rounded,
+                                      ),
+                                      suffixIcon: _buscador.text.isEmpty
+                                          ? null
+                                          : IconButton(
+                                              tooltip: 'Limpiar búsqueda',
+                                              onPressed: () => setState(
+                                                () => _buscador.clear(),
+                                              ),
+                                              icon: const Icon(
+                                                Icons.close_rounded,
+                                              ),
+                                            ),
                                     ),
                                   ),
-                                  if (_numeroFiltros > 0 ||
-                                      _buscador.text.isNotEmpty)
-                                    TextButton(
-                                      onPressed: _limpiar,
-                                      child: const Text('Limpiar'),
-                                    ),
-                                  Tooltip(
-                                    message: _filtrosAbiertos
-                                        ? 'Ocultar filtros'
-                                        : 'Filtrar por rol, área y orden',
-                                    child: OutlinedButton.icon(
-                                      onPressed: () => setState(
-                                        () => _filtrosAbiertos =
-                                            !_filtrosAbiertos,
-                                      ),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: CatalogoEstilo.rojo,
-                                        side: const BorderSide(
-                                          color: Color(0xFFEBCBCB),
+                                  const SizedBox(height: 12),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    children: [
+                                      Text(
+                                        '${lista.length} de ${_usuarios.length} usuarios',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
                                         ),
-                                        minimumSize: const Size(44, 48),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
+                                      ),
+                                      if (_numeroFiltros > 0 ||
+                                          _buscador.text.isNotEmpty)
+                                        TextButton(
+                                          onPressed: _limpiar,
+                                          child: const Text('Limpiar'),
+                                        ),
+                                      Tooltip(
+                                        message: _filtrosAbiertos
+                                            ? 'Ocultar filtros'
+                                            : 'Filtrar por rol, área y orden',
+                                        child: OutlinedButton.icon(
+                                          onPressed: () => setState(
+                                            () => _filtrosAbiertos =
+                                                !_filtrosAbiertos,
+                                          ),
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor:
+                                                CatalogoEstilo.rojo,
+                                            side: const BorderSide(
+                                              color: Color(0xFFEBCBCB),
+                                            ),
+                                            minimumSize: const Size(44, 48),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          icon: Icon(
+                                            _filtrosAbiertos
+                                                ? Icons.expand_less_rounded
+                                                : Icons.tune_rounded,
+                                            size: 19,
+                                          ),
+                                          label: Text(
+                                            _numeroFiltros > 0
+                                                ? 'Filtros ($_numeroFiltros)'
+                                                : 'Filtros',
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                      icon: Icon(
-                                        _filtrosAbiertos
-                                            ? Icons.expand_less_rounded
-                                            : Icons.tune_rounded,
-                                        size: 19,
-                                      ),
-                                      label: Text(
-                                        _numeroFiltros > 0
-                                            ? 'Filtros ($_numeroFiltros)'
-                                            : 'Filtros',
-                                        style: const TextStyle(fontSize: 13),
-                                      ),
-                                    ),
+                                    ],
                                   ),
+                                  AnimatedSize(
+                                    duration: const Duration(milliseconds: 200),
+                                    alignment: Alignment.topCenter,
+                                    child: _filtrosAbiertos
+                                        ? _panelFiltros()
+                                        : const SizedBox.shrink(),
+                                  ),
+                                  if (_estructuraPendiente) ...[
+                                    const SizedBox(height: 12),
+                                    CatalogoEstilo.nota(
+                                      'Los perfiles actuales están disponibles. Aplica la actualización de estructura de usuarios para disponer de usuario, nombres y apellidos separados.',
+                                    ),
+                                  ],
+                                  const SizedBox(height: 16),
+                                  if (lista.isEmpty) _sinResultados(),
                                 ],
                               ),
-                              AnimatedSize(
-                                duration: const Duration(milliseconds: 200),
-                                alignment: Alignment.topCenter,
-                                child: _filtrosAbiertos
-                                    ? _panelFiltros()
-                                    : const SizedBox.shrink(),
-                              ),
-                              if (_estructuraPendiente) ...[
-                                const SizedBox(height: 12),
-                                CatalogoEstilo.nota(
-                                  'Los perfiles actuales están disponibles. Aplica la actualización de estructura de usuarios para disponer de usuario, nombres y apellidos separados.',
+                            ),
+                          ),
+                        ),
+                        SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => _centrado(
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  0,
+                                  16,
+                                  14,
                                 ),
-                              ],
-                              const SizedBox(height: 16),
-                              if (lista.isEmpty) _sinResultados(),
-                            ],
+                                child: _tarjeta(lista[index]),
+                              ),
+                            ),
+                            childCount: lista.length,
                           ),
                         ),
-                      ),
+                        const SliverToBoxAdapter(child: SizedBox(height: 90)),
+                      ],
                     ),
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _centrado(
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-                            child: _tarjeta(lista[index]),
-                          ),
-                        ),
-                        childCount: lista.length,
-                      ),
-                    ),
-                    const SliverToBoxAdapter(child: SizedBox(height: 90)),
-                  ],
-                ),
-              ),
+                  ),
+          ),
+        ),
       ),
     );
   }
@@ -512,6 +535,8 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
         child: Column(
           children: [
             DropdownButtonFormField<String>(
+              itemHeight: null,
+              isDense: false,
               value: _rol,
               isExpanded: true,
               decoration: const InputDecoration(labelText: 'Rol'),
@@ -536,6 +561,8 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
+              itemHeight: null,
+              isDense: false,
               value: _area,
               isExpanded: true,
               decoration: const InputDecoration(labelText: 'Área asignada'),
@@ -557,6 +584,8 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
+              itemHeight: null,
+              isDense: false,
               value: _orden,
               isExpanded: true,
               decoration: const InputDecoration(labelText: 'Ordenar por'),
@@ -596,9 +625,8 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+            FilaDetalleAdaptable(
+              principales: [
                 CircleAvatar(
                   radius: 23,
                   backgroundColor: CatalogoEstilo.pastel,
@@ -632,9 +660,8 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                _etiquetaEstado(u.activo),
               ],
+              detalle: _etiquetaEstado(u.activo),
             ),
             const SizedBox(height: 14),
             _linea(
@@ -783,6 +810,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
   /// No realiza otra consulta ni muestra contraseñas; los valores ausentes se indican.
   void _detalle(UsuarioAdministrativo u) {
     showModalBottomSheet<void>(
+      useSafeArea: true,
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
@@ -792,123 +820,113 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
       ),
       builder: (ctx) => Theme(
         data: CatalogoEstilo.tema(ctx),
-        child: SafeArea(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(ctx).height * .88,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  color: CatalogoEstilo.rojo,
-                  padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.person_outline_rounded,
+        child: HojaAdaptable(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                color: CatalogoEstilo.rojo,
+                padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.person_outline_rounded,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'Datos del usuario',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Cerrar',
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: const Icon(
+                        Icons.close_rounded,
                         color: Colors.white,
                       ),
-                      const SizedBox(width: 10),
-                      const Expanded(
-                        child: Text(
-                          'Datos del usuario',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: 'Cerrar',
-                        onPressed: () => Navigator.pop(ctx),
-                        icon: const Icon(
-                          Icons.close_rounded,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          u.nombreCompleto,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        _etiquetaEstado(u.activo),
-                        const SizedBox(height: 20),
-                        _dato('Nombre de usuario', u.usuario),
-                        _dato('Nombres', u.nombres),
-                        _dato('Apellidos', u.apellidos),
-                        if (u.nombres.isEmpty && u.apellidos.isEmpty)
-                          _dato('Nombre completo registrado', u.nombreAnterior),
-                        _dato('Correo electrónico', u.correo),
-                        _dato('Cargo / ocupación', u.cargo),
-                        _dato('Rol', u.rolVisible),
-                        if (u.colegioCodigo.isNotEmpty) ...[
-                          _dato(
-                            'Colegio profesional',
-                            u.colegioNombre.isEmpty
-                                ? u.colegioCodigo
-                                : u.colegioNombre,
-                          ),
-                          _dato(
-                            'Número de colegiatura (${u.colegioCodigo})',
-                            u.numeroColegiatura,
-                          ),
-                          if (u.especialidadCodigo.isNotEmpty)
-                            _dato(
-                              'Especialidad / área profesional',
-                              u.especialidadNombre.isEmpty
-                                  ? u.especialidadCodigo
-                                  : u.especialidadNombre,
-                            ),
-                        ],
-                        const Text(
-                          'Áreas asignadas',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF777780),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        if (u.areas.isEmpty)
-                          const Text(
-                            'Sin áreas asignadas',
-                            style: TextStyle(fontSize: 14),
-                          )
-                        else
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
-                            children: u.areas
-                                .map(
-                                  (a) => _chip(
-                                    _nombreArea(a),
-                                    icono: Icons.apartment_rounded,
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                        const SizedBox(height: 20),
-                        _dato('Registrado', _fecha(u.creado)),
-                        _dato('Última actualización', _fecha(u.actualizado)),
-                      ],
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      u.nombreCompleto,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _etiquetaEstado(u.activo),
+                    const SizedBox(height: 20),
+                    _dato('Nombre de usuario', u.usuario),
+                    _dato('Nombres', u.nombres),
+                    _dato('Apellidos', u.apellidos),
+                    if (u.nombres.isEmpty && u.apellidos.isEmpty)
+                      _dato('Nombre completo registrado', u.nombreAnterior),
+                    _dato('Correo electrónico', u.correo),
+                    _dato('Cargo / ocupación', u.cargo),
+                    _dato('Rol', u.rolVisible),
+                    if (u.colegioCodigo.isNotEmpty) ...[
+                      _dato(
+                        'Colegio profesional',
+                        u.colegioNombre.isEmpty
+                            ? u.colegioCodigo
+                            : u.colegioNombre,
+                      ),
+                      _dato(
+                        'Número de colegiatura (${u.colegioCodigo})',
+                        u.numeroColegiatura,
+                      ),
+                      if (u.especialidadCodigo.isNotEmpty)
+                        _dato(
+                          'Especialidad / área profesional',
+                          u.especialidadNombre.isEmpty
+                              ? u.especialidadCodigo
+                              : u.especialidadNombre,
+                        ),
+                    ],
+                    const Text(
+                      'Áreas asignadas',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF777780)),
+                    ),
+                    const SizedBox(height: 8),
+                    if (u.areas.isEmpty)
+                      const Text(
+                        'Sin áreas asignadas',
+                        style: TextStyle(fontSize: 14),
+                      )
+                    else
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: u.areas
+                            .map(
+                              (a) => _chip(
+                                _nombreArea(a),
+                                icono: Icons.apartment_rounded,
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    const SizedBox(height: 20),
+                    _dato('Registrado', _fecha(u.creado)),
+                    _dato('Última actualización', _fecha(u.actualizado)),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),

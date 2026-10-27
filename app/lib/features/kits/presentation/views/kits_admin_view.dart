@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/tema_area.dart';
 import '../../../../core/widgets/mensajes_app.dart';
@@ -214,6 +215,10 @@ class _KitsAdminViewState extends State<KitsAdminView> {
       child: Scaffold(
         backgroundColor: CatalogoEstilo.fondo,
         appBar: AppBar(
+          toolbarHeight: DisenoAdaptable.altoCabecera(
+            context,
+            base: kToolbarHeight,
+          ),
           backgroundColor: rojo,
           foregroundColor: Colors.white,
           iconTheme: const IconThemeData(color: Colors.white),
@@ -259,324 +264,336 @@ class _KitsAdminViewState extends State<KitsAdminView> {
                     ? null
                     : () => _abrirFormulario(),
               ),
-        body: RefreshIndicator(
-          color: rojo,
-          onRefresh: _cargarDatos,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 800),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Resumen breve: el contenido y las acciones quedan cerca del pulgar.
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [rojo, Color.lerp(rojo, Colors.white, .08)!],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: rojo.withOpacity(0.25),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.inventory_2_rounded,
-                                color: Colors.white,
-                                size: 24,
+        body: ContenidoAdaptable(
+          anchoMaximo: 1100,
+          padding: EdgeInsets.zero,
+          child: SafeArea(
+            child: RefreshIndicator(
+              color: rojo,
+              onRefresh: _cargarDatos,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 800),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Resumen breve: el contenido y las acciones quedan cerca del pulgar.
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                rojo,
+                                Color.lerp(rojo, Colors.white, .08)!,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: rojo.withOpacity(0.25),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
-                              SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  'Kits por área',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                            ],
+                          ),
+                          child: const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.inventory_2_rounded,
                                     color: Colors.white,
+                                    size: 24,
                                   ),
+                                  SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      'Kits por área',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Organiza medicamentos e insumos en plantillas para cada área. Consulta su composición antes de editar.',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  height: 1.4,
+                                  color: Colors.white,
                                 ),
                               ),
                             ],
                           ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Organiza medicamentos e insumos en plantillas para cada área. Consulta su composición antes de editar.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              height: 1.4,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                        ),
+                        const SizedBox(height: 16),
 
-                    // Buscador y filtros
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFE2E2E2)),
-                      ),
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: _searchCtrl,
-                            onChanged: (val) {
-                              setState(() {
-                                _filtroTexto = val.trim();
-                              });
-                            },
-                            decoration: InputDecoration(
-                              hintText:
-                                  'Buscar por nombre, descripción o área...',
-                              prefixIcon: Icon(
-                                Icons.search_rounded,
-                                color: rojo,
-                              ),
-                              suffixIcon: _filtroTexto.isNotEmpty
-                                  ? IconButton(
-                                      icon: const Icon(Icons.clear_rounded),
-                                      onPressed: () {
-                                        _searchCtrl.clear();
-                                        setState(() {
-                                          _filtroTexto = '';
-                                        });
-                                      },
-                                    )
-                                  : null,
-                              filled: true,
-                              fillColor: const Color(0xFFF9F9F9),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 12,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
+                        // Buscador y filtros
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFFE2E2E2)),
                           ),
-                          const SizedBox(height: 12),
-                          // Filtros de estado y áreas
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                const Text(
-                                  'Estado:',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF616161),
+                          child: Column(
+                            children: [
+                              TextField(
+                                controller: _searchCtrl,
+                                onChanged: (val) {
+                                  setState(() {
+                                    _filtroTexto = val.trim();
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                  hintText:
+                                      'Buscar por nombre, descripción o área...',
+                                  prefixIcon: Icon(
+                                    Icons.search_rounded,
+                                    color: rojo,
+                                  ),
+                                  suffixIcon: _filtroTexto.isNotEmpty
+                                      ? IconButton(
+                                          icon: const Icon(Icons.clear_rounded),
+                                          onPressed: () {
+                                            _searchCtrl.clear();
+                                            setState(() {
+                                              _filtroTexto = '';
+                                            });
+                                          },
+                                        )
+                                      : null,
+                                  filled: true,
+                                  fillColor: const Color(0xFFF9F9F9),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 12,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                ChoiceChip(
-                                  label: const Text('Todos'),
-                                  selected: _filtroEstado == null,
-                                  onSelected: (_) {
-                                    setState(() {
-                                      _filtroEstado = null;
-                                    });
-                                  },
-                                ),
-                                const SizedBox(width: 6),
-                                ChoiceChip(
-                                  label: const Text('Activos'),
-                                  selected: _filtroEstado == 'ACTIVOS',
-                                  selectedColor: tema.suave,
-                                  onSelected: (_) {
-                                    setState(() {
-                                      _filtroEstado = 'ACTIVOS';
-                                    });
-                                  },
-                                ),
-                                const SizedBox(width: 6),
-                                ChoiceChip(
-                                  label: const Text('Inactivos'),
-                                  selected: _filtroEstado == 'INACTIVOS',
-                                  selectedColor: tema.suave,
-                                  onSelected: (_) {
-                                    setState(() {
-                                      _filtroEstado = 'INACTIVOS';
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                const Text(
-                                  'Área:',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF616161),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                ChoiceChip(
-                                  label: Text(
-                                    _contexto?.rol == 'ENFERMERIA'
-                                        ? 'Seleccionar área'
-                                        : 'Todas',
-                                  ),
-                                  selected: _filtroArea == null,
-                                  onSelected: (_) {
-                                    setState(() {
-                                      _filtroArea = null;
-                                    });
-                                  },
-                                ),
-                                ..._areas.map((area) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(left: 6),
-                                    child: ChoiceChip(
-                                      label: Text(
-                                        '${area.nombre}${area.activo ? '' : ' (deshabilitada)'}',
+                              ),
+                              const SizedBox(height: 12),
+                              // Filtros de estado y áreas
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: [
+                                    const Text(
+                                      'Estado:',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF616161),
                                       ),
-                                      selected: _filtroArea == area.codigo,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ChoiceChip(
+                                      label: const Text('Todos'),
+                                      selected: _filtroEstado == null,
                                       onSelected: (_) {
                                         setState(() {
-                                          _filtroArea =
-                                              _contexto?.rol == 'ENFERMERIA'
-                                              ? area.codigo
-                                              : _filtroArea == area.codigo
-                                              ? null
-                                              : area.codigo;
+                                          _filtroEstado = null;
                                         });
                                       },
                                     ),
-                                  );
-                                }),
+                                    const SizedBox(width: 6),
+                                    ChoiceChip(
+                                      label: const Text('Activos'),
+                                      selected: _filtroEstado == 'ACTIVOS',
+                                      selectedColor: tema.suave,
+                                      onSelected: (_) {
+                                        setState(() {
+                                          _filtroEstado = 'ACTIVOS';
+                                        });
+                                      },
+                                    ),
+                                    const SizedBox(width: 6),
+                                    ChoiceChip(
+                                      label: const Text('Inactivos'),
+                                      selected: _filtroEstado == 'INACTIVOS',
+                                      selectedColor: tema.suave,
+                                      onSelected: (_) {
+                                        setState(() {
+                                          _filtroEstado = 'INACTIVOS';
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: [
+                                    const Text(
+                                      'Área:',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF616161),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ChoiceChip(
+                                      label: Text(
+                                        _contexto?.rol == 'ENFERMERIA'
+                                            ? 'Seleccionar área'
+                                            : 'Todas',
+                                      ),
+                                      selected: _filtroArea == null,
+                                      onSelected: (_) {
+                                        setState(() {
+                                          _filtroArea = null;
+                                        });
+                                      },
+                                    ),
+                                    ..._areas.map((area) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(left: 6),
+                                        child: ChoiceChip(
+                                          label: Text(
+                                            '${area.nombre}${area.activo ? '' : ' (deshabilitada)'}',
+                                          ),
+                                          selected: _filtroArea == area.codigo,
+                                          onSelected: (_) {
+                                            setState(() {
+                                              _filtroArea =
+                                                  _contexto?.rol == 'ENFERMERIA'
+                                                  ? area.codigo
+                                                  : _filtroArea == area.codigo
+                                                  ? null
+                                                  : area.codigo;
+                                            });
+                                          },
+                                        ),
+                                      );
+                                    }),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+
+                        // Contenido de la lista
+                        if (_cargando) ...[
+                          const Padding(
+                            padding: EdgeInsets.all(40),
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                        ] else if (_error != null) ...[
+                          MensajesApp.nota(_error!, tipo: TipoMensaje.error),
+                          const SizedBox(height: 12),
+                          Center(
+                            child: FilledButton.icon(
+                              onPressed: _cargarDatos,
+                              icon: const Icon(Icons.refresh_rounded),
+                              label: const Text('Reintentar conexión'),
+                            ),
+                          ),
+                        ] else if (kits.isEmpty) ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(36),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: const Color(0xFFE5E5E5),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                const Icon(
+                                  Icons.medical_services_outlined,
+                                  size: 48,
+                                  color: Color(0xFFBDBDBD),
+                                ),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  'Selecciona un área o ajusta los filtros para consultar sus kits.',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF616161),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                const Text(
+                                  'La consulta conserva las plantillas deshabilitadas y sus componentes.',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF9E9E9E),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 16),
+                                if (_puedeGestionar &&
+                                    _areas.any((a) => a.activo))
+                                  FilledButton.icon(
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: rojo,
+                                    ),
+                                    icon: const Icon(Icons.add_rounded),
+                                    label: const Text('Crear Primer Kit'),
+                                    onPressed: () => _abrirFormulario(),
+                                  ),
                               ],
                             ),
                           ),
+                        ] else ...[
+                          Text(
+                            '${kits.length} kits registrados',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF616161),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: kits.length,
+                            itemBuilder: (context, index) {
+                              final kit = kits[index];
+                              return KitCard(
+                                key: ValueKey(kit.id),
+                                kit: kit,
+                                tema: _temaDeArea(kit.areaDestino),
+                                puedeGestionar: _puedeGestionar,
+                                bloqueada: _operando || _cargando,
+                                disponibilidad: _disponibilidad,
+                                onDuplicar: () =>
+                                    _abrirFormulario(kit: kit, duplicar: true),
+                                onEditar: () => _abrirFormulario(kit: kit),
+                                onCambiarEstado: (nuevoEstado) =>
+                                    _cambiarEstado(kit, nuevoEstado),
+                                onEliminar: () => _eliminarKit(kit),
+                              );
+                            },
+                          ),
                         ],
-                      ),
+                        const SizedBox(height: 80), // espacio para FAB
+                      ],
                     ),
-                    const SizedBox(height: 18),
-
-                    // Contenido de la lista
-                    if (_cargando) ...[
-                      const Padding(
-                        padding: EdgeInsets.all(40),
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                    ] else if (_error != null) ...[
-                      MensajesApp.nota(_error!, tipo: TipoMensaje.error),
-                      const SizedBox(height: 12),
-                      Center(
-                        child: FilledButton.icon(
-                          onPressed: _cargarDatos,
-                          icon: const Icon(Icons.refresh_rounded),
-                          label: const Text('Reintentar conexión'),
-                        ),
-                      ),
-                    ] else if (kits.isEmpty) ...[
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(36),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE5E5E5)),
-                        ),
-                        child: Column(
-                          children: [
-                            const Icon(
-                              Icons.medical_services_outlined,
-                              size: 48,
-                              color: Color(0xFFBDBDBD),
-                            ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'Selecciona un área o ajusta los filtros para consultar sus kits.',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF616161),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            const Text(
-                              'La consulta conserva las plantillas deshabilitadas y sus componentes.',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF9E9E9E),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
-                            if (_puedeGestionar && _areas.any((a) => a.activo))
-                              FilledButton.icon(
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: rojo,
-                                ),
-                                icon: const Icon(Icons.add_rounded),
-                                label: const Text('Crear Primer Kit'),
-                                onPressed: () => _abrirFormulario(),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ] else ...[
-                      Text(
-                        '${kits.length} kits registrados',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF616161),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: kits.length,
-                        itemBuilder: (context, index) {
-                          final kit = kits[index];
-                          return KitCard(
-                            key: ValueKey(kit.id),
-                            kit: kit,
-                            tema: _temaDeArea(kit.areaDestino),
-                            puedeGestionar: _puedeGestionar,
-                            bloqueada: _operando || _cargando,
-                            disponibilidad: _disponibilidad,
-                            onDuplicar: () =>
-                                _abrirFormulario(kit: kit, duplicar: true),
-                            onEditar: () => _abrirFormulario(kit: kit),
-                            onCambiarEstado: (nuevoEstado) =>
-                                _cambiarEstado(kit, nuevoEstado),
-                            onEliminar: () => _eliminarKit(kit),
-                          );
-                        },
-                      ),
-                    ],
-                    const SizedBox(height: 80), // espacio para FAB
-                  ],
+                  ),
                 ),
               ),
             ),

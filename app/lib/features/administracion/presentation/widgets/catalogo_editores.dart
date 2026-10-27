@@ -289,6 +289,8 @@ class _FinanciamientoEditorState extends State<FinanciamientoEditor> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
+              itemHeight: null,
+              isDense: false,
               value: _tipo,
               isExpanded: true,
               decoration: const InputDecoration(labelText: 'Tipo *'),

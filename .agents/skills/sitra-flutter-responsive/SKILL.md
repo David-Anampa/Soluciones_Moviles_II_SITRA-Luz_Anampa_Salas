@@ -18,6 +18,8 @@ Localizar estos archivos desde la raíz del repositorio antes de extenderlos:
 
 Ejemplos actuales: `CatalogoDialogo`, `UsuarioFormularioView`, `KitFormularioView`, `SelectorMedicamentoDialog` y `KitCard`.
 
+La base está aplicada también a Login, los cinco paneles por rol, medicamentos/lotes, stock, solicitudes, diferencias/correcciones y escáner. Leer el registro de cobertura en `docs/contexto/RESPONSIVIDAD_MOVIL_2026-10-26.md` para distinguir implementación de aceptación visual pendiente.
+
 ## Decisiones de distribución
 
 1. Usar el ancho local de `LayoutBuilder`, no el modelo del teléfono. `MediaQuery` aporta zonas seguras, teclado y escala de texto; no reemplaza las restricciones del componente.
@@ -26,6 +28,10 @@ Ejemplos actuales: `CatalogoDialogo`, `UsuarioFormularioView`, `KitFormularioVie
 4. Usar `DialogoAdaptable` para modales del alcance actual: acota el alto visible y permite desplazar todo el contenido, incluidas cabecera y acciones. No colocar `Expanded`/`Spacer` verticales dentro de ese scroll. Una lista de búsqueda interna debe tener alto acotado para mantener la virtualización.
 5. Para nuevas tareas largas, preferir una pantalla completa con formulario desplazable; reservar modales para decisiones y selecciones acotadas. No convertir pantallas existentes fuera del alcance acordado.
 6. Dar espacio flexible al texto dentro de filas. Si el conjunto no cabe, reordenar mediante `Wrap`, columna o `AccionesAdaptables`; no resolverlo ocultando información esencial.
+7. Para confirmaciones con contenido propio, usar `AlertaAdaptable` conservando validaciones y callbacks. Para hojas inferiores, usar `HojaAdaptable` con `isScrollControlled: true` y `useSafeArea: true`, sin Flex vertical no acotado.
+8. Separar título/estado con `FilaDetalleAdaptable` cuando compitan por ancho. Usar `PanelListaAdaptable` si los filtros altos compiten con una lista. Las tablas numéricas pueden usar `TablaAdaptable` para desplazarse horizontalmente, sin comprimir cantidades.
+9. La cámara mantiene su fondo a pantalla completa; adaptar sus controles y marco por separado. Evitar encerrar la cámara entera en un formulario o reducir el texto para hacer caber sus paneles.
+10. Cambios de distribución pueden requerir ajustar el alto de navegación con `DisenoAdaptable.altoCabecera`. No limitar globalmente el tamaño de texto como solución.
 
 ## Legibilidad e identidad
 

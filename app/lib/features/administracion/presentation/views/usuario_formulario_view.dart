@@ -225,6 +225,10 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
       child: Scaffold(
         backgroundColor: CatalogoEstilo.fondo,
         appBar: AppBar(
+          toolbarHeight: DisenoAdaptable.altoCabecera(
+            context,
+            base: kToolbarHeight,
+          ),
           title: Text(
             _edita ? 'Editar usuario' : 'Nuevo usuario',
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
@@ -425,6 +429,7 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
     ValueChanged<String> cambiar, {
     required IconData icono,
   }) => DropdownButtonFormField<String>(
+    isDense: false,
     key: ValueKey('$etiqueta:$valor'),
     value: valor,
     isExpanded: true,
@@ -575,6 +580,8 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
 
   /// Lista desplegable de roles. Se bloquea al editar la cuenta propia.
   Widget _selectorRol() => DropdownButtonFormField<String>(
+    itemHeight: null,
+    isDense: false,
     value: _rol,
     isExpanded: true,
     validator: UsuarioValidadores.rol,

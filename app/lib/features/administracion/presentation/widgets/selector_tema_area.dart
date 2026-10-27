@@ -129,15 +129,17 @@ class SelectorTemaArea extends StatelessWidget {
                         color: tema.principal,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
+                      child: const Wrap(
+                        alignment: WrapAlignment.start,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
                           Icon(
                             Icons.add_rounded,
                             color: Colors.white,
                             size: 20,
                           ),
-                          SizedBox(width: 8),
                           Text(
                             'Botón principal',
                             style: TextStyle(color: Colors.white, fontSize: 13),

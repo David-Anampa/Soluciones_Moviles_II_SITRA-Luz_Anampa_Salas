@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/mensajes_app.dart';
 import '../../../../core/theme/tema_area.dart';
@@ -185,6 +186,10 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
         builder: (localContext) => Scaffold(
           backgroundColor: CatalogoEstilo.fondo,
           appBar: AppBar(
+            toolbarHeight: DisenoAdaptable.altoCabecera(
+              context,
+              base: kToolbarHeight,
+            ),
             backgroundColor: CatalogoEstilo.rojo,
             foregroundColor: Colors.white,
             iconTheme: const IconThemeData(color: Colors.white),
@@ -204,157 +209,174 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
               ),
             ),
           ),
-          body: Column(
-            children: [
-              Material(
-                color: Colors.white,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF2F2F2),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Row(
-                          children: [
-                            _tab(0, 'Áreas', Icons.apartment_rounded),
-                            const SizedBox(width: 4),
-                            _tab(
-                              1,
-                              'Seguros y convenios',
-                              Icons.handshake_rounded,
+          body: ContenidoAdaptable(
+            anchoMaximo: 1100,
+            padding: EdgeInsets.zero,
+            child: SafeArea(
+              child: PanelListaAdaptable(
+                children: [
+                  Material(
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF2F2F2),
+                              borderRadius: BorderRadius.circular(14),
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _busqueda,
-                        onChanged: (_) => setState(() {}),
-                        decoration: InputDecoration(
-                          hintText: _pestana == 0
-                              ? 'Buscar área o código'
-                              : 'Buscar seguro o convenio',
-                          prefixIcon: const Icon(Icons.search_rounded),
-                          suffixIcon: _busqueda.text.isEmpty
-                              ? null
-                              : IconButton(
-                                  tooltip: 'Limpiar búsqueda',
-                                  onPressed: () =>
-                                      setState(() => _busqueda.clear()),
-                                  icon: const Icon(Icons.close_rounded),
+                            child: Row(
+                              children: [
+                                _tab(0, 'Áreas', Icons.apartment_rounded),
+                                const SizedBox(width: 4),
+                                _tab(
+                                  1,
+                                  'Seguros y convenios',
+                                  Icons.handshake_rounded,
                                 ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: 6,
-                          children: [
-                            _filtroEstado('TODOS', 'Todos'),
-                            _filtroEstado('ACTIVOS', 'Habilitados'),
-                            _filtroEstado('INACTIVOS', 'Deshabilitados'),
-                          ],
-                        ),
-                      ),
-                      if (_pestana == 1)
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Wrap(
-                            spacing: 8,
-                            runSpacing: 6,
-                            children: [
-                              for (final t in ['TODOS', 'SEGURO', 'CONVENIO'])
-                                ChoiceChip(
-                                  label: Text(
-                                    t == 'TODOS'
-                                        ? 'Ambos tipos'
-                                        : t == 'SEGURO'
-                                        ? 'Seguros'
-                                        : 'Convenios',
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                  selected: _tipo == t,
-                                  selectedColor: CatalogoEstilo.pastel,
-                                  onSelected: (_) => setState(() => _tipo = t),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              if (_operando)
-                const LinearProgressIndicator(
-                  color: CatalogoEstilo.rojo,
-                  backgroundColor: CatalogoEstilo.pastel,
-                ),
-              Expanded(
-                child: _cargando
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                          color: CatalogoEstilo.rojo,
-                        ),
-                      )
-                    : _error != null
-                    ? _estadoVacio(
-                        Icons.cloud_off_rounded,
-                        'No se pudo cargar',
-                        _error!,
-                        reintentar: true,
-                      )
-                    : RefreshIndicator(
-                        color: CatalogoEstilo.rojo,
-                        onRefresh: _cargar,
-                        child: ListView(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          children: [
-                            Center(
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 850,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '$count ${_pestana == 0 ? 'áreas' : 'registros'}',
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: Color(0xFF66666F),
-                                      ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _busqueda,
+                            onChanged: (_) => setState(() {}),
+                            decoration: InputDecoration(
+                              hintText: _pestana == 0
+                                  ? 'Buscar área o código'
+                                  : 'Buscar seguro o convenio',
+                              prefixIcon: const Icon(Icons.search_rounded),
+                              suffixIcon: _busqueda.text.isEmpty
+                                  ? null
+                                  : IconButton(
+                                      tooltip: 'Limpiar búsqueda',
+                                      onPressed: () =>
+                                          setState(() => _busqueda.clear()),
+                                      icon: const Icon(Icons.close_rounded),
                                     ),
-                                    const SizedBox(height: 12),
-                                    if (count == 0)
-                                      _estadoVacio(
-                                        _pestana == 0
-                                            ? Icons.apartment_rounded
-                                            : Icons.handshake_rounded,
-                                        'No hay resultados',
-                                        'Agrega un registro o cambia los filtros de búsqueda.',
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 6,
+                              children: [
+                                _filtroEstado('TODOS', 'Todos'),
+                                _filtroEstado('ACTIVOS', 'Habilitados'),
+                                _filtroEstado('INACTIVOS', 'Deshabilitados'),
+                              ],
+                            ),
+                          ),
+                          if (_pestana == 1)
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 6,
+                                children: [
+                                  for (final t in [
+                                    'TODOS',
+                                    'SEGURO',
+                                    'CONVENIO',
+                                  ])
+                                    ChoiceChip(
+                                      label: Text(
+                                        t == 'TODOS'
+                                            ? 'Ambos tipos'
+                                            : t == 'SEGURO'
+                                            ? 'Seguros'
+                                            : 'Convenios',
+                                        style: const TextStyle(fontSize: 12),
                                       ),
-                                    if (_pestana == 0)
-                                      ...areas.map(_tarjetaArea)
-                                    else
-                                      ...financiamientos.map(
-                                        _tarjetaFinanciamiento,
-                                      ),
-                                  ],
-                                ),
+                                      selected: _tipo == t,
+                                      selectedColor: CatalogoEstilo.pastel,
+                                      onSelected: (_) =>
+                                          setState(() => _tipo = t),
+                                    ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
+                        ],
                       ),
+                    ),
+                  ),
+                  if (_operando)
+                    const LinearProgressIndicator(
+                      color: CatalogoEstilo.rojo,
+                      backgroundColor: CatalogoEstilo.pastel,
+                    ),
+                  Expanded(
+                    child: _cargando
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                              color: CatalogoEstilo.rojo,
+                            ),
+                          )
+                        : _error != null
+                        ? _estadoVacio(
+                            Icons.cloud_off_rounded,
+                            'No se pudo cargar',
+                            _error!,
+                            reintentar: true,
+                          )
+                        : RefreshIndicator(
+                            color: CatalogoEstilo.rojo,
+                            onRefresh: _cargar,
+                            child: ListView(
+                              padding: const EdgeInsets.fromLTRB(
+                                16,
+                                16,
+                                16,
+                                96,
+                              ),
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [
+                                Center(
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxWidth: 850,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '$count ${_pestana == 0 ? 'áreas' : 'registros'}',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0xFF66666F),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        if (count == 0)
+                                          _estadoVacio(
+                                            _pestana == 0
+                                                ? Icons.apartment_rounded
+                                                : Icons.handshake_rounded,
+                                            'No hay resultados',
+                                            'Agrega un registro o cambia los filtros de búsqueda.',
+                                          ),
+                                        if (_pestana == 0)
+                                          ...areas.map(_tarjetaArea)
+                                        else
+                                          ...financiamientos.map(
+                                            _tarjetaFinanciamiento,
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
           floatingActionButton: _cargando || _operando || _error != null
               ? null
@@ -546,9 +568,8 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              FilaDetalleAdaptable(
+                principales: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -617,77 +638,72 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    width: 100,
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 9,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: activo
-                                ? CatalogoEstilo.pastel
-                                : const Color(0xFFF0F0F0),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            activo ? 'Habilitado' : 'Deshabilitado',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: activo
-                                  ? CatalogoEstilo.rojo
-                                  : const Color(0xFF707078),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Semantics(
-                          toggled: activo,
-                          child: SizedBox(
-                            width: 52,
-                            child: _botonAccion(
-                              activo
-                                  ? 'Habilitado · Toca para deshabilitar'
-                                  : 'Deshabilitado · Toca para habilitar',
-                              icono,
-                              activo
-                                  ? const Color(0xFF2E7D32)
-                                  : CatalogoEstilo.rojo,
-                              estado,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
+                detalle: SizedBox(
+                  width: 100,
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: activo
+                              ? CatalogoEstilo.pastel
+                              : const Color(0xFFF0F0F0),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          activo ? 'Habilitado' : 'Deshabilitado',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: activo
+                                ? CatalogoEstilo.rojo
+                                : const Color(0xFF707078),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Semantics(
+                        toggled: activo,
+                        child: SizedBox(
+                          width: 52,
+                          child: _botonAccion(
+                            activo
+                                ? 'Habilitado · Toca para deshabilitar'
+                                : 'Deshabilitado · Toca para habilitar',
+                            icono,
+                            activo
+                                ? const Color(0xFF2E7D32)
+                                : CatalogoEstilo.rojo,
+                            estado,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 8),
               const Divider(color: Color(0xFFEEEEEE)),
               const SizedBox(height: 6),
-              Row(
-                children: [
-                  Expanded(
-                    child: _botonAccion(
-                      'Editar',
-                      Icons.edit_outlined,
-                      CatalogoEstilo.rojo,
-                      editar,
-                    ),
+              AccionesAdaptables(
+                anchoMinimo: 150,
+                acciones: [
+                  _botonAccion(
+                    'Editar',
+                    Icons.edit_outlined,
+                    CatalogoEstilo.rojo,
+                    editar,
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _botonAccion(
-                      'Eliminar',
-                      Icons.delete_outline_rounded,
-                      CatalogoEstilo.rojo,
-                      eliminar,
-                    ),
+                  _botonAccion(
+                    'Eliminar',
+                    Icons.delete_outline_rounded,
+                    CatalogoEstilo.rojo,
+                    eliminar,
                   ),
                 ],
               ),

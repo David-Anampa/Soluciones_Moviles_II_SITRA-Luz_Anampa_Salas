@@ -244,6 +244,10 @@ class _KitFormularioViewState extends State<KitFormularioView> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF6F7F9),
         appBar: AppBar(
+          toolbarHeight: DisenoAdaptable.altoCabecera(
+            context,
+            base: kToolbarHeight,
+          ),
           iconTheme: const IconThemeData(color: Colors.white),
           backgroundColor: rojo,
           foregroundColor: Colors.white,
@@ -333,6 +337,8 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                   ),
                                 )
                               : DropdownButtonFormField<String>(
+                                  itemHeight: null,
+                                  isDense: false,
                                   isExpanded: true,
                                   // También evita el valor histórico inválido si
                                   // falla la carga o durante una reconstrucción.

@@ -101,9 +101,8 @@ class _KitCardState extends State<KitCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                FilaDetalleAdaptable(
+                  principales: [
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
@@ -185,30 +184,30 @@ class _KitCardState extends State<KitCard> {
                         ],
                       ),
                     ),
-                    // Badge Estado
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
+                  ],
+                  detalle: // Badge Estado
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: activo
+                          ? const Color(0xFFECF7EF)
+                          : const Color(0xFFFFEDEA),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      activo ? 'Activo' : 'Inactivo',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
                         color: activo
-                            ? const Color(0xFFECF7EF)
-                            : const Color(0xFFFFEDEA),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        activo ? 'Activo' : 'Inactivo',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: activo
-                              ? const Color(0xFF23713B)
-                              : const Color(0xFFB3261E),
-                        ),
+                            ? const Color(0xFF23713B)
+                            : const Color(0xFFB3261E),
                       ),
                     ),
-                  ],
+                  ),
                 ),
                 if (kit.descripcion != null &&
                     kit.descripcion!.trim().isNotEmpty) ...[
