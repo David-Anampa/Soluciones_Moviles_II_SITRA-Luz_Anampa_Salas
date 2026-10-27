@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/tema_area.dart';
+import '../../../../core/widgets/mensajes_app.dart';
 import '../../domain/entities/kit_entity.dart';
 import '../../data/repositories/kits_repository.dart';
 import 'disponibilidad_kit.dart';
@@ -12,6 +14,7 @@ class KitCard extends StatefulWidget {
   final bool puedeGestionar;
   final bool bloqueada;
   final Map<String, MedicamentoKit> disponibilidad;
+  final TemaArea tema;
 
   const KitCard({
     super.key,
@@ -23,6 +26,12 @@ class KitCard extends StatefulWidget {
     this.puedeGestionar = true,
     this.bloqueada = false,
     this.disponibilidad = const {},
+    this.tema = const TemaArea(
+      'ROJO',
+      'Rojo institucional',
+      Color(0xFFC62828),
+      Color(0xFFFFF0F0),
+    ),
   });
 
   @override
@@ -30,111 +39,41 @@ class KitCard extends StatefulWidget {
 }
 
 class _KitCardState extends State<KitCard> {
-  static const rojo = Color(0xFFC62828);
   bool _expandido = false;
 
-  /// Solicita confirmación antes de cambiar la disponibilidad para pedidos nuevos.
-  void _confirmarCambioEstado(bool nuevoEstado) {
-    final accion = nuevoEstado ? 'habilitar' : 'inhabilitar';
-    showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(
-              nuevoEstado
-                  ? Icons.check_circle_outline_rounded
-                  : Icons.pause_circle_outline_rounded,
-              color: rojo,
-            ),
-            const SizedBox(width: 10),
-            Expanded(child: Text('¿Deseas $accion este kit?')),
-          ],
-        ),
-        content: Text(
-          nuevoEstado
-              ? 'El kit "${widget.kit.nombre}" volverá a estar disponible para nuevas dispensaciones y solicitudes en ${widget.kit.areaNombre}.'
-              : 'Al inhabilitar el kit "${widget.kit.nombre}", no podrá ser seleccionado para nuevas dispensaciones. Todas las fichas y consumos históricos se conservan íntegros.',
-          style: const TextStyle(fontSize: 13, height: 1.4),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: Color(0xFF616161)),
-            ),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: rojo,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(nuevoEstado ? 'Habilitar Kit' : 'Inhabilitar Kit'),
-          ),
-        ],
-      ),
-    ).then((confirmado) {
-      if (mounted && confirmado == true && !widget.bloqueada) {
-        widget.onCambiarEstado(nuevoEstado);
-      }
-    });
+  /// Advierte antes de cambiar disponibilidad; el color del aviso no depende del área.
+  Future<void> _confirmarCambioEstado(bool nuevoEstado) async {
+    final confirmado = await MensajesApp.confirmar(
+      context,
+      titulo: nuevoEstado ? 'Habilitar kit' : 'Inhabilitar kit',
+      mensaje: nuevoEstado
+          ? 'El kit «${widget.kit.nombre}» estará disponible para nuevos pedidos en ${widget.kit.areaNombre}.'
+          : 'El kit «${widget.kit.nombre}» no podrá seleccionarse para nuevos pedidos. Su historial se conserva.',
+      accion: nuevoEstado ? 'Habilitar kit' : 'Inhabilitar kit',
+    );
+    if (mounted && confirmado && !widget.bloqueada) {
+      widget.onCambiarEstado(nuevoEstado);
+    }
   }
 
-  /// Confirma el borrado; el servidor conserva los kits que tengan historial.
-  void _confirmarEliminacion() {
-    showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.delete_outline_rounded, color: rojo),
-            SizedBox(width: 10),
-            Expanded(child: Text('Eliminar borrador de kit')),
-          ],
-        ),
-        content: Text(
-          '¿Estás seguro de eliminar el kit "${widget.kit.nombre}"?\n\n'
-          'Nota: Si este kit fue utilizado en alguna ficha médica histórica, el sistema bloqueará el borrado y te orientará a desactivarlo para proteger la trazabilidad.',
-          style: const TextStyle(fontSize: 13, height: 1.4),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: Color(0xFF616161)),
-            ),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: rojo,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
-    ).then((confirmado) {
-      if (mounted && confirmado == true && !widget.bloqueada) {
-        widget.onEliminar();
-      }
-    });
+  /// Confirma una eliminación destructiva; el servidor bloquea kits con historial.
+  Future<void> _confirmarEliminacion() async {
+    final confirmado = await MensajesApp.confirmar(
+      context,
+      titulo: 'Eliminar borrador de kit',
+      mensaje:
+          '¿Eliminar «${widget.kit.nombre}»? Solo se permite si no tiene fichas asociadas. Esta acción no se puede deshacer.',
+      accion: 'Eliminar kit',
+      destructivo: true,
+    );
+    if (mounted && confirmado && !widget.bloqueada) widget.onEliminar();
   }
 
   @override
   Widget build(BuildContext context) {
     final kit = widget.kit;
     final activo = kit.activo;
+    final rojo = widget.tema.principal;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -167,7 +106,7 @@ class _KitCardState extends State<KitCard> {
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: activo
-                            ? const Color(0xFFFFF0F0)
+                            ? widget.tema.suave
                             : const Color(0xFFF0F0F0),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -203,15 +142,15 @@ class _KitCardState extends State<KitCard> {
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFFF0F0),
+                                  color: widget.tema.suave,
                                   borderRadius: BorderRadius.circular(6),
                                   border: Border.all(
-                                    color: const Color(0xFFFFCDD2),
+                                    color: rojo.withValues(alpha: .2),
                                   ),
                                 ),
                                 child: Text(
                                   'Área: ${kit.areaNombre}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
                                     color: rojo,
@@ -252,7 +191,7 @@ class _KitCardState extends State<KitCard> {
                       ),
                       decoration: BoxDecoration(
                         color: activo
-                            ? const Color(0xFFFFF0F0)
+                            ? widget.tema.suave
                             : const Color(0xFFEEEEEE),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -307,7 +246,7 @@ class _KitCardState extends State<KitCard> {
                       _expandido
                           ? 'Ocultar composición'
                           : 'Ver ${kit.items.length} insumos incluidos',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: rojo,
@@ -339,7 +278,7 @@ class _KitCardState extends State<KitCard> {
                               Container(
                                 width: 6,
                                 height: 6,
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   color: rojo,
                                   shape: BoxShape.circle,
                                 ),
@@ -469,13 +408,19 @@ class _KitCardState extends State<KitCard> {
 
   /// Mantiene iguales las zonas táctiles y explica los iconos al mantener pulsado.
   Widget _accion(String etiqueta, IconData icono, VoidCallback? accion) {
+    final destructivo = icono == Icons.delete_outline_rounded;
+    final rojo = destructivo
+        ? MensajesApp.color(TipoMensaje.error)
+        : widget.tema.principal;
     return Tooltip(
       message: etiqueta,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
           foregroundColor: rojo,
-          backgroundColor: const Color(0xFFFFFAFA),
-          side: const BorderSide(color: Color(0xFFFFCDD2)),
+          backgroundColor: destructivo
+              ? MensajesApp.fondo(TipoMensaje.error)
+              : widget.tema.suave,
+          side: BorderSide(color: rojo.withValues(alpha: .2)),
           minimumSize: const Size(48, 48),
           padding: const EdgeInsets.symmetric(horizontal: 8),
           overlayColor: rojo.withValues(alpha: 0.08),

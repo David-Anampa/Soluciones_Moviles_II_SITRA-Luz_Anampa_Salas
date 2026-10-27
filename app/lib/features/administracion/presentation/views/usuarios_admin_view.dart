@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/mensajes_app.dart';
 import 'package:go_router/go_router.dart';
 import '../../data/usuarios_repository.dart';
 import '../../data/catalogos_repository.dart';
@@ -156,42 +157,31 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
       _mensaje(destino ? 'Usuario habilitado.' : 'Usuario deshabilitado.');
       await _cargar();
     } catch (e) {
-      if (mounted) _mensaje(UsuariosRepository.mensajeError(e));
+      if (mounted) _mensaje(UsuariosRepository.mensajeError(e), error: true);
     } finally {
       if (mounted) setState(() => _cambiandoEstadoId = null);
     }
   }
 
   /// Pide confirmar el cambio de estado explicando su efecto; devuelve true si acepta.
-  Future<bool> _confirmarEstado(UsuarioAdministrativo u, bool destino) async {
-    final acepta = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(destino ? 'Habilitar usuario' : 'Deshabilitar usuario'),
-        content: Text(
-          destino
-              ? '${u.nombreCompleto} podrá iniciar sesión nuevamente.'
-              : '${u.nombreCompleto} no podrá iniciar sesión. Su historial se conserva.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(destino ? 'Habilitar' : 'Deshabilitar'),
-          ),
-        ],
-      ),
-    );
-    return acepta ?? false;
-  }
+  Future<bool> _confirmarEstado(
+    UsuarioAdministrativo u,
+    bool destino,
+  ) => MensajesApp.confirmar(
+    context,
+    titulo: destino ? 'Habilitar usuario' : 'Deshabilitar usuario',
+    mensaje: destino
+        ? '${u.nombreCompleto} podrá iniciar sesión nuevamente.'
+        : '${u.nombreCompleto} no podrá iniciar sesión. Su historial se conserva.',
+    accion: destino ? 'Habilitar usuario' : 'Deshabilitar usuario',
+  );
 
-  /// Muestra un aviso breve en la parte inferior de la pantalla.
-  void _mensaje(String texto) => ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(texto)));
+  /// Muestra resultados con icono semántico, independientemente del tema visual.
+  void _mensaje(String texto, {bool error = false}) => MensajesApp.mostrar(
+    context,
+    texto,
+    tipo: error ? TipoMensaje.error : TipoMensaje.exito,
+  );
 
   /// Combina estado, rol, área y todas las palabras del buscador, y ordena el resultado.
   /// Todo se realiza en memoria: escribir o cambiar filtros no envía consultas nuevas.

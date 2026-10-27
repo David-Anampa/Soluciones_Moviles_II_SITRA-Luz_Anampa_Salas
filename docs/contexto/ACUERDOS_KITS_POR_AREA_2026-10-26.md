@@ -1,5 +1,13 @@
 # Acuerdos de kits por área — 26/10/2026
 
+## Temas de área y mensajes — actualización posterior
+
+Administrador elige en Gestión de áreas una paleta persistida en `areas.tema_color`: Rojo, Azul, Celeste, Lavanda, Rosa o Gris azulado. Cada paleta tiene principal y pastel; los encabezados mantienen texto/iconos blancos. La elección se aplica en Kits al seleccionar área y en sus formularios; Administración sin selección conserva rojo.
+
+Los mensajes son independientes: información azul, éxito verde/check, advertencia ámbar/triángulo y error rojo/equis. Hay componente común integrado en Administración y Kits; los otros módulos conservan sus avisos hasta integrarlos. No confundir advertencias con el tema del área.
+
+Migración adicional: `docs/supabase/migracion_temas_areas_2026_10_26.sql`, después de la de Kits por área. Incluida en el setup; no ejecutada remotamente en esta entrega. Guía y pasos manuales: `docs/supabase/GUIA_TEMAS_AREAS_2026_10_26.md`. Mantener pendiente la aceptación funcional.
+
 ## Actualización local posterior — implementación de plantillas
 
 Se implementaron permisos por área y el checkbox «Puede gestionar kits» solo para cargo Técnica/Enfermera con rol Enfermería / Técnico; selección del área de trabajo, lectura para Jefatura/Farmacia, duplicación con nombre nuevo y disponibilidad real/laboratorio. Se retiraron fallbacks, se corrigió el selector histórico y se sustituyeron las RPC de kits con control de sesión/rol/pertenencia y códigos canónicos. Esta actualización sustituye los hallazgos previos correspondientes que siguen más abajo como antecedente.

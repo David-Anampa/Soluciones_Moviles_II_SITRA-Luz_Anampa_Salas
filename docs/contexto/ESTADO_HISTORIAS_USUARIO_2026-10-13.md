@@ -80,6 +80,8 @@ Actualización de planificación: el equipo decidió empezar los próximos cinco
 
 ### HU-012: alcance y reglas confirmadas
 
+Actualización local del 26/10: Gestión de áreas incluye selección y vista previa de tema (Rojo, Azul, Celeste, Lavanda, Rosa y Gris azulado), persistido en `areas.tema_color`. Cada opción utiliza principal y pastel. Kits aplica el tema del área de trabajo; los mensajes mantienen colores semánticos independientes mediante un componente común en Administración/Kits. SQL adicional: `migracion_temas_areas_2026_10_26.sql`, después de Kits por área; también incorporado al setup. Pendiente de instalación remota y validación manual. Ver `docs/supabase/GUIA_TEMAS_AREAS_2026_10_26.md`.
+
 - Nombre: **Gestionar financiamientos, seguros y áreas**. Se conserva la numeración HU-012; la gestión de áreas no se crea como una HU adicional.
 - Solo Administrador gestiona estos catálogos. Permite listar, crear, editar, activar/desactivar y eliminar tanto áreas como tipos de financiamiento/seguro.
 - La eliminación física solo se permite si el registro no tiene referencias: fichas, pedidos, stock, movimientos, kits, asignaciones de usuarios u otras asociaciones. Si existe alguna, bloquear la eliminación y ofrecer desactivación, conservando el historial. Regla confirmada por Walter Salas.

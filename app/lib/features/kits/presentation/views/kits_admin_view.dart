@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/theme/tema_area.dart';
+import '../../../../core/widgets/mensajes_app.dart';
 import '../../../administracion/presentation/widgets/catalogo_estilo.dart';
 import '../../data/repositories/kits_repository.dart';
 import '../../domain/entities/kit_entity.dart';
@@ -14,8 +16,6 @@ class KitsAdminView extends StatefulWidget {
 }
 
 class _KitsAdminViewState extends State<KitsAdminView> {
-  static const rojo = Color(0xFFC62828);
-
   final KitsRepository _repository = KitsRepository();
   final TextEditingController _searchCtrl = TextEditingController();
 
@@ -32,6 +32,14 @@ class _KitsAdminViewState extends State<KitsAdminView> {
   String _filtroTexto = '';
   String? _filtroEstado; // null: Todos, 'ACTIVOS', 'INACTIVOS'
   String? _filtroArea; // null: Todas las áreas
+
+  /// Resuelve el tema desde el área, conservando Administración en rojo sin selección.
+  TemaArea _temaDeArea(String? codigo) {
+    for (final area in _areas) {
+      if (area.codigo == codigo) return TemaArea.desde(area.temaColor);
+    }
+    return TemaArea.opciones.first;
+  }
 
   @override
   void initState() {
@@ -83,78 +91,52 @@ class _KitsAdminViewState extends State<KitsAdminView> {
     }
   }
 
-  /// Guarda la disponibilidad del kit y recarga los resultados desde el servidor.
+  /// Guarda disponibilidad con protección contra pulsaciones simultáneas.
   Future<void> _cambiarEstado(KitEntity kit, bool nuevoEstado) async {
     if (_operando || _cargando || !_puedeGestionar) return;
     setState(() => _operando = true);
     try {
-      await _repository.cambiarEstado(kit.id, nuevoEstado).whenComplete(() {
-        if (mounted) setState(() => _operando = false);
-      });
+      await _repository.cambiarEstado(kit.id, nuevoEstado);
+      if (!mounted) return;
+      MensajesApp.mostrar(
+        context,
+        nuevoEstado
+            ? 'Kit habilitado.'
+            : 'Kit inhabilitado; historial conservado.',
+      );
+      await _cargarDatos();
+    } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: const Color(0xFF424242),
-            content: Row(
-              children: [
-                Icon(
-                  nuevoEstado
-                      ? Icons.check_circle_rounded
-                      : Icons.pause_circle_filled_rounded,
-                  color: Colors.white,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    nuevoEstado
-                        ? 'Kit "${kit.nombre}" habilitado para nuevas dispensaciones.'
-                        : 'Kit "${kit.nombre}" inhabilitado (historial preservado).',
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-        _cargarDatos();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red.shade800,
-            content: Text(KitsRepository.mensajeError(e)),
-          ),
+        MensajesApp.mostrar(
+          context,
+          KitsRepository.mensajeError(error),
+          tipo: TipoMensaje.error,
         );
       }
+    } finally {
+      if (mounted) setState(() => _operando = false);
     }
   }
 
-  /// Solicita el borrado al servidor, que decide si el historial permite eliminarlo.
+  /// El servidor decide si se puede eliminar; el resultado utiliza un aviso semántico.
   Future<void> _eliminarKit(KitEntity kit) async {
     if (_operando || _cargando || !_puedeGestionar) return;
     setState(() => _operando = true);
     try {
-      await _repository.eliminarKit(kit.id).whenComplete(() {
-        if (mounted) setState(() => _operando = false);
-      });
+      await _repository.eliminarKit(kit.id);
+      if (!mounted) return;
+      MensajesApp.mostrar(context, 'Borrador de kit eliminado.');
+      await _cargarDatos();
+    } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: Color(0xFF424242),
-            content: Text('Borrador de kit eliminado correctamente.'),
-          ),
-        );
-        _cargarDatos();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red.shade800,
-            content: Text(KitsRepository.mensajeError(e)),
-          ),
+        MensajesApp.mostrar(
+          context,
+          KitsRepository.mensajeError(error),
+          tipo: TipoMensaje.error,
         );
       }
+    } finally {
+      if (mounted) setState(() => _operando = false);
     }
   }
 
@@ -185,6 +167,7 @@ class _KitsAdminViewState extends State<KitsAdminView> {
           kitExistente: duplicar ? null : kit,
           duplicarDe: duplicar ? kit : null,
           areaInicial: _filtroArea,
+          temaInicial: _temaDeArea(kit?.areaDestino ?? _filtroArea),
         ),
       ),
     );
@@ -223,9 +206,11 @@ class _KitsAdminViewState extends State<KitsAdminView> {
   @override
   Widget build(BuildContext context) {
     final kits = _kitsFiltrados;
+    final tema = _temaDeArea(_filtroArea);
+    final rojo = tema.principal;
 
     return Theme(
-      data: CatalogoEstilo.tema(context),
+      data: CatalogoEstilo.tema(context, area: tema),
       child: Scaffold(
         backgroundColor: CatalogoEstilo.fondo,
         appBar: AppBar(
@@ -291,8 +276,8 @@ class _KitsAdminViewState extends State<KitsAdminView> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [rojo, Color(0xFFE53935)],
+                        gradient: LinearGradient(
+                          colors: [rojo, Color.lerp(rojo, Colors.white, .08)!],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -362,7 +347,7 @@ class _KitsAdminViewState extends State<KitsAdminView> {
                             decoration: InputDecoration(
                               hintText:
                                   'Buscar por nombre, descripción o área...',
-                              prefixIcon: const Icon(
+                              prefixIcon: Icon(
                                 Icons.search_rounded,
                                 color: rojo,
                               ),
@@ -417,7 +402,7 @@ class _KitsAdminViewState extends State<KitsAdminView> {
                                 ChoiceChip(
                                   label: const Text('Activos'),
                                   selected: _filtroEstado == 'ACTIVOS',
-                                  selectedColor: const Color(0xFFFFF0F0),
+                                  selectedColor: tema.suave,
                                   onSelected: (_) {
                                     setState(() {
                                       _filtroEstado = 'ACTIVOS';
@@ -428,7 +413,7 @@ class _KitsAdminViewState extends State<KitsAdminView> {
                                 ChoiceChip(
                                   label: const Text('Inactivos'),
                                   selected: _filtroEstado == 'INACTIVOS',
-                                  selectedColor: const Color(0xFFFFEBEE),
+                                  selectedColor: tema.suave,
                                   onSelected: (_) {
                                     setState(() {
                                       _filtroEstado = 'INACTIVOS';
@@ -498,46 +483,16 @@ class _KitsAdminViewState extends State<KitsAdminView> {
                     if (_cargando) ...[
                       const Padding(
                         padding: EdgeInsets.all(40),
-                        child: Center(
-                          child: CircularProgressIndicator(color: rojo),
-                        ),
+                        child: Center(child: CircularProgressIndicator()),
                       ),
                     ] else if (_error != null) ...[
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFEBEE),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.red.shade200),
-                        ),
-                        child: Column(
-                          children: [
-                            const Icon(
-                              Icons.cloud_off_rounded,
-                              size: 36,
-                              color: Colors.red,
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              _error!,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: rojo,
-                                foregroundColor: Colors.white,
-                              ),
-                              icon: const Icon(Icons.refresh_rounded),
-                              label: const Text('Reintentar conexión'),
-                              onPressed: _cargarDatos,
-                            ),
-                          ],
+                      MensajesApp.nota(_error!, tipo: TipoMensaje.error),
+                      const SizedBox(height: 12),
+                      Center(
+                        child: FilledButton.icon(
+                          onPressed: _cargarDatos,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Reintentar conexión'),
                         ),
                       ),
                     ] else if (kits.isEmpty) ...[
@@ -606,6 +561,7 @@ class _KitsAdminViewState extends State<KitsAdminView> {
                           return KitCard(
                             key: ValueKey(kit.id),
                             kit: kit,
+                            tema: _temaDeArea(kit.areaDestino),
                             puedeGestionar: _puedeGestionar,
                             bloqueada: _operando || _cargando,
                             disponibilidad: _disponibilidad,

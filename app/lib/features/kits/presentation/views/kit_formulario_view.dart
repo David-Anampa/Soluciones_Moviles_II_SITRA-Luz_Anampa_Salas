@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/tema_area.dart';
+import '../../../../core/widgets/mensajes_app.dart';
 import '../../../administracion/presentation/widgets/catalogo_estilo.dart';
 import '../../data/repositories/kits_repository.dart';
 import '../../domain/entities/kit_entity.dart';
@@ -13,6 +15,7 @@ class KitFormularioView extends StatefulWidget {
   final KitsRepository repository;
   final KitEntity? duplicarDe;
   final String? areaInicial;
+  final TemaArea temaInicial;
 
   const KitFormularioView({
     super.key,
@@ -20,6 +23,12 @@ class KitFormularioView extends StatefulWidget {
     required this.repository,
     this.duplicarDe,
     this.areaInicial,
+    this.temaInicial = const TemaArea(
+      'ROJO',
+      'Rojo institucional',
+      Color(0xFFC62828),
+      Color(0xFFFFF0F0),
+    ),
   });
 
   @override
@@ -27,9 +36,6 @@ class KitFormularioView extends StatefulWidget {
 }
 
 class _KitFormularioViewState extends State<KitFormularioView> {
-  static const rojo = Color(0xFFC62828);
-  static const pastel = Color(0xFFFFF0F0);
-
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nombreCtrl;
   late final TextEditingController _descripcionCtrl;
@@ -45,6 +51,16 @@ class _KitFormularioViewState extends State<KitFormularioView> {
   String? _errorMensaje;
 
   bool get _esEdicion => widget.kitExistente != null;
+
+  /// Cambia la identidad del formulario cuando se elige otra área autorizada.
+  TemaArea get _temaActual {
+    for (final area in _areas) {
+      if (area.codigo == _areaSeleccionada) {
+        return TemaArea.desde(area.temaColor);
+      }
+    }
+    return widget.temaInicial;
+  }
 
   @override
   void initState() {
@@ -124,6 +140,7 @@ class _KitFormularioViewState extends State<KitFormularioView> {
     final itemSeleccionado = await showDialog<KitItemEntity>(
       context: context,
       builder: (ctx) => SelectorMedicamentoDialog(
+        tema: _temaActual,
         repository: widget.repository,
         idsYaSeleccionados: idsActuales,
       ),
@@ -198,24 +215,11 @@ class _KitFormularioViewState extends State<KitFormularioView> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: const Color(0xFF424242),
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    _esEdicion
-                        ? 'Plantilla de kit actualizada con éxito.'
-                        : 'Nuevo kit registrado exitosamente.',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        MensajesApp.mostrar(
+          context,
+          _esEdicion
+              ? 'Kit actualizado correctamente.'
+              : 'Kit guardado correctamente.',
         );
         Navigator.of(context).pop(true);
       }
@@ -231,8 +235,10 @@ class _KitFormularioViewState extends State<KitFormularioView> {
 
   @override
   Widget build(BuildContext context) {
+    final rojo = _temaActual.principal;
+    final pastel = _temaActual.suave;
     return Theme(
-      data: CatalogoEstilo.tema(context),
+      data: CatalogoEstilo.tema(context, area: _temaActual),
       child: Scaffold(
         backgroundColor: const Color(0xFFF6F7F9),
         appBar: AppBar(
@@ -258,72 +264,19 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Banner explicativo según HU-018 / HU-019
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: pastel,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFFFCDD2)),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.info_outline_rounded,
-                            color: rojo,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              _esEdicion
-                                  ? 'Los cambios se aplican a futuros pedidos. Las fichas anteriores conservan sus medicamentos y cantidades.'
-                                  : widget.duplicarDe != null
-                                  ? 'Copia de «${widget.duplicarDe!.nombre}». Escribe otro nombre y ajusta su composición. El original se conserva.'
-                                  : 'Crea un kit personalizado: elige el área, los medicamentos y las cantidades.',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                height: 1.4,
-                                color: Color(0xFF333333),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                    // La explicación utiliza el color informativo, no el tema del área.
+                    MensajesApp.nota(
+                      _esEdicion
+                          ? 'Los cambios se aplican a futuros pedidos. Las fichas anteriores conservan sus medicamentos y cantidades.'
+                          : widget.duplicarDe != null
+                          ? 'Copia de «${widget.duplicarDe!.nombre}». Escribe otro nombre y ajusta su composición. El original se conserva.'
+                          : 'Crea un kit personalizado: elige el área, los medicamentos y las cantidades.',
                     ),
                     const SizedBox(height: 16),
 
                     if (_errorMensaje != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFEBEE),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.red.shade200),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.error_outline_rounded,
-                              color: Colors.red,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                _errorMensaje!,
-                                style: const TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      MensajesApp.nota(_errorMensaje!, tipo: TipoMensaje.error),
+                      const SizedBox(height: 16),
                     ],
 
                     // Sección 1: Datos Generales
@@ -337,7 +290,7 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Row(
+                          Row(
                             children: [
                               Icon(Icons.badge_rounded, color: rojo, size: 20),
                               SizedBox(width: 8),
@@ -362,7 +315,7 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              prefixIcon: const Icon(
+                              prefixIcon: Icon(
                                 Icons.title_rounded,
                                 color: rojo,
                               ),
@@ -373,9 +326,7 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                               ? const Padding(
                                   padding: EdgeInsets.all(12),
                                   child: Center(
-                                    child: CircularProgressIndicator(
-                                      color: rojo,
-                                    ),
+                                    child: CircularProgressIndicator(),
                                   ),
                                 )
                               : DropdownButtonFormField<String>(
@@ -397,7 +348,7 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    prefixIcon: const Icon(
+                                    prefixIcon: Icon(
                                       Icons.local_hospital_rounded,
                                       color: rojo,
                                     ),
@@ -435,7 +386,7 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              prefixIcon: const Icon(
+                              prefixIcon: Icon(
                                 Icons.notes_rounded,
                                 color: rojo,
                               ),
@@ -459,7 +410,7 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                         children: [
                           Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.medication_liquid_rounded,
                                 color: rojo,
                                 size: 20,
@@ -480,12 +431,12 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFFF0F0),
+                                  color: pastel,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
                                   '${_items.length} ítems',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                     color: rojo,
@@ -543,7 +494,7 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                   OutlinedButton.icon(
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: rojo,
-                                      side: const BorderSide(color: rojo),
+                                      side: BorderSide(color: rojo),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       ),
@@ -578,12 +529,10 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                         children: [
                                           CircleAvatar(
                                             radius: 14,
-                                            backgroundColor: const Color(
-                                              0xFFFFF0F0,
-                                            ),
+                                            backgroundColor: pastel,
                                             child: Text(
                                               '${index + 1}',
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.bold,
                                                 color: rojo,
@@ -644,7 +593,7 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                           // Cantidad en otra fila para dar espacio al nombre completo.
                                           IconButton(
                                             tooltip: 'Disminuir cantidad',
-                                            icon: const Icon(
+                                            icon: Icon(
                                               Icons
                                                   .remove_circle_outline_rounded,
                                               color: rojo,
@@ -681,7 +630,7 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                           ),
                                           IconButton(
                                             tooltip: 'Aumentar cantidad',
-                                            icon: const Icon(
+                                            icon: Icon(
                                               Icons.add_circle_outline_rounded,
                                               color: rojo,
                                               size: 20,

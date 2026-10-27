@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/mensajes_app.dart';
 import '../../data/repositories/kits_repository.dart';
 
 /// Consulta orientativa, nunca una reserva: Almacén y tránsito se muestran separados.
@@ -26,7 +27,7 @@ class DisponibilidadKit extends StatelessWidget {
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: !m.activo || faltante > 0
-            ? const Color(0xFFFFF0F0)
+            ? MensajesApp.fondo(TipoMensaje.advertencia)
             : const Color(0xFFF5F5F5),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -56,15 +57,28 @@ class DisponibilidadKit extends StatelessWidget {
           if (!m.activo || faltante > 0)
             Padding(
               padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                !m.activo
-                    ? 'Medicamento deshabilitado: revisar composición.'
-                    : 'Faltan $faltante en Farmacia.${m.almacen > 0 ? ' Requiere abastecimiento desde Almacén.' : ' Requiere reposición.'}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFFC62828),
-                  fontWeight: FontWeight.w600,
-                ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    MensajesApp.icono(TipoMensaje.advertencia),
+                    size: 18,
+                    color: MensajesApp.color(TipoMensaje.advertencia),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      !m.activo
+                          ? 'Medicamento deshabilitado: revisar composición.'
+                          : 'Faltan $faltante en Farmacia.${m.almacen > 0 ? ' Requiere abastecimiento desde Almacén.' : ' Requiere reposición.'}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: MensajesApp.color(TipoMensaje.advertencia),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
         ],

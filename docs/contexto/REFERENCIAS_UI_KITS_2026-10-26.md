@@ -1,5 +1,7 @@
 # Actualización visual de Kits — 26/10/2026
 
+Actualización posterior: el área ya puede usar su propia paleta principal/pastel elegida por Administrador; sin selección se mantiene rojo institucional. Los mensajes se separan por significado, no por tema. Ver `docs/supabase/GUIA_TEMAS_AREAS_2026_10_26.md`. Esta actualización sustituye las menciones anteriores a rojo fijo y a permisos todavía sin desarrollar: estos últimos ya tienen código y migración dedicados, pendientes de instalación y aceptación funcional.
+
 Este bloque adapta la presentación de Kits al estilo existente de Administración. No completa los permisos por área ni el checkbox «Puede gestionar kits», que siguen pendientes de implementación.
 
 ## Referencias consultadas

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../../core/theme/tema_area.dart';
 import '../../../administracion/presentation/widgets/catalogo_estilo.dart';
 import '../../data/repositories/kits_repository.dart';
 import '../../domain/entities/kit_item_entity.dart';
@@ -9,10 +10,17 @@ import 'disponibilidad_kit.dart';
 class SelectorMedicamentoDialog extends StatefulWidget {
   final KitsRepository repository;
   final Set<String> idsYaSeleccionados;
+  final TemaArea tema;
   const SelectorMedicamentoDialog({
     super.key,
     required this.repository,
     this.idsYaSeleccionados = const {},
+    this.tema = const TemaArea(
+      'ROJO',
+      'Rojo institucional',
+      Color(0xFFC62828),
+      Color(0xFFFFF0F0),
+    ),
   });
   @override
   State<SelectorMedicamentoDialog> createState() =>
@@ -89,7 +97,7 @@ class _SelectorMedicamentoDialogState extends State<SelectorMedicamentoDialog> {
 
   @override
   Widget build(BuildContext context) => Theme(
-    data: CatalogoEstilo.tema(context),
+    data: CatalogoEstilo.tema(context, area: widget.tema),
     child: Dialog(
       backgroundColor: Colors.white,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -102,10 +110,7 @@ class _SelectorMedicamentoDialogState extends State<SelectorMedicamentoDialog> {
             children: [
               Row(
                 children: [
-                  const Icon(
-                    Icons.medication_outlined,
-                    color: CatalogoEstilo.rojo,
-                  ),
+                  Icon(Icons.medication_outlined, color: widget.tema.principal),
                   const SizedBox(width: 10),
                   const Expanded(
                     child: Text(
@@ -166,13 +171,13 @@ class _SelectorMedicamentoDialogState extends State<SelectorMedicamentoDialog> {
                           final seleccionado = _seleccionado?.id == m.id;
                           return Material(
                             color: seleccionado
-                                ? CatalogoEstilo.pastel
+                                ? widget.tema.suave
                                 : const Color(0xFFF8F8F8),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                               side: BorderSide(
                                 color: seleccionado
-                                    ? CatalogoEstilo.rojo
+                                    ? widget.tema.principal
                                     : const Color(0xFFE5E5E5),
                               ),
                             ),
@@ -208,9 +213,9 @@ class _SelectorMedicamentoDialogState extends State<SelectorMedicamentoDialog> {
                                             ),
                                           )
                                         else if (seleccionado)
-                                          const Icon(
+                                          Icon(
                                             Icons.check_circle_rounded,
-                                            color: CatalogoEstilo.rojo,
+                                            color: widget.tema.principal,
                                           ),
                                       ],
                                     ),

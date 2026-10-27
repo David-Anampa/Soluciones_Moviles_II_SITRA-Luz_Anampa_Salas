@@ -8,6 +8,7 @@ class AreaKit {
   final String codigoInterno;
   final String nombre;
   final bool activo;
+  final String temaColor;
 
   const AreaKit({
     required this.id,
@@ -15,6 +16,7 @@ class AreaKit {
     required this.codigoInterno,
     required this.nombre,
     required this.activo,
+    this.temaColor = 'ROJO',
   });
 
   factory AreaKit.fromMap(Map<String, dynamic> row) => AreaKit(
@@ -23,6 +25,7 @@ class AreaKit {
     codigoInterno: row['codigo_interno'] as String? ?? row['codigo'] as String,
     nombre: row['nombre'] as String,
     activo: row['activo'] as bool? ?? true,
+    temaColor: row['tema_color'] as String? ?? 'ROJO',
   );
 }
 
