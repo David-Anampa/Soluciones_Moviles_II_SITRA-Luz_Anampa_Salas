@@ -8,6 +8,7 @@ import '../../domain/usuario_borrador.dart';
 import '../../domain/usuario_validadores.dart';
 import '../../domain/catalogos_profesionales.dart';
 import '../../domain/permiso_kits.dart';
+import '../../domain/areas_por_rol.dart';
 import '../widgets/catalogo_estilo.dart';
 
 /// HU-021 (crear) y HU-022 (editar): formulario de usuario.
@@ -53,6 +54,7 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
   bool _puedeGestionarKits = false;
   bool get _cargoConKits => cargoPermiteKits(_cargo.text);
   String? _error;
+  bool _areasAjustadas = false;
 
   /// Indica si el formulario edita un perfil existente.
   bool get _edita => widget.usuario != null;
@@ -82,6 +84,7 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
     _areasSeleccionadas = {
       for (final token in u?.areas ?? <String>[]) _codigoDeArea(token),
     };
+    _aplicarAreasDelRol();
     _cargarCatalogos();
   }
 
@@ -151,13 +154,35 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
   Map<String, String> get _opcionesAreas {
     final opciones = <String, String>{
       for (final a in widget.areas)
-        if (a.activo || _areasSeleccionadas.contains(a.codigo))
+        if (!areaReservadaPorRol(a.codigo, a.nombre) &&
+            (a.activo || _areasSeleccionadas.contains(a.codigo)))
           a.codigo: a.nombre,
     };
     for (final codigo in _areasSeleccionadas) {
-      opciones.putIfAbsent(codigo, () => codigo);
+      if (!areaReservadaPorRol(codigo, codigo)) {
+        opciones.putIfAbsent(codigo, () => codigo);
+      }
     }
     return opciones;
+  }
+
+  /// Ajusta solo el borrador al cambiar de rol; avisa antes de guardar perfiles antiguos.
+  void _aplicarAreasDelRol() {
+    final anteriores = {..._areasSeleccionadas};
+    if (_rol == 'ENFERMERIA') {
+      _areasSeleccionadas.retainWhere((codigo) {
+        final area = widget.areas.where((a) => a.codigo == codigo).firstOrNull;
+        return !areaReservadaPorRol(codigo, area?.nombre ?? codigo);
+      });
+    } else if (_rol != null) {
+      _areasSeleccionadas.clear();
+      final fija = areaFijaPorRol(_rol);
+      if (fija != null) _areasSeleccionadas.add(fija);
+    }
+    _areasAjustadas =
+        _edita &&
+        (anteriores.length != _areasSeleccionadas.length ||
+            !anteriores.containsAll(_areasSeleccionadas));
   }
 
   /// Construye el borrador a partir de los campos del formulario.
@@ -631,6 +656,7 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
         : (v) => setState(() {
             _rol = v;
             if (v != 'ENFERMERIA') _puedeGestionarKits = false;
+            _aplicarAreasDelRol();
           }),
   );
 
@@ -639,19 +665,40 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
       _esCuentaPropia ? 'No puedes cambiar el rol de tu propia cuenta.' : null;
 
   /// Selección múltiple buscable del catálogo HU-012 con etiquetas de resumen.
-  Widget _selectorAreas() => AreasUsuarioSelector(
-    opciones: _opcionesAreas,
-    seleccionadas: _areasSeleccionadas,
-    inactivas: {
-      for (final area in widget.areas)
-        if (!area.activo) area.codigo,
-    },
-    habilitado: !_guardando,
-    onChanged: (seleccion) => setState(() {
-      _areasSeleccionadas
-        ..clear()
-        ..addAll(seleccion);
-    }),
+  Widget _selectorAreas() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      if (_areasAjustadas) ...[
+        MensajesApp.nota(
+          'Las áreas se ajustarán al rol seleccionado cuando guardes los cambios.',
+          tipo: TipoMensaje.advertencia,
+        ),
+        const SizedBox(height: 12),
+      ],
+      if (_rol == 'ENFERMERIA')
+        AreasUsuarioSelector(
+          opciones: _opcionesAreas,
+          seleccionadas: _areasSeleccionadas,
+          inactivas: {
+            for (final area in widget.areas)
+              if (!area.activo) area.codigo,
+          },
+          habilitado: !_guardando,
+          onChanged: (seleccion) => setState(() {
+            _areasSeleccionadas
+              ..clear()
+              ..addAll(seleccion);
+          }),
+        )
+      else
+        MensajesApp.nota(
+          _rol == 'ADMINISTRADOR'
+              ? 'Administrador: acceso global según sus permisos. No requiere asignación de áreas.'
+              : _rol == null
+              ? 'Selecciona un rol para definir las áreas de trabajo.'
+              : 'Área asignada por el rol: ${areaFijaPorRol(_rol) == 'ALMACEN' ? 'Almacén' : 'Farmacia'}.',
+        ),
+    ],
   );
 
   /// Abre una acción independiente y bloquea el formulario mientras está abierta.

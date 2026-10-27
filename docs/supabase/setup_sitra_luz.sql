@@ -1519,6 +1519,30 @@ BEGIN
     END IF;
   END LOOP;
 
+  -- Regla de asignación: solo Enfermería/Técnico selecciona áreas clínicas.
+  v_areas := ARRAY(SELECT DISTINCT unnest(v_areas) ORDER BY 1);
+  IF v_rol = 'ENFERMERIA' THEN
+    IF EXISTS (
+      SELECT 1 FROM unnest(v_areas) AS asignada(codigo)
+      LEFT JOIN public.areas a ON a.codigo = asignada.codigo
+      WHERE upper(translate(btrim(asignada.codigo),'ÁÉÍÓÚáéíóú','AEIOUaeiou'))
+              ~ '^(FARMACIA|ALMACEN|JEFATURA)([ _-]|$)'
+         OR upper(translate(btrim(COALESCE(a.nombre,'')),'ÁÉÍÓÚáéíóú','AEIOUaeiou'))
+              ~ '^(FARMACIA|ALMACEN|JEFATURA)([ _-]|$)'
+    ) THEN
+      RAISE EXCEPTION 'Enfermería/Técnico solo puede asignarse a áreas clínicas, no a Farmacia, Almacén o Jefatura.';
+    END IF;
+  ELSIF v_rol = 'ADMINISTRADOR' THEN
+    IF cardinality(v_areas) <> 0 THEN
+      RAISE EXCEPTION 'Administrador tiene acceso global por su rol y no requiere áreas asignadas.';
+    END IF;
+  ELSE
+    v_codigo := CASE WHEN v_rol = 'ALMACEN' THEN 'ALMACEN' ELSE 'FARMACIA' END;
+    IF cardinality(v_areas) <> 1 OR v_areas[1] IS DISTINCT FROM v_codigo THEN
+      RAISE EXCEPTION 'El rol % debe estar asignado únicamente al área %.', v_rol, v_codigo;
+    END IF;
+  END IF;
+
   RETURN jsonb_build_object(
     'nombres', v_nombres, 'apellidos', v_apellidos,
     'nombre', v_nombres || ' ' || v_apellidos,
@@ -2083,6 +2107,30 @@ BEGIN
     END IF;
   END LOOP;
 
+  -- Regla de asignación: solo Enfermería/Técnico selecciona áreas clínicas.
+  v_areas := ARRAY(SELECT DISTINCT unnest(v_areas) ORDER BY 1);
+  IF v_rol = 'ENFERMERIA' THEN
+    IF EXISTS (
+      SELECT 1 FROM unnest(v_areas) AS asignada(codigo)
+      LEFT JOIN public.areas a ON a.codigo = asignada.codigo
+      WHERE upper(translate(btrim(asignada.codigo),'ÁÉÍÓÚáéíóú','AEIOUaeiou'))
+              ~ '^(FARMACIA|ALMACEN|JEFATURA)([ _-]|$)'
+         OR upper(translate(btrim(COALESCE(a.nombre,'')),'ÁÉÍÓÚáéíóú','AEIOUaeiou'))
+              ~ '^(FARMACIA|ALMACEN|JEFATURA)([ _-]|$)'
+    ) THEN
+      RAISE EXCEPTION 'Enfermería/Técnico solo puede asignarse a áreas clínicas, no a Farmacia, Almacén o Jefatura.';
+    END IF;
+  ELSIF v_rol = 'ADMINISTRADOR' THEN
+    IF cardinality(v_areas) <> 0 THEN
+      RAISE EXCEPTION 'Administrador tiene acceso global por su rol y no requiere áreas asignadas.';
+    END IF;
+  ELSE
+    v_codigo := CASE WHEN v_rol = 'ALMACEN' THEN 'ALMACEN' ELSE 'FARMACIA' END;
+    IF cardinality(v_areas) <> 1 OR v_areas[1] IS DISTINCT FROM v_codigo THEN
+      RAISE EXCEPTION 'El rol % debe estar asignado únicamente al área %.', v_rol, v_codigo;
+    END IF;
+  END IF;
+
   RETURN jsonb_build_object(
     'nombres', v_nombres, 'apellidos', v_apellidos,
     'nombre', v_nombres || ' ' || v_apellidos,
@@ -2483,6 +2531,30 @@ BEGIN
       RAISE EXCEPTION 'Área desconocida: %', v_token;
     END IF;
   END LOOP;
+
+  -- Regla de asignación: solo Enfermería/Técnico selecciona áreas clínicas.
+  v_areas := ARRAY(SELECT DISTINCT unnest(v_areas) ORDER BY 1);
+  IF v_rol = 'ENFERMERIA' THEN
+    IF EXISTS (
+      SELECT 1 FROM unnest(v_areas) AS asignada(codigo)
+      LEFT JOIN public.areas a ON a.codigo = asignada.codigo
+      WHERE upper(translate(btrim(asignada.codigo),'ÁÉÍÓÚáéíóú','AEIOUaeiou'))
+              ~ '^(FARMACIA|ALMACEN|JEFATURA)([ _-]|$)'
+         OR upper(translate(btrim(COALESCE(a.nombre,'')),'ÁÉÍÓÚáéíóú','AEIOUaeiou'))
+              ~ '^(FARMACIA|ALMACEN|JEFATURA)([ _-]|$)'
+    ) THEN
+      RAISE EXCEPTION 'Enfermería/Técnico solo puede asignarse a áreas clínicas, no a Farmacia, Almacén o Jefatura.';
+    END IF;
+  ELSIF v_rol = 'ADMINISTRADOR' THEN
+    IF cardinality(v_areas) <> 0 THEN
+      RAISE EXCEPTION 'Administrador tiene acceso global por su rol y no requiere áreas asignadas.';
+    END IF;
+  ELSE
+    v_codigo := CASE WHEN v_rol = 'ALMACEN' THEN 'ALMACEN' ELSE 'FARMACIA' END;
+    IF cardinality(v_areas) <> 1 OR v_areas[1] IS DISTINCT FROM v_codigo THEN
+      RAISE EXCEPTION 'El rol % debe estar asignado únicamente al área %.', v_rol, v_codigo;
+    END IF;
+  END IF;
 
   RETURN jsonb_build_object(
     'nombres', v_nombres, 'apellidos', v_apellidos,
