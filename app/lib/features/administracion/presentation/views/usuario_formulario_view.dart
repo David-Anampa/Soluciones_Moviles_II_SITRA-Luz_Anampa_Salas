@@ -325,27 +325,30 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
                   _seccion('Rol y áreas', [
                     _selectorRol(),
                     _selectorAreas(),
-                    if (_cargoConKits)
-                      CheckboxListTile(
-                        contentPadding: EdgeInsets.zero,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        activeColor: CatalogoEstilo.rojo,
-                        title: const Text(
-                          'Puede gestionar kits',
-                          style: TextStyle(fontSize: 14),
+                    if (_rol == 'ENFERMERIA')
+                      Material(
+                        color: Colors.transparent,
+                        child: CheckboxListTile(
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          activeColor: CatalogoEstilo.rojo,
+                          title: const Text(
+                            'Puede gestionar kits',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                          subtitle: Text(
+                            _cargoConKits
+                                ? 'Solo en sus áreas asignadas. Requiere al menos un área.'
+                                : 'Completa Cargo / ocupación como Técnica, Técnico, Enfermera o Enfermero para habilitar este permiso.',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          value: _cargoConKits && _puedeGestionarKits,
+                          onChanged: _guardando || !_cargoConKits
+                              ? null
+                              : (valor) => setState(
+                                  () => _puedeGestionarKits = valor == true,
+                                ),
                         ),
-                        subtitle: Text(
-                          _rol == 'ENFERMERIA'
-                              ? 'Solo en sus áreas asignadas. Requiere al menos un área.'
-                              : 'Disponible con el rol Enfermería / Técnico.',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        value: _rol == 'ENFERMERIA' && _puedeGestionarKits,
-                        onChanged: _guardando || _rol != 'ENFERMERIA'
-                            ? null
-                            : (valor) => setState(
-                                () => _puedeGestionarKits = valor == true,
-                              ),
                       ),
                   ], icono: Icons.admin_panel_settings_outlined),
                   if (_error != null) ...[
