@@ -5,15 +5,37 @@ enum DisenoTarjeta { area, seguro, convenio, usuario }
 
 /// Paletas visuales; no intervienen en permisos ni cambian el tema del área.
 class PaletaTarjeta {
-  static TemaArea usuario(String rol) => TemaArea.desde(switch (rol) {
-    'ALMACEN' => 'AZUL',
-    'FARMACIA' => 'TURQUESA',
-    'ENFERMERIA' => 'LAVANDA',
-    'JEFATURA_FARMACIA' => 'GRIS_AZUL',
-    _ => 'ROJO',
-  });
+  static TemaArea usuario(String rol) => switch (rol) {
+    'ALMACEN' => seguro,
+    'FARMACIA' => const TemaArea(
+      'TURQUESA',
+      'Turquesa',
+      Color(0xFF007F79),
+      Color(0xFFE3FAF6),
+    ),
+    'ENFERMERIA' => const TemaArea(
+      'LAVANDA',
+      'Lavanda',
+      Color(0xFF7145C2),
+      Color(0xFFF1EBFC),
+    ),
+    'JEFATURA_FARMACIA' => TemaArea.desde('GRIS_AZUL'),
+    _ => TemaArea.desde('ROJO'),
+  };
+  static const seguro = TemaArea(
+    'AZUL',
+    'Azul',
+    Color(0xFF0062DB),
+    Color(0xFFE8F5FF),
+  );
+  static const convenio = TemaArea(
+    'MORADO',
+    'Morado',
+    Color(0xFF753AE0),
+    Color(0xFFF2EAFE),
+  );
   static TemaArea financiamiento(String tipo) =>
-      TemaArea.desde(tipo == 'SEGURO' ? 'AZUL' : 'MORADO');
+      tipo == 'SEGURO' ? seguro : convenio;
 }
 
 /// Degradado continuo, con zona central clara. El patrón no ocupa altura ni
@@ -35,6 +57,8 @@ class TarjetaCatalogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: pastel,
+    elevation: 2,
+    shadowColor: principal.withValues(alpha: .15),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(20),
       side: BorderSide(color: principal.withValues(alpha: .25)),
@@ -72,6 +96,13 @@ class _FondoTarjeta extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
+    // Acento luminoso en los bordes; el color oscuro original sigue siendo
+    // el de textos e iconos para conservar contraste y la identidad del área.
+    final hsl = HSLColor.fromColor(color);
+    final vivo = hsl
+        .withSaturation((hsl.saturation + .18).clamp(0.0, 1.0))
+        .withLightness(.53)
+        .toColor();
     canvas.save();
     canvas.clipRect(rect);
     canvas.drawRect(
@@ -81,9 +112,9 @@ class _FondoTarjeta extends CustomPainter {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color.lerp(pastel, color, .32)!,
+            Color.lerp(pastel, vivo, .55)!,
             pastel,
-            Color.lerp(pastel, color, .35)!,
+            Color.lerp(pastel, vivo, .75)!,
           ],
           stops: const [0, .48, 1],
         ).createShader(rect),
@@ -96,13 +127,27 @@ class _FondoTarjeta extends CustomPainter {
               ? const Alignment(-.65, -.55)
               : const Alignment(.80, -.80),
           radius: 1.2,
-          colors: [color.withValues(alpha: .30), color.withValues(alpha: 0)],
+          colors: [vivo.withValues(alpha: .60), vivo.withValues(alpha: 0)],
         ).createShader(rect),
     );
+    // Luz elíptica central: aclara los datos sin borrar los extremos ni el patrón.
+    canvas.save();
+    canvas.translate(size.width * .47, size.height * .42);
+    canvas.scale(size.width * .64, size.height * .60);
+    canvas.drawCircle(
+      Offset.zero,
+      1,
+      Paint()
+        ..shader = const RadialGradient(
+          colors: [Color(0xFAFFFFFF), Color(0xCFFFFFFF), Color(0x00FFFFFF)],
+          stops: [0, .65, 1],
+        ).createShader(const Rect.fromLTWH(-1, -1, 2, 2)),
+    );
+    canvas.restore();
     canvas.save();
     canvas.scale(size.width / 360, size.height / 260);
     final linea = Paint()
-      ..color = Colors.white.withValues(alpha: .42)
+      ..color = Colors.white.withValues(alpha: .65)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.1;
     switch (diseno) {
@@ -132,7 +177,7 @@ class _FondoTarjeta extends CustomPainter {
             ..cubicTo(180 + d, 132, 310, 188 - d, 380, 100 - d)
             ..lineTo(380, 280)
             ..close();
-          canvas.drawPath(onda, Paint()..color = color.withValues(alpha: .09));
+          canvas.drawPath(onda, Paint()..color = vivo.withValues(alpha: .18));
           canvas.drawPath(onda, linea);
         }
       case DisenoTarjeta.convenio:
@@ -146,7 +191,7 @@ class _FondoTarjeta extends CustomPainter {
               ..lineTo(50 + d, 275)
               ..lineTo(-30 + d, 275)
               ..close(),
-            Paint()..color = color.withValues(alpha: .07),
+            Paint()..color = vivo.withValues(alpha: .13),
           );
           canvas.drawPath(
             Path()
@@ -165,17 +210,6 @@ class _FondoTarjeta extends CustomPainter {
         );
     }
     canvas.restore();
-    // Velo central protege nombres, descripciones y datos del registro.
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = const RadialGradient(
-          center: Alignment(-.12, -.10),
-          radius: 1.15,
-          colors: [Color(0xF5FFFFFF), Color(0xD9FFFFFF), Color(0x00FFFFFF)],
-          stops: [0, .55, 1],
-        ).createShader(rect),
-    );
     canvas.restore();
   }
 
