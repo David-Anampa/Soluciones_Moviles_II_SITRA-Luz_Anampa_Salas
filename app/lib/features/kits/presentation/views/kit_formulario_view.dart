@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/theme/tema_area.dart';
 import '../../../../core/widgets/mensajes_app.dart';
@@ -49,6 +50,7 @@ class _KitFormularioViewState extends State<KitFormularioView> {
   Map<String, MedicamentoKit> _disponibilidad = {};
 
   List<KitItemEntity> _items = [];
+  final _cantidades = <String, TextEditingController>{};
   bool _guardando = false;
   String? _errorMensaje;
 
@@ -81,6 +83,9 @@ class _KitFormularioViewState extends State<KitFormularioView> {
 
   @override
   void dispose() {
+    for (final controller in _cantidades.values) {
+      controller.dispose();
+    }
     _nombreCtrl.dispose();
     _descripcionCtrl.dispose();
     super.dispose();
@@ -160,7 +165,20 @@ class _KitFormularioViewState extends State<KitFormularioView> {
   }
 
   /// Actualiza la cantidad del borrador sin escribir todavía en la base de datos.
-  void _cambiarCantidad(String medId, int nuevaCantidad) {
+  void _cambiarCantidad(
+    String medId,
+    int nuevaCantidad, {
+    bool desdeTeclado = false,
+  }) {
+    if (nuevaCantidad < 1 || nuevaCantidad > 999999999) return;
+    if (!desdeTeclado) {
+      final controller = _cantidades[medId];
+      final texto = '$nuevaCantidad';
+      controller?.value = TextEditingValue(
+        text: texto,
+        selection: TextSelection.collapsed(offset: texto.length),
+      );
+    }
     setState(() {
       final borrador = KitBorrador(
         items: _items,
@@ -171,6 +189,8 @@ class _KitFormularioViewState extends State<KitFormularioView> {
 
   /// Retira un ítem de la composición que se guardará al confirmar el formulario.
   void _eliminarItem(String medId) {
+    final controller = _cantidades.remove(medId);
+    WidgetsBinding.instance.addPostFrameCallback((_) => controller?.dispose());
     setState(() {
       final borrador = KitBorrador(items: _items).eliminarItem(medId);
       _items = borrador.items;
@@ -611,28 +631,62 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                                 : null,
                                           ),
                                           Expanded(
-                                            child: Container(
-                                              constraints: const BoxConstraints(
-                                                minWidth: 36,
+                                            child: TextFormField(
+                                              key: ValueKey(
+                                                'cantidad-kit-${item.medicamentoId}',
                                               ),
-                                              alignment: Alignment.center,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 4,
+                                              controller: _cantidades
+                                                  .putIfAbsent(
+                                                    item.medicamentoId,
+                                                    () => TextEditingController(
+                                                      text: '${item.cantidad}',
+                                                    ),
                                                   ),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFF5F5F5),
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                              ),
-                                              child: Text(
-                                                '${item.cantidad}',
-                                                style: const TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.bold,
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              textInputAction:
+                                                  TextInputAction.done,
+                                              textAlign: TextAlign.center,
+                                              inputFormatters: [
+                                                FilteringTextInputFormatter
+                                                    .digitsOnly,
+                                                LengthLimitingTextInputFormatter(
+                                                  9,
                                                 ),
+                                              ],
+                                              decoration: const InputDecoration(
+                                                hintText: 'Cantidad',
+                                                filled: true,
+                                                fillColor: Color(0xFFF5F5F5),
+                                                contentPadding:
+                                                    EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 12,
+                                                    ),
                                               ),
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              validator: (valor) =>
+                                                  (int.tryParse(valor ?? '') ??
+                                                          0) <
+                                                      1
+                                                  ? 'Mín. 1'
+                                                  : null,
+                                              onChanged: (valor) {
+                                                final cantidad = int.tryParse(
+                                                  valor,
+                                                );
+                                                if (cantidad != null &&
+                                                    cantidad > 0) {
+                                                  _cambiarCantidad(
+                                                    item.medicamentoId,
+                                                    cantidad,
+                                                    desdeTeclado: true,
+                                                  );
+                                                }
+                                              },
                                             ),
                                           ),
                                           IconButton(
