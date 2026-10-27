@@ -130,21 +130,6 @@ class _FondoTarjeta extends CustomPainter {
           colors: [vivo.withValues(alpha: .60), vivo.withValues(alpha: 0)],
         ).createShader(rect),
     );
-    // Luz elíptica central: aclara los datos sin borrar los extremos ni el patrón.
-    canvas.save();
-    canvas.translate(size.width * .47, size.height * .42);
-    // Reduce otro 3% el diámetro en ambos ejes respecto al halo anterior.
-    canvas.scale(size.width * .316608, size.height * .29682);
-    canvas.drawCircle(
-      Offset.zero,
-      1,
-      Paint()
-        ..shader = const RadialGradient(
-          colors: [Color(0xFAFFFFFF), Color(0xCFFFFFFF), Color(0x00FFFFFF)],
-          stops: [0, .65, 1],
-        ).createShader(const Rect.fromLTWH(-1, -1, 2, 2)),
-    );
-    canvas.restore();
     canvas.save();
     canvas.scale(size.width / 360, size.height / 260);
     final linea = Paint()
