@@ -572,91 +572,100 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: tema?.principal ?? CatalogoEstilo.rojo,
-                    borderRadius: BorderRadius.circular(12),
+            DatosTarjeta(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: tema?.principal ?? CatalogoEstilo.rojo,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(icono, color: Colors.white, size: 23),
                   ),
-                  child: Icon(icono, color: Colors.white, size: 23),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        nombre,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: CatalogoEstilo.texto,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          nombre,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: CatalogoEstilo.texto,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        subtitulo,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF30343F),
+                        const SizedBox(height: 5),
+                        Text(
+                          subtitulo,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF30343F),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Semantics(
-                  toggled: activo,
-                  child: SizedBox(
-                    width: 48,
-                    child: _botonAccion(
-                      activo
-                          ? 'Habilitado · Toca para deshabilitar'
-                          : 'Deshabilitado · Toca para habilitar',
-                      icono,
-                      activo ? const Color(0xFF2E7D32) : CatalogoEstilo.rojo,
-                      estado,
+                      ],
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Semantics(
+                    toggled: activo,
+                    child: SizedBox(
+                      width: 48,
+                      child: _botonAccion(
+                        activo
+                            ? 'Habilitado · Toca para deshabilitar'
+                            : 'Deshabilitado · Toca para habilitar',
+                        icono,
+                        activo ? const Color(0xFF2E7D32) : CatalogoEstilo.rojo,
+                        estado,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            if (porcentaje != null) ...[
-              const SizedBox(height: 14),
-              Text(
-                porcentaje,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF30343F),
-                ),
-              ),
-              const Text(
-                'Descuento sobre Kairos',
-                style: TextStyle(fontSize: 13, color: CatalogoEstilo.texto),
-              ),
-            ],
-            if (descripcion.isNotEmpty) ...[
-              const SizedBox(height: 14),
-              Text(
-                descripcion,
-                style: const TextStyle(
-                  fontSize: 13,
-                  height: 1.5,
-                  color: Color(0xFF30343F),
-                ),
-              ),
-            ],
             const SizedBox(height: 12),
-            Text(
-              detalle,
-              style: TextStyle(
-                fontSize: 12,
-                height: 1.5,
-                color: const Color(0xFF30343F),
+            DatosTarjeta(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (porcentaje != null) ...[
+                    Text(
+                      porcentaje,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF30343F),
+                      ),
+                    ),
+                    const Text(
+                      'Descuento sobre Kairos',
+                      style: TextStyle(fontSize: 13, color: Color(0xFF30343F)),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                  if (descripcion.isNotEmpty) ...[
+                    Text(
+                      descripcion,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        height: 1.5,
+                        color: Color(0xFF30343F),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  Text(
+                    detalle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      height: 1.5,
+                      color: Color(0xFF30343F),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 8),

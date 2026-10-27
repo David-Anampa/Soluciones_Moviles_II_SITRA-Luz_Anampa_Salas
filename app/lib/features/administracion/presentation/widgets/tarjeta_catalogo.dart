@@ -3,6 +3,25 @@ import '../../../../core/theme/tema_area.dart';
 
 enum DisenoTarjeta { area, seguro, convenio, usuario }
 
+/// Protege el contraste de un grupo de datos sobre cualquier color de tarjeta.
+/// Conserva un 10% de transparencia, sin filtros ni brillo central.
+class DatosTarjeta extends StatelessWidget {
+  final Widget child;
+  const DatosTarjeta({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(10),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: .90),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.white.withValues(alpha: .65)),
+    ),
+    child: child,
+  );
+}
+
 /// Paletas visuales; no intervienen en permisos ni cambian el tema del área.
 class PaletaTarjeta {
   static TemaArea usuario(String rol) => switch (rol) {

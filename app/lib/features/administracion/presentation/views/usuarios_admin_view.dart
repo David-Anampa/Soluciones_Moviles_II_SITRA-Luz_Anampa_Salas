@@ -636,61 +636,77 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  radius: 23,
-                  backgroundColor: tema.principal,
-                  child: Text(
-                    u.iniciales,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+            DatosTarjeta(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 23,
+                    backgroundColor: tema.principal,
+                    child: Text(
+                      u.iniciales,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        u.nombreCompleto,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: CatalogoEstilo.texto,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          u.nombreCompleto,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: CatalogoEstilo.texto,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        u.cargo.isEmpty ? u.rolVisible : u.cargo,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          height: 1.4,
-                          color: Color(0xFF30343F),
+                        const SizedBox(height: 5),
+                        Text(
+                          u.cargo.isEmpty ? u.rolVisible : u.cargo,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            height: 1.4,
+                            color: Color(0xFF30343F),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 48,
-                  child: Semantics(toggled: u.activo, child: _accionEstado(u)),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 48,
+                    child: Semantics(
+                      toggled: u.activo,
+                      child: _accionEstado(u),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 14),
-            _linea(
-              Icons.alternate_email_rounded,
-              u.usuario.isEmpty ? 'Usuario por definir' : u.usuario,
-              color: tema.principal,
+            const SizedBox(height: 12),
+            DatosTarjeta(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _linea(
+                    Icons.alternate_email_rounded,
+                    u.usuario.isEmpty ? 'Usuario por definir' : u.usuario,
+                    color: tema.principal,
+                  ),
+                  const SizedBox(height: 8),
+                  _linea(
+                    Icons.mail_outline_rounded,
+                    u.correo,
+                    color: tema.principal,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
-            _linea(Icons.mail_outline_rounded, u.correo, color: tema.principal),
             const SizedBox(height: 12),
             Wrap(
               spacing: 6,
