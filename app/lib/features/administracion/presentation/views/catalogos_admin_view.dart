@@ -539,7 +539,7 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     ),
   );
 
-  /// Compone el contenido del registro, la etiqueta de estado y su botón debajo.
+  /// Compone el registro con el control de estado junto al nombre, sin etiqueta.
   /// La fila inferior reparte el ancho entre Editar y Eliminar; no hace consultas.
   Widget _tarjeta({
     required String nombre,
@@ -568,123 +568,76 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              FilaDetalleAdaptable(
-                principales: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: CatalogoEstilo.pastel,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(icono, color: CatalogoEstilo.rojo, size: 23),
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: CatalogoEstilo.pastel,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                icono,
-                                color: CatalogoEstilo.rojo,
-                                size: 23,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    nombre,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w700,
-                                      color: CatalogoEstilo.texto,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    subtitulo,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Color(0xFF72727A),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (descripcion.isNotEmpty) ...[
-                          const SizedBox(height: 14),
-                          Text(
-                            descripcion,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              height: 1.5,
-                              color: Color(0xFF65656F),
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 12),
                         Text(
-                          detalle,
+                          nombre,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: CatalogoEstilo.texto,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          subtitulo,
                           style: const TextStyle(
                             fontSize: 12,
-                            height: 1.5,
-                            color: CatalogoEstilo.rojo,
+                            color: Color(0xFF72727A),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
-                detalle: SizedBox(
-                  width: 100,
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: activo
-                              ? CatalogoEstilo.pastel
-                              : const Color(0xFFF0F0F0),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          activo ? 'Habilitado' : 'Deshabilitado',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: activo
-                                ? CatalogoEstilo.rojo
-                                : const Color(0xFF707078),
-                          ),
-                        ),
+                  const SizedBox(width: 8),
+                  Semantics(
+                    toggled: activo,
+                    child: SizedBox(
+                      width: 48,
+                      child: _botonAccion(
+                        activo
+                            ? 'Habilitado · Toca para deshabilitar'
+                            : 'Deshabilitado · Toca para habilitar',
+                        icono,
+                        activo ? const Color(0xFF2E7D32) : CatalogoEstilo.rojo,
+                        estado,
                       ),
-                      const SizedBox(height: 12),
-                      Semantics(
-                        toggled: activo,
-                        child: SizedBox(
-                          width: 52,
-                          child: _botonAccion(
-                            activo
-                                ? 'Habilitado · Toca para deshabilitar'
-                                : 'Deshabilitado · Toca para habilitar',
-                            icono,
-                            activo
-                                ? const Color(0xFF2E7D32)
-                                : CatalogoEstilo.rojo,
-                            estado,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
+                ],
+              ),
+              if (descripcion.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Text(
+                  descripcion,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    height: 1.5,
+                    color: Color(0xFF65656F),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              Text(
+                detalle,
+                style: const TextStyle(
+                  fontSize: 12,
+                  height: 1.5,
+                  color: CatalogoEstilo.rojo,
                 ),
               ),
               const SizedBox(height: 8),
