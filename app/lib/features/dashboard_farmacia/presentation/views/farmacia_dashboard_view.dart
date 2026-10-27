@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:go_router/go_router.dart';
 import '../../../almacen/presentation/views/diferencias_abastecimiento_view.dart';
 import 'package:provider/provider.dart';
@@ -66,6 +67,7 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: SitraAppBar(
+        alto: DisenoAdaptable.altoCabecera(context),
         title: 'Farmacia Clínica',
         subtitle: 'Dispensación y Reposición Inter-Áreas',
         actions: [
@@ -108,307 +110,316 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
         ),
         onPressed: _abrirCrearSolicitud,
       ),
-      body: RefreshIndicator(
-        color: AppColors.farmaciaColor,
-        onRefresh: () => almacenVM.cargarInventario(),
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFC62828),
-                    minimumSize: const Size(48, 48),
-                  ),
-                  icon: const Icon(Icons.medical_services_outlined),
-                  label: const Text('Consultar kits por área'),
-                  onPressed: () => context.push('/kits'),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // 1. Banner de Farmacia
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.farmaciaColor, Color(0xFF004D40)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.farmaciaColor.withOpacity(0.25),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
+      body: ContenidoAdaptable(
+        anchoMaximo: 1100,
+        padding: EdgeInsets.zero,
+        child: SafeArea(
+          child: RefreshIndicator(
+            color: AppColors.farmaciaColor,
+            onRefresh: () => almacenVM.cargarInventario(),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFC62828),
+                        minimumSize: const Size(48, 48),
+                      ),
+                      icon: const Icon(Icons.medical_services_outlined),
+                      label: const Text('Consultar kits por área'),
+                      onPressed: () => context.push('/kits'),
                     ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  ),
+                  const SizedBox(height: 16),
+                  // 1. Banner de Farmacia
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.farmaciaColor, Color(0xFF004D40)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.farmaciaColor.withOpacity(0.25),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.18),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(
-                                Icons.local_pharmacy_rounded,
-                                color: Colors.white,
-                                size: 16,
+                        Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
                               ),
-                              SizedBox(width: 6),
-                              Text(
-                                'VENTANILLA & DISPENSACIÓN',
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.18),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Wrap(
+                                alignment: WrapAlignment.start,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  Icon(
+                                    Icons.local_pharmacy_rounded,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                  Text(
+                                    'VENTANILLA & DISPENSACIÓN',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.amberAccent.withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text(
+                                '7 Pendientes',
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 0.5,
+                                  color: Color(0xFF1A1A2E),
                                 ),
                               ),
-                            ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          'Bienvenido, ${user?.nombre ?? "Químico Farmacéutico"}',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.amberAccent.withOpacity(0.9),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            '7 Pendientes',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1A1A2E),
-                            ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Gestión de pedidos de medicamentos e insumos y abastecimiento entre áreas.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white.withOpacity(0.9),
                           ),
                         ),
                       ],
                     ),
+                  ),
+
+                  // Banner interactivo si hay medicamentos listos para recepción física
+                  if (listasParaRecepcion > 0) ...[
                     const SizedBox(height: 14),
-                    Text(
-                      'Bienvenido, ${user?.nombre ?? "Químico Farmacéutico"}',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Gestión de pedidos de medicamentos e insumos y abastecimiento entre áreas.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withOpacity(0.9),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _abrirMisSolicitudes,
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: Colors.blue.shade300,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade700,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  Icons.local_shipping_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '$listasParaRecepcion pedido(s) listos desde Almacén',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        color: Colors.blue.shade900,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Toca aquí para verificar y confirmar la recepción física.',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.blue.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 14,
+                                color: Colors.blue,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ],
-                ),
-              ),
 
-              // Banner interactivo si hay medicamentos listos para recepción física
-              if (listasParaRecepcion > 0) ...[
-                const SizedBox(height: 14),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: _abrirMisSolicitudes,
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                  const SizedBox(height: 20),
+
+                  // Métricas de atención
+                  const Text(
+                    'Abastecimiento de Farmacia',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  AccionesAdaptables(
+                    anchoMinimo: 150,
+                    acciones: [
+                      _buildMetricCard(
+                        title: 'Solicitudes activas',
+                        value: '$transferenciasActivas',
+                        subtitle: 'Pedidos a Almacén',
+                        icon: Icons.move_to_inbox_rounded,
+                        color: AppColors.farmaciaColor,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: Colors.blue.shade300,
-                          width: 1.5,
+                      _buildMetricCard(
+                        title: 'Listos para recibir',
+                        value: '$listasParaRecepcion',
+                        subtitle: 'Confirmar recepción física',
+                        icon: Icons.local_shipping_outlined,
+                        color: AppColors.warning,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Acciones directas
+                  const Text(
+                    'Operaciones Farmacéuticas',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // HU-029: Solicitar abastecimiento a Almacén.
+                  _buildModuleTile(
+                    icon: Icons.add_shopping_cart_rounded,
+                    title: 'Solicitar Abastecimiento a Almacén',
+                    subtitle:
+                        'Crear solicitud de reposición por faltantes de guardia o stock crítico.',
+                    color: AppColors.primary,
+                    onTap: _abrirCrearSolicitud,
+                  ),
+                  const SizedBox(height: 10),
+
+                  // MIS SOLICITUDES Y RECEPCIÓN FÍSICA
+                  _buildModuleTile(
+                    icon: Icons.fact_check_outlined,
+                    title: 'Mis reportes e historial',
+                    subtitle:
+                        'Sigue diferencias, revisa propuestas y consulta sus justificaciones.',
+                    color: AppColors.primary,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const DiferenciasAbastecimientoView(
+                          esFarmacia: true,
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade700,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(
-                              Icons.local_shipping_rounded,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '$listasParaRecepcion pedido(s) listos desde Almacén',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                    color: Colors.blue.shade900,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Toca aquí para verificar y confirmar la recepción física.',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.blue.shade700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 14,
-                            color: Colors.blue,
-                          ),
-                        ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildModuleTile(
+                    icon: Icons.download_done_rounded,
+                    title: 'Mis Solicitudes y Recepción de Mercadería',
+                    subtitle:
+                        'Monitorear estado de pedidos y confirmar recepción de lotes despachados.',
+                    color: AppColors.secondary,
+                    onTap: _abrirMisSolicitudes,
+                  ),
+                  const SizedBox(height: 10),
+
+                  _buildModuleTile(
+                    icon: Icons.inventory_rounded,
+                    title: 'Atender Pedidos de Reposición (Pisos)',
+                    subtitle:
+                        'Preparar coches de paro y botiquines para enfermería.',
+                    color: AppColors.warning,
+                    onTap: () =>
+                        _showActionSnackbar(context, 'Atención a Botiquines'),
+                  ),
+                  const SizedBox(height: 10),
+
+                  _buildModuleTile(
+                    icon: Icons.search_rounded,
+                    title: 'Stock de Farmacia y Almacén',
+                    subtitle:
+                        'Consulta disponibilidad por ubicación y lo que aún está en tránsito.',
+                    color: AppColors.primary,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const StockUbicacionesView(puedeSolicitar: true),
                       ),
                     ),
                   ),
-                ),
-              ],
 
-              const SizedBox(height: 20),
-
-              // Métricas de atención
-              const Text(
-                'Abastecimiento de Farmacia',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildMetricCard(
-                      title: 'Solicitudes activas',
-                      value: '$transferenciasActivas',
-                      subtitle: 'Pedidos a Almacén',
-                      icon: Icons.move_to_inbox_rounded,
-                      color: AppColors.farmaciaColor,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildMetricCard(
-                      title: 'Listos para recibir',
-                      value: '$listasParaRecepcion',
-                      subtitle: 'Confirmar recepción física',
-                      icon: Icons.local_shipping_outlined,
-                      color: AppColors.warning,
-                    ),
-                  ),
+                  const SizedBox(height: 40),
                 ],
               ),
-
-              const SizedBox(height: 24),
-
-              // Acciones directas
-              const Text(
-                'Operaciones Farmacéuticas',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // HU-029: Solicitar abastecimiento a Almacén.
-              _buildModuleTile(
-                icon: Icons.add_shopping_cart_rounded,
-                title: 'Solicitar Abastecimiento a Almacén',
-                subtitle:
-                    'Crear solicitud de reposición por faltantes de guardia o stock crítico.',
-                color: AppColors.primary,
-                onTap: _abrirCrearSolicitud,
-              ),
-              const SizedBox(height: 10),
-
-              // MIS SOLICITUDES Y RECEPCIÓN FÍSICA
-              _buildModuleTile(
-                icon: Icons.fact_check_outlined,
-                title: 'Mis reportes e historial',
-                subtitle:
-                    'Sigue diferencias, revisa propuestas y consulta sus justificaciones.',
-                color: AppColors.primary,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        const DiferenciasAbastecimientoView(esFarmacia: true),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              _buildModuleTile(
-                icon: Icons.download_done_rounded,
-                title: 'Mis Solicitudes y Recepción de Mercadería',
-                subtitle:
-                    'Monitorear estado de pedidos y confirmar recepción de lotes despachados.',
-                color: AppColors.secondary,
-                onTap: _abrirMisSolicitudes,
-              ),
-              const SizedBox(height: 10),
-
-              _buildModuleTile(
-                icon: Icons.inventory_rounded,
-                title: 'Atender Pedidos de Reposición (Pisos)',
-                subtitle:
-                    'Preparar coches de paro y botiquines para enfermería.',
-                color: AppColors.warning,
-                onTap: () =>
-                    _showActionSnackbar(context, 'Atención a Botiquines'),
-              ),
-              const SizedBox(height: 10),
-
-              _buildModuleTile(
-                icon: Icons.search_rounded,
-                title: 'Stock de Farmacia y Almacén',
-                subtitle:
-                    'Consulta disponibilidad por ubicación y lo que aún está en tránsito.',
-                color: AppColors.primary,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        const StockUbicacionesView(puedeSolicitar: true),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 40),
-            ],
+            ),
           ),
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -17,232 +18,244 @@ class EnfermeriaDashboardView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const SitraAppBar(
+      appBar: SitraAppBar(
+        alto: DisenoAdaptable.altoCabecera(context),
         title: 'Enfermería & Pisos',
         subtitle: 'Pedidos y stock del servicio',
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFFC62828),
-                  minimumSize: const Size(48, 48),
-                ),
-                icon: const Icon(Icons.medical_services_outlined),
-                label: const Text('Kits de mi área'),
-                onPressed: () => context.push('/kits'),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Banner de Enfermería
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.enfermeriaColor, Color(0xFF880E4F)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.enfermeriaColor.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
+      body: ContenidoAdaptable(
+        anchoMaximo: 1100,
+        padding: EdgeInsets.zero,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFFC62828),
+                      minimumSize: const Size(48, 48),
+                    ),
+                    icon: const Icon(Icons.medical_services_outlined),
+                    label: const Text('Kits de mi área'),
+                    onPressed: () => context.push('/kits'),
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                ),
+                const SizedBox(height: 16),
+                // Banner de Enfermería
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.enfermeriaColor, Color(0xFF880E4F)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.enfermeriaColor.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.health_and_safety_rounded,
-                              color: Colors.white,
-                              size: 16,
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
                             ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'SERVICIO: ${areaAsignada.toUpperCase()}',
-                              style: const TextStyle(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Wrap(
+                              alignment: WrapAlignment.start,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                const Icon(
+                                  Icons.health_and_safety_rounded,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                                Text(
+                                  'SERVICIO: ${areaAsignada.toUpperCase()}',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.25),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'Coche Activo #1',
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
-                                letterSpacing: 0.5,
                               ),
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        'Lic. ${user?.nombre.replaceAll("Lic. ", "") ?? "Enfermera Asignada"}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          'Coche Activo #1',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Solicitud de medicamentos e insumos a Farmacia y seguimiento del stock del área.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white.withOpacity(0.9),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'Lic. ${user?.nombre.replaceAll("Lic. ", "") ?? "Enfermera Asignada"}',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                ),
+
+                const SizedBox(height: 20),
+
+                // Métricas del servicio
+                const Text(
+                  'Estado del Botiquín del Servicio',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                AccionesAdaptables(
+                  anchoMinimo: 150,
+                  acciones: [
+                    _buildMetricCard(
+                      title: 'Items en Botiquín',
+                      value: '38',
+                      subtitle: 'Medicamentos disponibles',
+                      icon: Icons.medical_services_outlined,
+                      color: AppColors.enfermeriaColor,
+                    ),
+                    _buildMetricCard(
+                      title: 'Reposición Solicitada',
+                      value: '1',
+                      subtitle: 'En preparación en farmacia',
+                      icon: Icons.sync_rounded,
+                      color: AppColors.warning,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: _buildMetricCard(
+                    title: 'Stock Crítico',
+                    value: '2',
+                    subtitle: 'Atropina y Midazolam',
+                    icon: Icons.error_outline_rounded,
+                    color: AppColors.error,
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Botón de acción rápida: Solicitud urgente
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.enfermeriaColor,
+                    minimumSize: const Size(double.infinity, 52),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Solicitud de medicamentos e insumos a Farmacia y seguimiento del stock del área.',
+                  icon: const Icon(
+                    Icons.emergency_rounded,
+                    color: Colors.white,
+                  ),
+                  label: const Text(
+                    'PEDIDO URGENTE DE REPOSICIÓN A FARMACIA',
                     style: TextStyle(
+                      fontWeight: FontWeight.bold,
                       fontSize: 13,
-                      color: Colors.white.withOpacity(0.9),
+                      letterSpacing: 0.5,
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Métricas del servicio
-            const Text(
-              'Estado del Botiquín del Servicio',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            Row(
-              children: [
-                Expanded(
-                  child: _buildMetricCard(
-                    title: 'Items en Botiquín',
-                    value: '38',
-                    subtitle: 'Medicamentos disponibles',
-                    icon: Icons.medical_services_outlined,
-                    color: AppColors.enfermeriaColor,
+                  onPressed: () => _showActionSnackbar(
+                    context,
+                    'Solicitud Urgente de Reposición',
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildMetricCard(
-                    title: 'Reposición Solicitada',
-                    value: '1',
-                    subtitle: 'En preparación en farmacia',
-                    icon: Icons.sync_rounded,
-                    color: AppColors.warning,
+
+                const SizedBox(height: 24),
+
+                // Módulos operativos
+                const Text(
+                  'Operaciones del Servicio Clínico',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
                   ),
                 ),
+                const SizedBox(height: 12),
+
+                _buildModuleTile(
+                  icon: Icons.medication_liquid_rounded,
+                  title: 'Kardex y Stock del Coche de Paro',
+                  subtitle:
+                      'Revisión periódica de ampollas, jeringas y fármacos de emergencia.',
+                  color: AppColors.primary,
+                  onTap: () =>
+                      _showActionSnackbar(context, 'Kardex del Coche de Paro'),
+                ),
+                const SizedBox(height: 10),
+                _buildModuleTile(
+                  icon: Icons.reply_all_rounded,
+                  title: 'Devolución de Sobrantes / Mermas',
+                  subtitle:
+                      'Coordinar el retorno de medicamentos e insumos no utilizados por el servicio.',
+                  color: AppColors.secondary,
+                  onTap: () =>
+                      _showActionSnackbar(context, 'Devolución de Sobrantes'),
+                ),
+
+                const SizedBox(height: 24),
               ],
             ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: _buildMetricCard(
-                title: 'Stock Crítico',
-                value: '2',
-                subtitle: 'Atropina y Midazolam',
-                icon: Icons.error_outline_rounded,
-                color: AppColors.error,
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Botón de acción rápida: Solicitud urgente
-            FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.enfermeriaColor,
-                minimumSize: const Size(double.infinity, 52),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              icon: const Icon(Icons.emergency_rounded, color: Colors.white),
-              label: const Text(
-                'PEDIDO URGENTE DE REPOSICIÓN A FARMACIA',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              onPressed: () => _showActionSnackbar(
-                context,
-                'Solicitud Urgente de Reposición',
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Módulos operativos
-            const Text(
-              'Operaciones del Servicio Clínico',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            _buildModuleTile(
-              icon: Icons.medication_liquid_rounded,
-              title: 'Kardex y Stock del Coche de Paro',
-              subtitle:
-                  'Revisión periódica de ampollas, jeringas y fármacos de emergencia.',
-              color: AppColors.primary,
-              onTap: () =>
-                  _showActionSnackbar(context, 'Kardex del Coche de Paro'),
-            ),
-            const SizedBox(height: 10),
-            _buildModuleTile(
-              icon: Icons.reply_all_rounded,
-              title: 'Devolución de Sobrantes / Mermas',
-              subtitle:
-                  'Coordinar el retorno de medicamentos e insumos no utilizados por el servicio.',
-              color: AppColors.secondary,
-              onTap: () =>
-                  _showActionSnackbar(context, 'Devolución de Sobrantes'),
-            ),
-
-            const SizedBox(height: 24),
-          ],
+          ),
         ),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../almacen/presentation/views/diferencias_abastecimiento_view.dart';
 import '../../../almacen/presentation/views/ingresos_correcciones_view.dart';
 import 'package:provider/provider.dart';
@@ -71,82 +72,95 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
 
   void _mostrarOpcionesRegistro() {
     showModalBottomSheet(
+      isScrollControlled: true,
+      useSafeArea: true,
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Recepción e Ingreso de Medicamento',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Elige el método de captura para registrar el medicamento:',
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.almacenColor.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.qr_code_scanner_rounded,
-                    color: AppColors.almacenColor,
+        return HojaAdaptable(
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Recepción e Ingreso de Medicamento',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Elige el método de captura para registrar el medicamento:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
                   ),
                 ),
-                title: const Text(
-                  'Escanear con Cámara (ML Kit + IA)',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: const Text(
-                  'Lectura instantánea de GTIN + foto opcional de caja para extracción asistida',
-                ),
-                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  _abrirEscanerCamara();
-                },
-              ),
-              const Divider(),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 16),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.almacenColor.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.qr_code_scanner_rounded,
+                      color: AppColors.almacenColor,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.edit_note_rounded,
-                    color: AppColors.textPrimary,
+                  title: const Text(
+                    'Escanear con Cámara (ML Kit + IA)',
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
+                  subtitle: const Text(
+                    'Lectura instantánea de GTIN + foto opcional de caja para extracción asistida',
+                  ),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 14,
+                  ),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    _abrirEscanerCamara();
+                  },
                 ),
-                title: const Text(
-                  'Ingreso Manual',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                const Divider(),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceVariant,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.edit_note_rounded,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  title: const Text(
+                    'Ingreso Manual',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: const Text(
+                    'Completar formulario técnico de medicamento y lote paso a paso',
+                  ),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 14,
+                  ),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    _abrirRegistroMedicamento();
+                  },
                 ),
-                subtitle: const Text(
-                  'Completar formulario técnico de medicamento y lote paso a paso',
-                ),
-                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  _abrirRegistroMedicamento();
-                },
-              ),
-              const SizedBox(height: 8),
-            ],
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         );
       },
@@ -236,6 +250,7 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: SitraAppBar(
+        alto: DisenoAdaptable.altoCabecera(context),
         title: 'Almacén General',
         subtitle: 'Recepción, Lotes y Cadena de Frío',
         actions: [
@@ -279,637 +294,654 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: RefreshIndicator(
-        color: AppColors.almacenColor,
-        onRefresh: () => almacenVM.cargarInventario(),
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. BANNER DE BIENVENIDA Y ESTADO
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.almacenColor, Color(0xFFBF360C)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.almacenColor.withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
+      body: ContenidoAdaptable(
+        anchoMaximo: 1100,
+        padding: EdgeInsets.zero,
+        child: SafeArea(
+          child: RefreshIndicator(
+            color: AppColors.almacenColor,
+            onRefresh: () => almacenVM.cargarInventario(),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1. BANNER DE BIENVENIDA Y ESTADO
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.almacenColor, Color(0xFFBF360C)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.almacenColor.withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(
-                                Icons.inventory_2_rounded,
-                                color: Colors.white,
-                                size: 16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
                               ),
-                              SizedBox(width: 6),
-                              Text(
-                                'ALMACÉN DE LA CLÍNICA',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 0.5,
-                                ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                            ],
+                              child: const Wrap(
+                                alignment: WrapAlignment.start,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  Icon(
+                                    Icons.inventory_2_rounded,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                  Text(
+                                    'ALMACÉN DE LA CLÍNICA',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          'Bienvenido, ${user?.nombre ?? "Responsable de Almacén"}',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Recepción de guías, ingreso de lotes al sistema y despacho hacia Farmacia Central.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white.withOpacity(0.9),
                           ),
                         ),
                       ],
                     ),
+                  ),
+
+                  // HU-030: Solicitudes pendientes de Farmacia.
+                  if (state is AlmacenLoaded &&
+                      state.solicitudesPendientes > 0) ...[
                     const SizedBox(height: 14),
-                    Text(
-                      'Bienvenido, ${user?.nombre ?? "Responsable de Almacén"}',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Recepción de guías, ingreso de lotes al sistema y despacho hacia Farmacia Central.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // HU-030: Solicitudes pendientes de Farmacia.
-              if (state is AlmacenLoaded &&
-                  state.solicitudesPendientes > 0) ...[
-                const SizedBox(height: 14),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: _abrirSolicitudesAbastecimiento,
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.farmaciaColor.withOpacity(0.1),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _abrirSolicitudesAbastecimiento,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: AppColors.farmaciaColor.withOpacity(0.4),
-                          width: 1.5,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.farmaciaColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: AppColors.farmaciaColor.withOpacity(0.4),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.farmaciaColor,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  Icons.notifications_active_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${state.solicitudesPendientes} ${state.solicitudesPendientes == 1 ? "solicitud pendiente" : "solicitudes pendientes"} de reposición',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        color: AppColors.farmaciaColor,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    const Text(
+                                      'Farmacia Central requiere abastecimiento de stock. Toca para revisar y despachar.',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 14,
+                                color: AppColors.farmaciaColor,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppColors.farmaciaColor,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(
-                              Icons.notifications_active_rounded,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${state.solicitudesPendientes} ${state.solicitudesPendientes == 1 ? "solicitud pendiente" : "solicitudes pendientes"} de reposición',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                    color: AppColors.farmaciaColor,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                const Text(
-                                  'Farmacia Central requiere abastecimiento de stock. Toca para revisar y despachar.',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 14,
-                            color: AppColors.farmaciaColor,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: 20),
-
-              // 2. MÉTRICAS OPERATIVAS REALES DE ALMACÉN
-              const Text(
-                'Estado del Almacén General',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              if (state is AlmacenLoaded) ...[
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildMetricCard(
-                        title: 'Total Unidades',
-                        value: '${state.totalUnidades}',
-                        subtitle: 'Físico en Almacén',
-                        icon: Icons.inventory_rounded,
-                        color: AppColors.almacenColor,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildMetricCard(
-                        title: 'Lotes Registrados',
-                        value: '${state.inventario.length}',
-                        subtitle: 'Lotes únicos',
-                        icon: Icons.numbers_rounded,
-                        color: AppColors.primary,
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildMetricCard(
-                        title: 'Alertas FEFO',
-                        value: '${state.lotesCriticos}',
-                        subtitle: 'Vence < 30 días',
-                        icon: Icons.warning_amber_rounded,
-                        color: state.lotesCriticos > 0
-                            ? AppColors.error
-                            : AppColors.success,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildMetricCard(
-                        title: 'Cadena de Frío',
-                        value: '${state.articulosCadenaFrio}',
-                        subtitle: '2.0 °C a 8.0 °C',
-                        icon: Icons.ac_unit_rounded,
-                        color: Colors.teal,
-                      ),
-                    ),
-                  ],
-                ),
-              ] else if (state is AlmacenLoading) ...[
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: CircularProgressIndicator(
-                      color: AppColors.almacenColor,
-                    ),
-                  ),
-                ),
-              ] else ...[
-                const Text('Sin datos disponibles'),
-              ],
 
-              const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
-              // 3. ACCIONES RÁPIDAS
-              const Text(
-                'Acciones Rápidas',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.surface,
-                        foregroundColor: AppColors.almacenColor,
-                        fixedSize: const Size.fromHeight(48),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 8,
-                        ),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(
-                            color: AppColors.almacenColor,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                      onPressed: _abrirRegistroMedicamento,
-                      icon: const Icon(
-                        Icons.add_circle_outline_rounded,
-                        size: 18,
-                      ),
-                      label: const Text(
-                        'Nuevo',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.surface,
-                        foregroundColor: AppColors.primary,
-                        fixedSize: const Size.fromHeight(48),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 8,
-                        ),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(
-                            color: AppColors.primary,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                      onPressed: state is AlmacenLoaded
-                          ? () => _abrirIngresoLote(state)
-                          : null,
-                      icon: const Icon(Icons.playlist_add_rounded, size: 18),
-                      label: const Text(
-                        'Ingreso',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.surface,
-                        foregroundColor: AppColors.farmaciaColor,
-                        fixedSize: const Size.fromHeight(48),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 8,
-                        ),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(
-                            color: AppColors.farmaciaColor,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                      onPressed: state is AlmacenLoaded
-                          ? _abrirAbastecimiento
-                          : null,
-                      icon: const Icon(Icons.swap_horiz_rounded, size: 18),
-                      label: const Text(
-                        'Despachar',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: _abrirEnvioFarmacia,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFC62828),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  icon: const Icon(Icons.local_shipping_outlined),
-                  label: const Text('Enviar a Farmacia'),
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: _abrirStockUbicaciones,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFC62828),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  icon: const Icon(Icons.warehouse_outlined),
-                  label: const Text('Stock por ubicación'),
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(width: double.infinity, child: OutlinedButton.icon(
-                onPressed: () async {
-                  final vm = context.read<AlmacenViewModel>();
-                  await Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const IngresosCorreccionesView()));
-                  if (mounted) await vm.cargarInventario();
-                },
-                icon: const Icon(Icons.receipt_long_outlined),
-                label: const Text('Ingresos y correcciones'),
-                style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFC62828),
-                  padding: const EdgeInsets.symmetric(vertical: 16)),
-              )),
-              const SizedBox(height: 12),
-              SizedBox(width: double.infinity, child: OutlinedButton.icon(
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const DiferenciasAbastecimientoView())),
-                icon: const Icon(Icons.fact_check_outlined),
-                label: const Text('Diferencias por resolver e historial'),
-                style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFC62828),
-                  padding: const EdgeInsets.symmetric(vertical: 16)),
-              )),
-              const SizedBox(height: 24),
-              // HU-013 / HU-023: Inventario físico con búsqueda y filtros.
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
+                  // 2. MÉTRICAS OPERATIVAS REALES DE ALMACÉN
                   const Text(
-                    'Inventario en Almacén General',
+                    'Estado del Almacén General',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  if (state is AlmacenLoaded)
-                    Text(
-                      _searchController.text.trim().isEmpty
-                          ? 'Mostrando ${itemsFiltrados.length > 5 ? 5 : itemsFiltrados.length} de ${state.inventario.length} lotes'
-                          : '${itemsFiltrados.length} resultados encontrados',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-              if (state is AlmacenLoaded) ...[
-                if (state.inventario.isNotEmpty) ...[
-                  // Barra de Búsqueda Rápida en tiempo real
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.surfaceVariant),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (_) => setState(() {}),
-                      decoration: InputDecoration(
-                        hintText: 'Buscar por nombre, DCI, GTIN o lote...',
-                        hintStyle: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.search_rounded,
+                  if (state is AlmacenLoaded) ...[
+                    AccionesAdaptables(
+                      anchoMinimo: 150,
+                      acciones: [
+                        _buildMetricCard(
+                          title: 'Total Unidades',
+                          value: '${state.totalUnidades}',
+                          subtitle: 'Físico en Almacén',
+                          icon: Icons.inventory_rounded,
                           color: AppColors.almacenColor,
-                          size: 20,
                         ),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear_rounded, size: 18),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() {});
-                                },
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
+                        _buildMetricCard(
+                          title: 'Lotes Registrados',
+                          value: '${state.inventario.length}',
+                          subtitle: 'Lotes únicos',
+                          icon: Icons.numbers_rounded,
+                          color: AppColors.primary,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    AccionesAdaptables(
+                      anchoMinimo: 150,
+                      acciones: [
+                        _buildMetricCard(
+                          title: 'Alertas FEFO',
+                          value: '${state.lotesCriticos}',
+                          subtitle: 'Vence < 30 días',
+                          icon: Icons.warning_amber_rounded,
+                          color: state.lotesCriticos > 0
+                              ? AppColors.error
+                              : AppColors.success,
+                        ),
+                        _buildMetricCard(
+                          title: 'Cadena de Frío',
+                          value: '${state.articulosCadenaFrio}',
+                          subtitle: '2.0 °C a 8.0 °C',
+                          icon: Icons.ac_unit_rounded,
+                          color: Colors.teal,
+                        ),
+                      ],
+                    ),
+                  ] else if (state is AlmacenLoading) ...[
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: CircularProgressIndicator(
+                          color: AppColors.almacenColor,
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
+                  ] else ...[
+                    const Text('Sin datos disponibles'),
+                  ],
 
-                  // Chips de Filtro Rápido
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildFiltroChip(
-                          label: 'Todos',
-                          count: state.inventario.length,
-                          isSelected: _filtroRapido == 'TODOS',
-                          onTap: () => setState(() => _filtroRapido = 'TODOS'),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildFiltroChip(
-                          label: 'Cadena de Frío',
-                          icon: Icons.ac_unit_rounded,
-                          iconColor: Colors.cyan,
-                          count: state.articulosCadenaFrio,
-                          isSelected: _filtroRapido == 'FRIO',
-                          onTap: () => setState(() => _filtroRapido = 'FRIO'),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildFiltroChip(
-                          label: 'FEFO Crítico',
-                          icon: Icons.warning_amber_rounded,
-                          iconColor: AppColors.error,
-                          count: state.lotesCriticos,
-                          isSelected: _filtroRapido == 'FEFO',
-                          onTap: () => setState(() => _filtroRapido = 'FEFO'),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildFiltroChip(
-                          label: 'Bajo Stock',
-                          icon: Icons.inventory_2_outlined,
-                          iconColor: AppColors.warning,
-                          count: state.inventario
-                              .where((i) => i.cantidad <= 20)
-                              .length,
-                          isSelected: _filtroRapido == 'BAJO_STOCK',
-                          onTap: () =>
-                              setState(() => _filtroRapido = 'BAJO_STOCK'),
-                        ),
-                      ],
+                  const SizedBox(height: 24),
+
+                  // 3. ACCIONES RÁPIDAS
+                  const Text(
+                    'Acciones Rápidas',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 14),
-                ],
+                  const SizedBox(height: 12),
 
-                if (state.inventario.isEmpty)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.surfaceVariant),
-                    ),
-                    child: Column(
-                      children: [
-                        const Icon(
-                          Icons.inbox_rounded,
-                          size: 48,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'No hay medicamentos en Almacén',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Registra tu primer artículo con el botón inferior.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
+                  AccionesAdaptables(
+                    anchoMinimo: 150,
+                    acciones: [
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.surface,
+                          foregroundColor: AppColors.almacenColor,
+                          fixedSize: const Size.fromHeight(48),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 8,
+                          ),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: const BorderSide(
+                              color: AppColors.almacenColor,
+                              width: 1.5,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 14),
-                        FilledButton.icon(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.almacenColor,
-                          ),
-                          onPressed: _abrirRegistroMedicamento,
-                          icon: const Icon(Icons.add_rounded),
-                          label: const Text('Registrar Primer Medicamento'),
+                        onPressed: _abrirRegistroMedicamento,
+                        icon: const Icon(
+                          Icons.add_circle_outline_rounded,
+                          size: 18,
                         ),
-                      ],
-                    ),
-                  )
-                else if (itemsFiltrados.isEmpty)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.surfaceVariant),
-                    ),
-                    child: Column(
-                      children: [
-                        const Icon(
-                          Icons.search_off_rounded,
-                          size: 44,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'No se encontraron medicamentos',
+                        label: const Text(
+                          'Nuevo',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                            fontSize: 13,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'No hay coincidencias para los filtros o término de búsqueda ingresado.',
-                          textAlign: TextAlign.center,
+                      ),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.surface,
+                          foregroundColor: AppColors.primary,
+                          fixedSize: const Size.fromHeight(48),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 8,
+                          ),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: const BorderSide(
+                              color: AppColors.primary,
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                        onPressed: state is AlmacenLoaded
+                            ? () => _abrirIngresoLote(state)
+                            : null,
+                        icon: const Icon(Icons.playlist_add_rounded, size: 18),
+                        label: const Text(
+                          'Ingreso',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.surface,
+                          foregroundColor: AppColors.farmaciaColor,
+                          fixedSize: const Size.fromHeight(48),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 8,
+                          ),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: const BorderSide(
+                              color: AppColors.farmaciaColor,
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                        onPressed: state is AlmacenLoaded
+                            ? _abrirAbastecimiento
+                            : null,
+                        icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+                        label: const Text(
+                          'Despachar',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: _abrirEnvioFarmacia,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFFC62828),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      icon: const Icon(Icons.local_shipping_outlined),
+                      label: const Text('Enviar a Farmacia'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _abrirStockUbicaciones,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFC62828),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      icon: const Icon(Icons.warehouse_outlined),
+                      label: const Text('Stock por ubicación'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final vm = context.read<AlmacenViewModel>();
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const IngresosCorreccionesView(),
+                          ),
+                        );
+                        if (mounted) await vm.cargarInventario();
+                      },
+                      icon: const Icon(Icons.receipt_long_outlined),
+                      label: const Text('Ingresos y correcciones'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFC62828),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const DiferenciasAbastecimientoView(),
+                        ),
+                      ),
+                      icon: const Icon(Icons.fact_check_outlined),
+                      label: const Text('Diferencias por resolver e historial'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFC62828),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // HU-013 / HU-023: Inventario físico con búsqueda y filtros.
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Inventario en Almacén General',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      if (state is AlmacenLoaded)
+                        Text(
+                          _searchController.text.trim().isEmpty
+                              ? 'Mostrando ${itemsFiltrados.length > 5 ? 5 : itemsFiltrados.length} de ${state.inventario.length} lotes'
+                              : '${itemsFiltrados.length} resultados encontrados',
+                          style: const TextStyle(
                             fontSize: 12,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.textSecondary,
                           ),
                         ),
-                        const SizedBox(height: 14),
-                        OutlinedButton.icon(
-                          onPressed: () {
-                            setState(() {
-                              _searchController.clear();
-                              _filtroRapido = 'TODOS';
-                            });
-                          },
-                          icon: const Icon(Icons.refresh_rounded, size: 16),
-                          label: const Text('Limpiar filtros'),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _searchController.text.trim().isEmpty
-                        ? (itemsFiltrados.length > 5
-                              ? 5
-                              : itemsFiltrados.length)
-                        : itemsFiltrados.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final item = itemsFiltrados[index];
-                      return _buildStockItemCard(item, state);
-                    },
+                    ],
                   ),
-              ],
-              const SizedBox(height: 60), // Margen para el FAB
-            ],
+                  const SizedBox(height: 12),
+
+                  if (state is AlmacenLoaded) ...[
+                    if (state.inventario.isNotEmpty) ...[
+                      // Barra de Búsqueda Rápida en tiempo real
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.surfaceVariant),
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (_) => setState(() {}),
+                          decoration: InputDecoration(
+                            hintText: 'Buscar por nombre, DCI, GTIN o lote...',
+                            hintStyle: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.search_rounded,
+                              color: AppColors.almacenColor,
+                              size: 20,
+                            ),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(
+                                      Icons.clear_rounded,
+                                      size: 18,
+                                    ),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() {});
+                                    },
+                                  )
+                                : null,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Chips de Filtro Rápido
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Wrap(
+                          alignment: WrapAlignment.start,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _buildFiltroChip(
+                              label: 'Todos',
+                              count: state.inventario.length,
+                              isSelected: _filtroRapido == 'TODOS',
+                              onTap: () =>
+                                  setState(() => _filtroRapido = 'TODOS'),
+                            ),
+                            _buildFiltroChip(
+                              label: 'Cadena de Frío',
+                              icon: Icons.ac_unit_rounded,
+                              iconColor: Colors.cyan,
+                              count: state.articulosCadenaFrio,
+                              isSelected: _filtroRapido == 'FRIO',
+                              onTap: () =>
+                                  setState(() => _filtroRapido = 'FRIO'),
+                            ),
+                            _buildFiltroChip(
+                              label: 'FEFO Crítico',
+                              icon: Icons.warning_amber_rounded,
+                              iconColor: AppColors.error,
+                              count: state.lotesCriticos,
+                              isSelected: _filtroRapido == 'FEFO',
+                              onTap: () =>
+                                  setState(() => _filtroRapido = 'FEFO'),
+                            ),
+                            _buildFiltroChip(
+                              label: 'Bajo Stock',
+                              icon: Icons.inventory_2_outlined,
+                              iconColor: AppColors.warning,
+                              count: state.inventario
+                                  .where((i) => i.cantidad <= 20)
+                                  .length,
+                              isSelected: _filtroRapido == 'BAJO_STOCK',
+                              onTap: () =>
+                                  setState(() => _filtroRapido = 'BAJO_STOCK'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+
+                    if (state.inventario.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.surfaceVariant),
+                        ),
+                        child: Column(
+                          children: [
+                            const Icon(
+                              Icons.inbox_rounded,
+                              size: 48,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'No hay medicamentos en Almacén',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Registra tu primer artículo con el botón inferior.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.almacenColor,
+                              ),
+                              onPressed: _abrirRegistroMedicamento,
+                              icon: const Icon(Icons.add_rounded),
+                              label: const Text('Registrar Primer Medicamento'),
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (itemsFiltrados.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.surfaceVariant),
+                        ),
+                        child: Column(
+                          children: [
+                            const Icon(
+                              Icons.search_off_rounded,
+                              size: 44,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'No se encontraron medicamentos',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'No hay coincidencias para los filtros o término de búsqueda ingresado.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            OutlinedButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  _searchController.clear();
+                                  _filtroRapido = 'TODOS';
+                                });
+                              },
+                              icon: const Icon(Icons.refresh_rounded, size: 16),
+                              label: const Text('Limpiar filtros'),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _searchController.text.trim().isEmpty
+                            ? (itemsFiltrados.length > 5
+                                  ? 5
+                                  : itemsFiltrados.length)
+                            : itemsFiltrados.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final item = itemsFiltrados[index];
+                          return _buildStockItemCard(item, state);
+                        },
+                      ),
+                  ],
+                  const SizedBox(height: 60), // Margen para el FAB
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -952,9 +984,8 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Fila Superior: Nombre y Cantidad
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+          FilaDetalleAdaptable(
+            principales: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -983,37 +1014,34 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.almacenColor.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      '${item.cantidad}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.almacenColor,
-                      ),
-                    ),
-                    const Text(
-                      'unid.',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.almacenColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
+            detalle: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.almacenColor.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    '${item.cantidad}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.almacenColor,
+                    ),
+                  ),
+                  const Text(
+                    'unid.',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.almacenColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
 
           const SizedBox(height: 10),
@@ -1173,11 +1201,13 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Wrap(
+        alignment: WrapAlignment.start,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 8,
+        runSpacing: 8,
         children: [
           Icon(icon, size: 13, color: color),
-          const SizedBox(width: 4),
           Text(
             text,
             style: TextStyle(
