@@ -3,7 +3,6 @@ import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/widgets/mensajes_app.dart';
 import 'package:go_router/go_router.dart';
 import '../../data/usuarios_repository.dart';
-import '../../data/catalogos_repository.dart';
 import '../widgets/catalogo_estilo.dart';
 import 'usuario_formulario_view.dart';
 
@@ -70,7 +69,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
     } catch (e) {
       if (mounted && revision == _revision) {
         setState(() {
-          _error = CatalogosRepository.mensajeError(e);
+          _error = UsuariosRepository.mensajeError(e);
           _cargando = false;
         });
       }

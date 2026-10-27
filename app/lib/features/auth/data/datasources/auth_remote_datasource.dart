@@ -49,8 +49,19 @@ class AuthRemoteDataSource {
       }
 
       return userModel;
+    } on AuthRetryableFetchException catch (e) {
+      throw AuthException(
+        e.message.toLowerCase().contains('timeoutexception')
+            ? 'El acceso tardó demasiado. Revisa la conexión del dispositivo y vuelve a intentar.'
+            : 'No se pudo conectar con el servicio de acceso. Vuelve a intentar.',
+      );
     } on AuthApiException catch (e) {
       final rawMsg = '${e.code} ${e.message}';
+      if (rawMsg.toLowerCase().contains('timeoutexception')) {
+        throw const AuthException(
+          'El acceso tardó demasiado. Revisa la conexión del dispositivo y vuelve a intentar.',
+        );
+      }
       if (_isNetworkError(rawMsg)) {
         throw const AuthException('Sin conexión a internet');
       }
@@ -65,6 +76,11 @@ class AuthRemoteDataSource {
       );
     } catch (e) {
       if (e is AuthException) rethrow;
+      if (e is TimeoutException) {
+        throw const AuthException(
+          'La consulta del perfil tardó demasiado. Revisa la conexión y vuelve a intentar.',
+        );
+      }
       debugPrint('Error inesperado en login: $e');
       if (_isNetworkError(e.toString())) {
         throw const AuthException('Sin conexión a internet');
@@ -79,7 +95,9 @@ class AuthRemoteDataSource {
       await _supabase.auth.signOut(scope: SignOutScope.local);
     } catch (e) {
       debugPrint('Error al cerrar sesión en Supabase: $e');
-      throw const AuthException('No se pudo cerrar la sesión. Revisa la conexión e inténtalo de nuevo.');
+      throw const AuthException(
+        'No se pudo cerrar la sesión. Revisa la conexión e inténtalo de nuevo.',
+      );
     }
   }
 
@@ -97,15 +115,42 @@ class AuthRemoteDataSource {
   /// Stream de cambios en el estado de autenticación de Supabase
   Stream<UserModel?> get authStateChanges {
     try {
-      return _supabase.auth.onAuthStateChange.asyncMap((data) async {
-        final user = data.session?.user;
-        if (user == null) return null;
-        try {
-          return await _getUserModel(user.id);
-        } catch (_) {
-          return null;
-        }
-      });
+      return Stream<UserModel?>.multi((controlador) {
+        var revision = 0;
+        final suscripcion = _supabase.auth.onAuthStateChange.listen(
+          (data) {
+            final actual = ++revision;
+            final user = data.session?.user;
+            if (user == null) {
+              controlador.add(null);
+              return;
+            }
+            // No encolar signedOut detrás de una consulta de perfil lenta.
+            unawaited(() async {
+              try {
+                final perfil = await _getUserModel(user.id);
+                if (!controlador.isClosed &&
+                    actual == revision &&
+                    _supabase.auth.currentUser?.id == user.id) {
+                  controlador.add(perfil);
+                }
+              } catch (_) {
+                if (!controlador.isClosed && actual == revision) {
+                  controlador.add(null);
+                }
+              }
+            }());
+          },
+          onError: (Object error, StackTrace stack) {
+            revision++;
+            controlador.addError(error, stack);
+          },
+        );
+        controlador.onCancel = () {
+          revision++;
+          return suscripcion.cancel();
+        };
+      }, isBroadcast: true);
     } catch (_) {
       return const Stream.empty();
     }
@@ -117,10 +162,11 @@ class AuthRemoteDataSource {
         .from('profiles')
         .select()
         .eq('id', uid)
-        .maybeSingle();
+        .maybeSingle()
+        .timeout(const Duration(seconds: 20));
 
     if (response == null) {
-      await _descartarSesionInvalida();
+      await _descartarSesionInvalida(uid);
       throw const AuthException(
         'Perfil de usuario no registrado en la base de datos de la clínica.',
       );
@@ -128,7 +174,7 @@ class AuthRemoteDataSource {
 
     final model = UserModel.fromMap(response, uid);
     if (!model.activo) {
-      await _descartarSesionInvalida();
+      await _descartarSesionInvalida(uid);
       throw const AuthException(
         'Tu cuenta está deshabilitada. Contacta al administrador del sistema.',
       );
@@ -136,13 +182,17 @@ class AuthRemoteDataSource {
     try {
       model.toEntity();
     } on FormatException {
-      await _descartarSesionInvalida();
-      throw const AuthException('El perfil no tiene un rol válido. Contacta al administrador.');
+      await _descartarSesionInvalida(uid);
+      throw const AuthException(
+        'El perfil no tiene un rol válido. Contacta al administrador.',
+      );
     }
     return model;
   }
 
-  Future<void> _descartarSesionInvalida() async {
+  Future<void> _descartarSesionInvalida(String uid) async {
+    // Una consulta anterior no puede cerrar la sesión de otra persona.
+    if (_supabase.auth.currentUser?.id != uid) return;
     try {
       await _supabase.auth.signOut(scope: SignOutScope.local);
     } catch (_) {
@@ -187,10 +237,12 @@ class AuthRemoteDataSource {
     if (lower.contains('user not found') || lower.contains('user_not_found')) {
       return 'No existe ningún usuario registrado con ese correo.';
     }
-    if (lower.contains('email not confirmed') || lower.contains('email_not_confirmed')) {
+    if (lower.contains('email not confirmed') ||
+        lower.contains('email_not_confirmed')) {
       return 'El correo aún no ha sido confirmado.';
     }
-    if (lower.contains('too many requests') || lower.contains('over_request_rate_limit')) {
+    if (lower.contains('too many requests') ||
+        lower.contains('over_request_rate_limit')) {
       return 'Demasiados intentos de acceso. Espera unos minutos.';
     }
     return 'Error de autenticación: $codeOrMessage';

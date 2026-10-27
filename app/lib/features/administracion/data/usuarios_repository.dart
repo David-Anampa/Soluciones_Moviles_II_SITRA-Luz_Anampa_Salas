@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:async';
 import '../domain/usuario_borrador.dart';
 import '../domain/catalogos_profesionales.dart';
 import 'catalogos_repository.dart';
@@ -126,6 +127,9 @@ class UsuariosConsulta {
 }
 
 class UsuariosRepository {
+  final SupabaseClient? _customClient;
+  UsuariosRepository({SupabaseClient? client}) : _customClient = client;
+
   /// Lee catálogos reales, incluidos deshabilitados para conservar valores históricos.
   /// Una migración ausente se comunica; no se sustituyen datos por listas ficticias.
   Future<CatalogosProfesionales> cargarCatalogosProfesionales() async {
@@ -169,17 +173,23 @@ class UsuariosRepository {
   }
 
   /// Accede al cliente de Supabase que comparte la sesión autenticada de la aplicación.
-  SupabaseClient get _client => Supabase.instance.client;
+  SupabaseClient get _client => _customClient ?? Supabase.instance.client;
 
   /// Consulta perfiles reales para Gestión de usuarios, previa comprobación de
   /// Administrador activo. Pagina la RPC y luego carga las áreas para los filtros.
   /// Solo si falta la RPC utiliza el esquema anterior y señala estructuraPendiente;
   /// los errores de permiso o red siguen propagándose a la vista.
-  Future<UsuariosConsulta> cargar() async {
-    // La vista también puede mostrar los perfiles antiguos antes de aplicar HU-020.
+  Future<UsuariosConsulta> cargar() => _cargar().timeout(
+    const Duration(seconds: 20),
+    onTimeout: () => throw TimeoutException(
+      'La consulta de usuarios tardó demasiado. Revisa la conexión y pulsa Reintentar.',
+    ),
+  );
+
+  /// Verifica el rol antes de iniciar en paralelo las tres lecturas independientes.
+  Future<UsuariosConsulta> _cargar() async {
     final uid = _client.auth.currentUser?.id;
     if (uid == null) throw const AuthException('Inicia sesión.');
-    // SELECT del perfil actual: verifica rol y habilitación antes de cargar personal.
     final perfil = await _client
         .from('profiles')
         .select('rol,activo')
@@ -190,9 +200,34 @@ class UsuariosRepository {
         'Solo Administrador puede consultar esta pantalla.',
       );
     }
-    var pendiente = false;
-    final usuarios = <UsuarioAdministrativo>[];
-    // Consulta explícita del contrato de permisos; si falta la migración se informa.
+    final resultados = await Future.wait<Object>([
+      _consultarPermisos(),
+      _consultarPerfiles(),
+      _consultarAreas(),
+    ], eagerError: true);
+    if (_client.auth.currentUser?.id != uid) {
+      throw const AuthException('La sesión cambió. Vuelve a ingresar.');
+    }
+    final permisos = resultados[0] as Map<String, bool>;
+    final perfiles =
+        resultados[1] as ({List<Map<String, dynamic>> filas, bool pendiente});
+    final areas = resultados[2] as List<AreaUsuario>;
+    return UsuariosConsulta(
+      perfiles.filas
+          .map(
+            (fila) => UsuarioAdministrativo.fromMap({
+              ...fila,
+              'puede_gestionar_kits': permisos[fila['id']] == true,
+            }),
+          )
+          .toList(),
+      areas,
+      perfiles.pendiente,
+    );
+  }
+
+  /// Pagina los permisos sin depender de la lectura de perfiles ni del catálogo.
+  Future<Map<String, bool>> _consultarPermisos() async {
     final permisos = <String, bool>{};
     for (var desde = 0; ; desde += 200) {
       final filas =
@@ -207,33 +242,31 @@ class UsuariosRepository {
       }
       if (filas.length < 200) break;
     }
+    return permisos;
+  }
+
+  /// Conserva la compatibilidad de solo lectura únicamente si falta la RPC.
+  Future<({List<Map<String, dynamic>> filas, bool pendiente})>
+  _consultarPerfiles() async {
+    final perfiles = <Map<String, dynamic>>[];
     try {
       for (var desde = 0; ; desde += 200) {
-        // RPC de solo lectura: el servidor vuelve a exigir Administrador activo
-        // y devuelve únicamente campos públicos, en páginas de 200 perfiles.
-        final data = await _client.rpc(
-          'listar_usuarios_hu020',
-          params: {'p_desde': desde, 'p_limite': 200},
-        );
-        final rows = (data as List<dynamic>).cast<Map<String, dynamic>>();
-        usuarios.addAll(
-          rows.map(
-            (fila) => UsuarioAdministrativo.fromMap({
-              ...fila,
-              'puede_gestionar_kits': permisos[fila['id']] == true,
-            }),
-          ),
-        );
-        if (rows.length < 200) break;
+        final filas =
+            (await _client.rpc(
+                      'listar_usuarios_hu020',
+                      params: {'p_desde': desde, 'p_limite': 200},
+                    )
+                    as List)
+                .cast<Map<String, dynamic>>();
+        perfiles.addAll(filas);
+        if (filas.length < 200) break;
       }
-    } on PostgrestException catch (e) {
-      if (e.code != 'PGRST202' && e.code != '42883') rethrow;
-      pendiente = true;
-      usuarios.clear();
+      return (filas: perfiles, pendiente: false);
+    } on PostgrestException catch (error) {
+      if (error.code != 'PGRST202' && error.code != '42883') rethrow;
+      perfiles.clear();
       for (var desde = 0; ; desde += 500) {
-        // Compatibilidad cuando falta la RPC: consulta solo columnas antiguas.
-        // No se usa ante errores de permisos o conexión y no obtiene contraseñas.
-        final rows = await _client
+        final filas = await _client
             .from('profiles')
             .select(
               'id,nombre,email,rol,areas_asignadas,activo,created_at,updated_at',
@@ -241,22 +274,25 @@ class UsuariosRepository {
             .order('nombre')
             .order('id')
             .range(desde, desde + 499);
-        usuarios.addAll(rows.map(UsuarioAdministrativo.fromMap));
-        if (rows.length < 500) break;
+        perfiles.addAll(filas);
+        if (filas.length < 500) break;
       }
+      return (filas: perfiles, pendiente: true);
     }
+  }
+
+  /// Pagina áreas para resolver nombres y filtros; mantiene referencias históricas.
+  Future<List<AreaUsuario>> _consultarAreas() async {
     final areas = <AreaUsuario>[];
     for (var desde = 0; ; desde += 500) {
-      // SELECT paginado de áreas: transforma los códigos históricos de perfiles
-      // en nombres visibles y construye las opciones del filtro de áreas.
-      final rows = await _client
+      final filas = await _client
           .from('areas')
           .select('id,codigo,nombre,activo')
           .order('nombre')
           .order('id')
           .range(desde, desde + 499);
       areas.addAll(
-        rows.map(
+        filas.map(
           (a) => AreaUsuario(
             id: a['id'] as String,
             codigo: a['codigo'] as String,
@@ -265,9 +301,9 @@ class UsuariosRepository {
           ),
         ),
       );
-      if (rows.length < 500) break;
+      if (filas.length < 500) break;
     }
-    return UsuariosConsulta(usuarios, areas, pendiente);
+    return areas;
   }
 
   /// UUID del usuario con sesión iniciada; permite impedir autoacciones peligrosas
@@ -382,6 +418,9 @@ class UsuariosRepository {
   /// rechazos de la Edge Function (HTTP 4xx con `error`) y la migración pendiente;
   /// el resto lo resuelve el traductor general del módulo de administración.
   static String mensajeError(Object error) {
+    if (error is TimeoutException) {
+      return 'La consulta tardó demasiado. Revisa la conexión y vuelve a intentar.';
+    }
     if (error is PostgrestException &&
         error.code == 'SITRA_CONTRATO_PROFESIONAL') {
       return error.message;
