@@ -823,6 +823,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
         child: HojaAdaptable(
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
                 color: CatalogoEstilo.rojo,
@@ -860,69 +861,129 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      u.nombreCompleto,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF0F0),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const CircleAvatar(
+                            backgroundColor: Colors.white,
+                            foregroundColor: CatalogoEstilo.rojo,
+                            child: Icon(Icons.person_rounded),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  u.nombreCompleto,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    _etiquetaEstado(u.activo),
+                                    Text(
+                                      u.rolVisible,
+                                      style: const TextStyle(fontSize: 13),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    _etiquetaEstado(u.activo),
-                    const SizedBox(height: 20),
-                    _dato('Nombre de usuario', u.usuario),
-                    _dato('Nombres', u.nombres),
-                    _dato('Apellidos', u.apellidos),
-                    if (u.nombres.isEmpty && u.apellidos.isEmpty)
-                      _dato('Nombre completo registrado', u.nombreAnterior),
-                    _dato('Correo electrónico', u.correo),
-                    _dato('Cargo / ocupación', u.cargo),
-                    _dato('Rol', u.rolVisible),
-                    if (u.colegioCodigo.isNotEmpty) ...[
-                      _dato(
-                        'Colegio profesional',
-                        u.colegioNombre.isEmpty
-                            ? u.colegioCodigo
-                            : u.colegioNombre,
-                      ),
-                      _dato(
-                        'Número de colegiatura (${u.colegioCodigo})',
-                        u.numeroColegiatura,
-                      ),
-                      if (u.especialidadCodigo.isNotEmpty)
-                        _dato(
-                          'Especialidad / área profesional',
-                          u.especialidadNombre.isEmpty
-                              ? u.especialidadCodigo
-                              : u.especialidadNombre,
-                        ),
-                    ],
-                    const Text(
-                      'Áreas asignadas',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF777780)),
-                    ),
-                    const SizedBox(height: 8),
-                    if (u.areas.isEmpty)
-                      const Text(
-                        'Sin áreas asignadas',
-                        style: TextStyle(fontSize: 14),
-                      )
-                    else
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: u.areas
-                            .map(
-                              (a) => _chip(
-                                _nombreArea(a),
-                                icono: Icons.apartment_rounded,
+                    const SizedBox(height: 16),
+                    _seccionDetalle('Cuenta', Icons.alternate_email_rounded, [
+                      _dato('Nombre de usuario', u.usuario),
+                      _dato('Correo electrónico', u.correo),
+                    ]),
+                    _seccionDetalle('Datos personales', Icons.badge_outlined, [
+                      _dato('Nombres', u.nombres),
+                      _dato('Apellidos', u.apellidos),
+                      if (u.nombres.isEmpty && u.apellidos.isEmpty)
+                        _dato('Nombre completo registrado', u.nombreAnterior),
+                    ]),
+                    _seccionDetalle(
+                      'Asignación y permisos',
+                      Icons.apartment_rounded,
+                      [
+                        _dato('Rol', u.rolVisible),
+                        _dato('Cargo / ocupación', u.cargo),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Áreas asignadas',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF777780),
                               ),
-                            )
-                            .toList(),
+                            ),
+                            const SizedBox(height: 6),
+                            if (u.areas.isEmpty)
+                              const Text(
+                                'Sin áreas asignadas',
+                                style: TextStyle(fontSize: 14),
+                              )
+                            else
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: u.areas
+                                    .map(
+                                      (a) => _chip(
+                                        _nombreArea(a),
+                                        icono: Icons.apartment_rounded,
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    if (u.colegioCodigo.isNotEmpty)
+                      _seccionDetalle(
+                        'Información profesional',
+                        Icons.medical_information_outlined,
+                        [
+                          _dato(
+                            'Colegio profesional',
+                            u.colegioNombre.isEmpty
+                                ? u.colegioCodigo
+                                : u.colegioNombre,
+                          ),
+                          _dato(
+                            'Número de colegiatura (${u.colegioCodigo})',
+                            u.numeroColegiatura,
+                          ),
+                          if (u.especialidadCodigo.isNotEmpty)
+                            _dato(
+                              'Especialidad / área profesional',
+                              u.especialidadNombre.isEmpty
+                                  ? u.especialidadCodigo
+                                  : u.especialidadNombre,
+                            ),
+                        ],
                       ),
-                    const SizedBox(height: 20),
-                    _dato('Registrado', _fecha(u.creado)),
-                    _dato('Última actualización', _fecha(u.actualizado)),
+                    _seccionDetalle('Registro', Icons.history_rounded, [
+                      _dato('Registrado', _fecha(u.creado)),
+                      _dato('Última actualización', _fecha(u.actualizado)),
+                    ]),
                   ],
                 ),
               ),
@@ -933,9 +994,62 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
     );
   }
 
+  /// Agrupa datos a ancho completo; usa dos columnas solo si ancho y texto lo permiten.
+  Widget _seccionDetalle(String titulo, IconData icono, List<Widget> campos) =>
+      Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFAFAFA),
+          border: Border.all(color: const Color(0xFFEEEEEE)),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(icono, size: 20, color: CatalogoEstilo.rojo),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    titulo,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: CatalogoEstilo.texto,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            LayoutBuilder(
+              builder: (context, limites) {
+                final dosColumnas =
+                    limites.maxWidth >= 420 &&
+                    MediaQuery.textScalerOf(context).scale(14) <= 18;
+                final ancho = dosColumnas
+                    ? (limites.maxWidth - 16) / 2
+                    : limites.maxWidth;
+                return Wrap(
+                  spacing: 16,
+                  runSpacing: 14,
+                  children: [
+                    for (final campo in campos)
+                      SizedBox(width: ancho, child: campo),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      );
+
   /// Muestra etiqueta y valor seleccionable, usando Sin registrar cuando está vacío.
   Widget _dato(String etiqueta, String valor) => Padding(
-    padding: const EdgeInsets.only(bottom: 18),
+    padding: EdgeInsets.zero,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
