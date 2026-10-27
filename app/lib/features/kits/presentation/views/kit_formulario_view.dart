@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/theme/tema_area.dart';
 import '../../../../core/widgets/mensajes_app.dart';
 import '../../../administracion/presentation/widgets/catalogo_estilo.dart';
@@ -255,11 +256,10 @@ class _KitFormularioViewState extends State<KitFormularioView> {
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 800),
+        body: SafeArea(
+          child: ContenidoAdaptable(
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -295,11 +295,13 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                             children: [
                               Icon(Icons.badge_rounded, color: rojo, size: 20),
                               SizedBox(width: 8),
-                              Text(
-                                'Información del Kit',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                              Expanded(
+                                child: Text(
+                                  'Información del Kit',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ],
@@ -584,9 +586,11 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                         cantidad: item.cantidad,
                                       ),
                                       const SizedBox(height: 8),
-                                      Row(
+                                      Wrap(
+                                        alignment: WrapAlignment.end,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
                                         children: [
-                                          const Spacer(),
                                           // Cantidad en otra fila para dar espacio al nombre completo.
                                           IconButton(
                                             tooltip: 'Disminuir cantidad',
@@ -674,62 +678,54 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                     const SizedBox(height: 24),
 
                     // Botones de acción
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size(0, 48),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                    AccionesAdaptables(
+                      acciones: [
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(0, 48),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            onPressed: _guardando
-                                ? null
-                                : () => Navigator.of(context).pop(),
-                            child: const Text(
-                              'Cancelar',
-                              style: TextStyle(color: Color(0xFF616161)),
-                            ),
+                          ),
+                          onPressed: _guardando
+                              ? null
+                              : () => Navigator.of(context).pop(),
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(color: Color(0xFF616161)),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: FilledButton.icon(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: rojo,
-                              minimumSize: const Size(0, 48),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                        FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: rojo,
+                            minimumSize: const Size(0, 48),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            icon: _guardando
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.save_rounded, size: 20),
-                            label: Text(
-                              _guardando
-                                  ? 'Guardando...'
-                                  : _esEdicion
-                                  ? 'Actualizar Kit'
-                                  : 'Guardar Kit',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            onPressed:
-                                _guardando || _cargandoAreas || !_autorizado
-                                ? null
-                                : _guardar,
                           ),
+                          icon: _guardando
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.save_rounded, size: 20),
+                          label: Text(
+                            _guardando
+                                ? 'Guardando...'
+                                : _esEdicion
+                                ? 'Actualizar Kit'
+                                : 'Guardar Kit',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          onPressed:
+                              _guardando || _cargandoAreas || !_autorizado
+                              ? null
+                              : _guardar,
                         ),
                       ],
                     ),

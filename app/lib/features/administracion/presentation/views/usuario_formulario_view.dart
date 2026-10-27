@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../data/usuarios_repository.dart';
 import '../../domain/usuario_borrador.dart';
 import '../../domain/usuario_validadores.dart';
@@ -234,13 +235,13 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
             onPressed: _guardando ? null : () => Navigator.pop(context, false),
           ),
         ),
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 650),
+        body: SafeArea(
+          child: ContenidoAdaptable(
+            anchoMaximo: 650,
             child: Form(
               key: _formKey,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.zero,
                 keyboardDismissBehavior:
                     ScrollViewKeyboardDismissBehavior.onDrag,
                 children: [
@@ -659,32 +660,27 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
   }
 
   /// Botones Cancelar y Guardar; Guardar muestra progreso y se bloquea al enviar.
-  Widget _acciones() => Row(
-    children: [
-      Expanded(
-        child: TextButton(
-          onPressed: _guardando ? null : () => Navigator.pop(context, false),
-          child: const Text('Cancelar'),
-        ),
+  Widget _acciones() => AccionesAdaptables(
+    acciones: [
+      TextButton(
+        onPressed: _guardando ? null : () => Navigator.pop(context, false),
+        child: const Text('Cancelar'),
       ),
-      const SizedBox(width: 12),
-      Expanded(
-        child: FilledButton.icon(
-          onPressed: (_guardando || _cargandoCatalogos || _catalogos == null)
-              ? null
-              : _guardar,
-          icon: _guardando
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(Icons.check_rounded),
-          label: Text(_edita ? 'Guardar cambios' : 'Crear usuario'),
-        ),
+      FilledButton.icon(
+        onPressed: (_guardando || _cargandoCatalogos || _catalogos == null)
+            ? null
+            : _guardar,
+        icon: _guardando
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(Icons.check_rounded),
+        label: Text(_edita ? 'Guardar cambios' : 'Crear usuario'),
       ),
     ],
   );

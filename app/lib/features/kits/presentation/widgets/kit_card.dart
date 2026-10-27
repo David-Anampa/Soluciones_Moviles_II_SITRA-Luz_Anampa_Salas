@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/theme/tema_area.dart';
 import '../../../../core/widgets/mensajes_app.dart';
 import '../../domain/entities/kit_entity.dart';
@@ -359,44 +360,32 @@ class _KitCardState extends State<KitCard> {
             // Acciones del mismo ancho, con etiquetas accesibles y respuesta al hover.
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _accion(
-                      'Editar kit',
-                      Icons.edit_outlined,
-                      widget.onEditar,
-                    ),
+              child: AccionesAdaptables(
+                anchoMinimo: 48,
+                separacion: 8,
+                considerarTexto: false,
+                acciones: [
+                  _accion('Editar kit', Icons.edit_outlined, widget.onEditar),
+                  _accion(
+                    'Duplicar como variante',
+                    Icons.copy_all_outlined,
+                    widget.onDuplicar,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _accion(
-                      'Duplicar como variante',
-                      Icons.copy_all_outlined,
-                      widget.onDuplicar,
-                    ),
+                  _accion(
+                    activo ? 'Inhabilitar kit' : 'Habilitar kit',
+                    activo ? Icons.check_circle_rounded : Icons.block_rounded,
+                    () => _confirmarCambioEstado(!activo),
+                    color: activo
+                        ? const Color(0xFF23713B)
+                        : const Color(0xFFB3261E),
+                    fondo: activo
+                        ? const Color(0xFFECF7EF)
+                        : const Color(0xFFFFEDEA),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _accion(
-                      activo ? 'Inhabilitar kit' : 'Habilitar kit',
-                      activo ? Icons.check_circle_rounded : Icons.block_rounded,
-                      () => _confirmarCambioEstado(!activo),
-                      color: activo
-                          ? const Color(0xFF23713B)
-                          : const Color(0xFFB3261E),
-                      fondo: activo
-                          ? const Color(0xFFECF7EF)
-                          : const Color(0xFFFFEDEA),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _accion(
-                      'Eliminar borrador de kit',
-                      Icons.delete_outline_rounded,
-                      _confirmarEliminacion,
-                    ),
+                  _accion(
+                    'Eliminar borrador de kit',
+                    Icons.delete_outline_rounded,
+                    _confirmarEliminacion,
                   ),
                 ],
               ),
