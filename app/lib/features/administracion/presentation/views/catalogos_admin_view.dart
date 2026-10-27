@@ -6,6 +6,7 @@ import '../../../../core/theme/tema_area.dart';
 import '../../data/catalogos_repository.dart';
 import '../widgets/catalogo_editores.dart';
 import '../widgets/catalogo_estilo.dart';
+import '../widgets/tarjeta_catalogo.dart';
 
 class CatalogosAdminView extends StatefulWidget {
   /// Entrada de Administrador para gestionar áreas y seguros/convenios.
@@ -556,123 +557,108 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     TemaArea? tema,
   }) => Padding(
     padding: const EdgeInsets.only(bottom: 14),
-    child: Material(
-      color: tema?.suave ?? Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color:
-              tema?.principal.withValues(alpha: .25) ?? const Color(0xFFE7E7E7),
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: _operando ? null : editar,
-        hoverColor:
-            tema?.principal.withValues(alpha: .06) ?? const Color(0xFFFFF8F8),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: tema?.principal ?? CatalogoEstilo.pastel,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      icono,
-                      color: tema == null ? CatalogoEstilo.rojo : Colors.white,
-                      size: 23,
-                    ),
+    child: TarjetaCatalogo(
+      principal: tema?.principal ?? CatalogoEstilo.rojo,
+      pastel: tema?.suave ?? CatalogoEstilo.pastel,
+      onTap: _operando ? null : editar,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: tema?.principal ?? CatalogoEstilo.rojo,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          nombre,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: CatalogoEstilo.texto,
-                          ),
+                  child: Icon(icono, color: Colors.white, size: 23),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        nombre,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: CatalogoEstilo.texto,
                         ),
-                        const SizedBox(height: 5),
-                        Text(
-                          subtitulo,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF72727A),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Semantics(
-                    toggled: activo,
-                    child: SizedBox(
-                      width: 48,
-                      child: _botonAccion(
-                        activo
-                            ? 'Habilitado · Toca para deshabilitar'
-                            : 'Deshabilitado · Toca para habilitar',
-                        icono,
-                        activo ? const Color(0xFF2E7D32) : CatalogoEstilo.rojo,
-                        estado,
                       ),
-                    ),
+                      const SizedBox(height: 5),
+                      Text(
+                        subtitulo,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF555560),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              if (descripcion.isNotEmpty) ...[
-                const SizedBox(height: 14),
-                Text(
-                  descripcion,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    height: 1.5,
-                    color: Color(0xFF65656F),
+                ),
+                const SizedBox(width: 8),
+                Semantics(
+                  toggled: activo,
+                  child: SizedBox(
+                    width: 48,
+                    child: _botonAccion(
+                      activo
+                          ? 'Habilitado · Toca para deshabilitar'
+                          : 'Deshabilitado · Toca para habilitar',
+                      icono,
+                      activo ? const Color(0xFF2E7D32) : CatalogoEstilo.rojo,
+                      estado,
+                    ),
                   ),
                 ),
               ],
-              const SizedBox(height: 12),
+            ),
+            if (descripcion.isNotEmpty) ...[
+              const SizedBox(height: 14),
               Text(
-                detalle,
-                style: TextStyle(
-                  fontSize: 12,
+                descripcion,
+                style: const TextStyle(
+                  fontSize: 13,
                   height: 1.5,
-                  color: tema?.principal ?? CatalogoEstilo.rojo,
+                  color: Color(0xFF50505B),
                 ),
               ),
-              const SizedBox(height: 8),
-              const Divider(color: Color(0xFFEEEEEE)),
-              const SizedBox(height: 6),
-              AccionesAdaptables(
-                anchoMinimo: 150,
-                acciones: [
-                  _botonAccion(
-                    'Editar',
-                    Icons.edit_outlined,
-                    tema?.principal ?? CatalogoEstilo.rojo,
-                    editar,
-                  ),
-                  _botonAccion(
-                    'Eliminar',
-                    Icons.delete_outline_rounded,
-                    CatalogoEstilo.rojo,
-                    eliminar,
-                  ),
-                ],
-              ),
             ],
-          ),
+            const SizedBox(height: 12),
+            Text(
+              detalle,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.5,
+                color: tema?.principal ?? CatalogoEstilo.rojo,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Divider(color: Color(0xFFEEEEEE)),
+            const SizedBox(height: 6),
+            AccionesAdaptables(
+              anchoMinimo: 150,
+              acciones: [
+                _botonAccion(
+                  'Editar',
+                  Icons.edit_outlined,
+                  tema?.principal ?? CatalogoEstilo.rojo,
+                  editar,
+                ),
+                _botonAccion(
+                  'Eliminar',
+                  Icons.delete_outline_rounded,
+                  CatalogoEstilo.rojo,
+                  eliminar,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     ),
@@ -692,7 +678,7 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
       style:
           OutlinedButton.styleFrom(
             foregroundColor: color,
-            backgroundColor: color.withOpacity(.04),
+            backgroundColor: Colors.white,
             side: BorderSide(color: color.withOpacity(.20)),
             minimumSize: const Size(0, 48),
             padding: const EdgeInsets.symmetric(vertical: 12),
