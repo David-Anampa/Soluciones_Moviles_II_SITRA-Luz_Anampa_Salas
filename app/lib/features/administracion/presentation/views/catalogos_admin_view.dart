@@ -547,6 +547,9 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
 
   /// Compone el registro con el control de estado junto al nombre, sin etiqueta.
   /// La fila inferior reparte el ancho entre Editar y Eliminar; no hace consultas.
+  Widget _encabezadoTarjeta(DisenoTarjeta diseno, Widget child) =>
+      diseno == DisenoTarjeta.area ? child : DatosTarjeta(child: child);
+
   Widget _tarjeta({
     required String nombre,
     required String subtitulo,
@@ -572,8 +575,9 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DatosTarjeta(
-              child: Row(
+            _encabezadoTarjeta(
+              diseno,
+              Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
@@ -598,11 +602,25 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
                           ),
                         ),
                         const SizedBox(height: 5),
-                        Text(
-                          subtitulo,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF30343F),
+                        Container(
+                          padding: diseno == DisenoTarjeta.area
+                              ? const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                )
+                              : EdgeInsets.zero,
+                          decoration: diseno == DisenoTarjeta.area
+                              ? BoxDecoration(
+                                  color: Colors.white.withValues(alpha: .90),
+                                  borderRadius: BorderRadius.circular(6),
+                                )
+                              : null,
+                          child: Text(
+                            subtitulo,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF30343F),
+                            ),
                           ),
                         ),
                       ],
@@ -620,6 +638,7 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
                         icono,
                         activo ? const Color(0xFF2E7D32) : CatalogoEstilo.rojo,
                         estado,
+                        sinFondo: diseno == DisenoTarjeta.area,
                       ),
                     ),
                   ),
@@ -706,16 +725,19 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     String tooltip,
     IconData icono,
     Color color,
-    VoidCallback accion,
-  ) => Tooltip(
+    VoidCallback accion, {
+    bool sinFondo = false,
+  }) => Tooltip(
     message: tooltip,
     child: OutlinedButton(
       onPressed: _operando ? null : accion,
       style:
           OutlinedButton.styleFrom(
             foregroundColor: color,
-            backgroundColor: Colors.white,
-            side: BorderSide(color: color.withOpacity(.20)),
+            backgroundColor: sinFondo ? Colors.transparent : Colors.white,
+            side: sinFondo
+                ? BorderSide.none
+                : BorderSide(color: color.withOpacity(.20)),
             minimumSize: const Size(0, 48),
             padding: const EdgeInsets.symmetric(vertical: 12),
             shape: RoundedRectangleBorder(
