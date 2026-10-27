@@ -6,6 +6,7 @@ import '../../../administracion/presentation/widgets/catalogo_estilo.dart';
 import '../../data/repositories/kits_repository.dart';
 import '../../domain/entities/kit_item_entity.dart';
 import 'disponibilidad_kit.dart';
+import 'laboratorio_medicamento.dart';
 
 class SelectorMedicamentoDialog extends StatefulWidget {
   final KitsRepository repository;
@@ -219,14 +220,9 @@ class _SelectorMedicamentoDialogState extends State<SelectorMedicamentoDialog> {
                                           ),
                                       ],
                                     ),
-                                    if (m.laboratorio.isNotEmpty)
-                                      Text(
-                                        m.laboratorio,
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Color(0xFF757575),
-                                        ),
-                                      ),
+                                    LaboratorioMedicamento(
+                                      laboratorio: m.laboratorio,
+                                    ),
                                     if (m.presentacion.isNotEmpty)
                                       Text(
                                         m.presentacion,

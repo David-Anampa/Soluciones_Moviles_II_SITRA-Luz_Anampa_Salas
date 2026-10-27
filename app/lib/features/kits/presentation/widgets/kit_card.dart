@@ -4,6 +4,7 @@ import '../../../../core/widgets/mensajes_app.dart';
 import '../../domain/entities/kit_entity.dart';
 import '../../data/repositories/kits_repository.dart';
 import 'disponibilidad_kit.dart';
+import 'laboratorio_medicamento.dart';
 
 class KitCard extends StatefulWidget {
   final KitEntity kit;
@@ -191,8 +192,8 @@ class _KitCardState extends State<KitCard> {
                       ),
                       decoration: BoxDecoration(
                         color: activo
-                            ? widget.tema.suave
-                            : const Color(0xFFEEEEEE),
+                            ? const Color(0xFFECF7EF)
+                            : const Color(0xFFFFEDEA),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -200,7 +201,9 @@ class _KitCardState extends State<KitCard> {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: activo ? rojo : const Color(0xFF757575),
+                          color: activo
+                              ? const Color(0xFF23713B)
+                              : const Color(0xFFB3261E),
                         ),
                       ),
                     ),
@@ -295,30 +298,24 @@ class _KitCardState extends State<KitCard> {
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
-                                    if ([
-                                      item.presentacion,
-                                      item.laboratorio,
-                                    ].any(
-                                      (valor) =>
-                                          valor != null &&
-                                          valor.trim().isNotEmpty,
-                                    ))
+                                    if (item.presentacion?.trim().isNotEmpty ==
+                                        true)
                                       Padding(
                                         padding: const EdgeInsets.only(top: 4),
                                         child: Text(
-                                          [item.presentacion, item.laboratorio]
-                                              .whereType<String>()
-                                              .where(
-                                                (valor) =>
-                                                    valor.trim().isNotEmpty,
-                                              )
-                                              .join(' · '),
+                                          item.presentacion!.trim(),
                                           style: const TextStyle(
                                             fontSize: 12,
                                             color: Color(0xFF757575),
                                           ),
                                         ),
                                       ),
+                                    LaboratorioMedicamento(
+                                      laboratorio: item.laboratorio,
+                                      referencia: widget
+                                          .disponibilidad[item.medicamentoId]
+                                          ?.laboratorio,
+                                    ),
                                     const SizedBox(height: 6),
                                     DisponibilidadKit(
                                       medicamento: widget
@@ -383,10 +380,14 @@ class _KitCardState extends State<KitCard> {
                   Expanded(
                     child: _accion(
                       activo ? 'Inhabilitar kit' : 'Habilitar kit',
-                      activo
-                          ? Icons.pause_circle_outline_rounded
-                          : Icons.play_circle_outline_rounded,
+                      activo ? Icons.check_circle_rounded : Icons.block_rounded,
                       () => _confirmarCambioEstado(!activo),
+                      color: activo
+                          ? const Color(0xFF23713B)
+                          : const Color(0xFFB3261E),
+                      fondo: activo
+                          ? const Color(0xFFECF7EF)
+                          : const Color(0xFFFFEDEA),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -407,23 +408,35 @@ class _KitCardState extends State<KitCard> {
   }
 
   /// Mantiene iguales las zonas táctiles y explica los iconos al mantener pulsado.
-  Widget _accion(String etiqueta, IconData icono, VoidCallback? accion) {
+  Widget _accion(
+    String etiqueta,
+    IconData icono,
+    VoidCallback? accion, {
+    Color? color,
+    Color? fondo,
+  }) {
     final destructivo = icono == Icons.delete_outline_rounded;
-    final rojo = destructivo
-        ? MensajesApp.color(TipoMensaje.error)
-        : widget.tema.principal;
+    final edicion = icono == Icons.edit_outlined;
+    final tinta = destructivo
+        ? Colors.white
+        : color ?? (edicion ? const Color(0xFF245B8F) : widget.tema.principal);
+    final superficie = destructivo
+        ? const Color(0xFFC62828)
+        : fondo ?? (edicion ? const Color(0xFFEDF4FB) : widget.tema.suave);
     return Tooltip(
       message: etiqueta,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          foregroundColor: rojo,
-          backgroundColor: destructivo
-              ? MensajesApp.fondo(TipoMensaje.error)
-              : widget.tema.suave,
-          side: BorderSide(color: rojo.withValues(alpha: .2)),
+          foregroundColor: tinta,
+          backgroundColor: superficie,
+          disabledBackgroundColor: const Color(0xFFF0F0F0),
+          disabledForegroundColor: const Color(0xFF9E9E9E),
+          side: BorderSide(
+            color: destructivo ? superficie : tinta.withValues(alpha: .2),
+          ),
           minimumSize: const Size(48, 48),
           padding: const EdgeInsets.symmetric(horizontal: 8),
-          overlayColor: rojo.withValues(alpha: 0.08),
+          overlayColor: tinta.withValues(alpha: destructivo ? .16 : .08),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),

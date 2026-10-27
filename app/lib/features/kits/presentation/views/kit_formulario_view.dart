@@ -9,6 +9,7 @@ import '../../domain/kit_borrador.dart';
 import '../../domain/kit_validadores.dart';
 import '../widgets/selector_medicamento_dialog.dart';
 import '../widgets/disponibilidad_kit.dart';
+import '../widgets/laboratorio_medicamento.dart';
 
 class KitFormularioView extends StatefulWidget {
   final KitEntity? kitExistente;
@@ -564,17 +565,13 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                                     ),
                                                   ),
                                                 ],
-                                                if (item.laboratorio != null &&
-                                                    item
-                                                        .laboratorio!
-                                                        .isNotEmpty)
-                                                  Text(
-                                                    item.laboratorio!,
-                                                    style: const TextStyle(
-                                                      fontSize: 12,
-                                                      color: Color(0xFF757575),
-                                                    ),
-                                                  ),
+                                                LaboratorioMedicamento(
+                                                  laboratorio: item.laboratorio,
+                                                  referencia:
+                                                      _disponibilidad[item
+                                                              .medicamentoId]
+                                                          ?.laboratorio,
+                                                ),
                                               ],
                                             ),
                                           ),
