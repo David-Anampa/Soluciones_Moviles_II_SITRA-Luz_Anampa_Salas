@@ -330,22 +330,26 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
                           : 'Se usa para el acceso y la vinculación con Drive, previa autorización de Google.',
                     ),
                     if (!_edita) _campoContrasena(),
-                    if (_edita) ...[
-                      const SizedBox(height: 8),
-                      const Text(
-                        'La contraseña actual no se muestra. Puedes asignar una nueva sin modificar el perfil.',
-                        style: TextStyle(fontSize: 12),
+                    if (_edita)
+                      // Una sola zona evita acumular los separadores de la sección.
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          OutlinedButton.icon(
+                            onPressed: _guardando ? null : _restablecerClave,
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(48, 48),
+                            ),
+                            icon: const Icon(Icons.lock_reset_rounded),
+                            label: const Text('Restablecer contraseña'),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'La contraseña actual no se muestra. Puedes asignar una nueva sin modificar el perfil.',
+                            style: TextStyle(fontSize: 12, height: 1.4),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: _guardando ? null : _restablecerClave,
-                        icon: const Icon(Icons.lock_reset_rounded),
-                        label: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Text('Restablecer contraseña'),
-                        ),
-                      ),
-                    ],
                   ]),
                   _seccion('Rol y áreas', [
                     _selectorRol(),
@@ -609,7 +613,8 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
     autovalidateMode: AutovalidateMode.onUserInteraction,
     decoration: InputDecoration(
       labelText: 'Contraseña inicial',
-      helperText: 'Mínimo 8 caracteres. Puede contener solo números o solo letras.',
+      helperText:
+          'Mínimo 8 caracteres. Puede contener solo números o solo letras.',
       prefixIcon: const Icon(Icons.lock_outline_rounded),
       suffixIcon: IconButton(
         tooltip: _verClave ? 'Ocultar contraseña' : 'Mostrar contraseña',
