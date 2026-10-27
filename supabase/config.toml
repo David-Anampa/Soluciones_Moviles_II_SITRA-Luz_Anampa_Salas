@@ -1,6 +1,0 @@
-project_id = "sitra-luz"
-
-# El login se invoca antes de tener sesión. Comprueba las credenciales con Auth.
-# Las demás funciones mantienen su verificación JWT predeterminada.
-[functions.login-usuario]
-verify_jwt = false

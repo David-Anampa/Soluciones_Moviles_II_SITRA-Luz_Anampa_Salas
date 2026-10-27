@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/supabase_config.dart';
-import 'core/network/cliente_http_con_limite.dart';
 import 'core/routes/app_router.dart';
 import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
@@ -26,7 +25,6 @@ void main() async {
   if (SupabaseConfig.isConfigured) {
     try {
       await Supabase.initialize(
-        httpClient: ClienteHttpConLimite(),
         url: SupabaseConfig.cleanUrl,
         anonKey: SupabaseConfig.supabaseAnonKey,
       );
@@ -111,4 +109,3 @@ class SitraLuzApp extends StatelessWidget {
     );
   }
 }
-

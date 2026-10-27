@@ -26,8 +26,7 @@ class ClienteHttpConLimite extends http.BaseClient {
     if (propio) _activos.add(transporte);
     final conLimite =
         request.url.path.startsWith('/auth/v1/') ||
-        request.url.path.startsWith('/rest/v1/') ||
-        request.url.path == '/functions/v1/login-usuario';
+        request.url.path.startsWith('/rest/v1/');
     // Solo método/ruta: omitir query, headers y cuerpo que contienen credenciales.
     final operacion = 'HTTP ${request.method} ${request.url.path}';
     final http.StreamedResponse respuesta;

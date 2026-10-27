@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/network/diagnostico_red.dart';
@@ -23,22 +22,19 @@ class AuthRemoteDataSource {
 
   SupabaseClient get _supabase => _customClient ?? Supabase.instance.client;
 
-  /// Acepta correo o nombre de usuario. Solo el servidor resuelve usuario → correo.
+  /// Inicia sesión exclusivamente con correo y contraseña mediante Supabase Auth.
   Future<UserModel> login({
     required String email,
     required String password,
   }) async {
     try {
-      final identificador = email.trim();
-      final response = identificador.contains('@')
-          ? await DiagnosticoRed.medir(
-              'Sesion.validarCredenciales',
-              () => _supabase.auth.signInWithPassword(
-                email: identificador.toLowerCase(),
-                password: password,
-              ),
-            )
-          : await _loginPorUsuario(identificador, password);
+      final response = await DiagnosticoRed.medir(
+        'Sesion.validarCredenciales',
+        () => _supabase.auth.signInWithPassword(
+          email: email.trim().toLowerCase(),
+          password: password,
+        ),
+      );
 
       final user = response.user;
       if (user == null) {
@@ -94,46 +90,6 @@ class AuthRemoteDataSource {
       }
       throw const AuthException(
         'No se pudo completar el inicio de sesión. Revisa la conexión y vuelve a intentar.',
-      );
-    }
-  }
-
-  /// Obtiene una sesión verificada por Auth desde la función pública de login.
-  /// La espera se limita antes de recuperar la sesión, evitando respuestas tardías.
-  Future<AuthResponse> _loginPorUsuario(String usuario, String password) async {
-    try {
-      final respuesta = await DiagnosticoRed.medir(
-        'Sesion.loginPorUsuario',
-        () => _supabase.functions
-            .invoke(
-              'login-usuario',
-              body: {'usuario': usuario, 'password': password},
-            )
-            .timeout(const Duration(seconds: 20)),
-      );
-      final datos = respuesta.data;
-      if (respuesta.status != 200 ||
-          datos is! Map ||
-          datos['session'] is! Map) {
-        throw const AuthException('No se pudo completar el acceso.');
-      }
-      return await _supabase.auth.recoverSession(jsonEncode(datos['session']));
-    } on FunctionException catch (error) {
-      if (error.status == 401 || error.status == 403) {
-        throw const AuthException(
-          'Usuario o contraseña incorrectos, o cuenta no habilitada.',
-        );
-      }
-      if (error.status == 404) {
-        throw const AuthException('Falta desplegar login-usuario en Supabase.');
-      }
-      if (error.status == 429) {
-        throw const AuthException(
-          'Demasiados intentos. Espera un momento y vuelve a intentar.',
-        );
-      }
-      throw const AuthException(
-        'El servicio de acceso no está disponible. Vuelve a intentar.',
       );
     }
   }

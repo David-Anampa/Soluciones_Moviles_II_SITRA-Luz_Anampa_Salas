@@ -5,7 +5,7 @@ Se aceptan nombres en mayúsculas, minúsculas o mezclados, con números opciona
 Ejemplos válidos: `ABC`, `WALTER`, `walter`, `Walter25`, `123A`, `ana.perez`.
 Ejemplos inválidos: `12345`, `12_-`, `ab`, `ana perez`.
 
-La escritura conserva las mayúsculas elegidas. La unicidad sigue siendo insensible a mayúsculas: `Walter` y `walter` no pueden pertenecer a usuarios diferentes. El acceso por correo se conserva. El nuevo acceso por nombre está preparado en la app y requiere publicar `login-usuario`; ver `GUIA_LOGIN_CORREO_O_USUARIO_2026_10_27.md`.
+La escritura conserva las mayúsculas elegidas. La unicidad sigue siendo insensible a mayúsculas: `Walter` y `walter` no pueden pertenecer a usuarios diferentes. El acceso se mantiene únicamente por correo y contraseña; se retiró el login por nombre por solicitud expresa. El nombre de usuario sigue siendo un dato del perfil.
 
 ## Aplicación en Supabase existente
 
