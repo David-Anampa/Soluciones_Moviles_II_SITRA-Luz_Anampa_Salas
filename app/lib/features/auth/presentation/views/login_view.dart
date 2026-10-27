@@ -14,13 +14,13 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _identificadorController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _identificadorController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -28,7 +28,7 @@ class _LoginViewState extends State<LoginView> {
   void _submitLogin() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthViewModel>().login(
-        email: _emailController.text.trim(),
+        email: _identificadorController.text.trim(),
         password: _passwordController.text,
       );
     }
@@ -135,16 +135,21 @@ class _LoginViewState extends State<LoginView> {
                               ),
                             ),
 
-                          // Campo Correo Electrónico
+                          // Un único identificador admite correo o nombre de usuario.
                           TextFormField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
+                            controller: _identificadorController,
+                            keyboardType: TextInputType.text,
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            autofillHints: const [AutofillHints.username],
                             textInputAction: TextInputAction.next,
                             enabled: !isLoading,
                             decoration: InputDecoration(
-                              labelText: 'Correo Institucional',
-                              hintText: 'ejemplo@sitraluz.pe',
-                              prefixIcon: const Icon(Icons.email_outlined),
+                              labelText: 'Correo o nombre de usuario',
+                              hintText: 'usuario o ejemplo@sitraluz.pe',
+                              prefixIcon: const Icon(
+                                Icons.account_circle_outlined,
+                              ),
                               filled: true,
                               fillColor: AppColors.surfaceVariant.withOpacity(
                                 0.5,
@@ -170,9 +175,12 @@ class _LoginViewState extends State<LoginView> {
                             ),
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Ingresa tu correo institucional';
+                                return 'Ingresa tu correo o nombre de usuario';
                               }
-                              if (!value.contains('@')) {
+                              if (value.contains('@') &&
+                                  !RegExp(
+                                    r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                                  ).hasMatch(value.trim())) {
                                 return 'Ingresa un correo electrónico válido';
                               }
                               return null;
