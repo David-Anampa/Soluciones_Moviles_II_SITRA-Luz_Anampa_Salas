@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
+import '../../../../core/widgets/mensajes_app.dart';
+import '../widgets/restablecer_clave_dialog.dart';
+import '../widgets/areas_usuario_selector.dart';
 import '../../data/usuarios_repository.dart';
 import '../../domain/usuario_borrador.dart';
 import '../../domain/usuario_validadores.dart';
@@ -302,6 +305,22 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
                           : 'Se usa para el acceso y la vinculación con Drive, previa autorización de Google.',
                     ),
                     if (!_edita) _campoContrasena(),
+                    if (_edita) ...[
+                      const SizedBox(height: 8),
+                      const Text(
+                        'La contraseña actual no se muestra. Puedes asignar una nueva sin modificar el perfil.',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: _guardando ? null : _restablecerClave,
+                        icon: const Icon(Icons.lock_reset_rounded),
+                        label: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Text('Restablecer contraseña'),
+                        ),
+                      ),
+                    ],
                   ]),
                   _seccion('Rol y áreas', [
                     _selectorRol(),
@@ -616,55 +635,48 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
   String? get _ayudaRol =>
       _esCuentaPropia ? 'No puedes cambiar el rol de tu propia cuenta.' : null;
 
-  /// Chips seleccionables con las áreas del catálogo HU-012.
-  Widget _selectorAreas() {
-    final opciones = _opcionesAreas.entries.toList()
-      ..sort((a, b) => a.value.compareTo(b.value));
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Áreas asignadas',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: CatalogoEstilo.texto,
-          ),
+  /// Selección múltiple buscable del catálogo HU-012 con etiquetas de resumen.
+  Widget _selectorAreas() => AreasUsuarioSelector(
+    opciones: _opcionesAreas,
+    seleccionadas: _areasSeleccionadas,
+    inactivas: {
+      for (final area in widget.areas)
+        if (!area.activo) area.codigo,
+    },
+    habilitado: !_guardando,
+    onChanged: (seleccion) => setState(() {
+      _areasSeleccionadas
+        ..clear()
+        ..addAll(seleccion);
+    }),
+  );
+
+  /// Abre una acción independiente y bloquea el formulario mientras está abierta.
+  Future<void> _restablecerClave() async {
+    if (_guardando || !_edita) return;
+    setState(() => _guardando = true);
+    final resultado = await showDialog<({String mensaje, bool advertencia})>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Theme(
+        data: CatalogoEstilo.tema(ctx),
+        child: RestablecerClaveDialog(
+          usuario: widget.usuario!,
+          repositorio: widget.repositorio,
         ),
-        const SizedBox(height: 4),
-        const Text(
-          'Un usuario puede rotar entre varias áreas.',
-          style: TextStyle(fontSize: 12),
-        ),
-        const SizedBox(height: 10),
-        if (opciones.isEmpty)
-          const Text(
-            'No hay áreas habilitadas. Créalas en Financiamientos, seguros y áreas.',
-            style: TextStyle(fontSize: 13),
-          )
-        else
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final o in opciones)
-                FilterChip(
-                  label: Text(o.value),
-                  selected: _areasSeleccionadas.contains(o.key),
-                  selectedColor: CatalogoEstilo.pastel,
-                  checkmarkColor: CatalogoEstilo.rojo,
-                  onSelected: _guardando
-                      ? null
-                      : (marcado) => setState(() {
-                          marcado
-                              ? _areasSeleccionadas.add(o.key)
-                              : _areasSeleccionadas.remove(o.key);
-                        }),
-                ),
-            ],
-          ),
-      ],
+      ),
     );
+    if (!mounted) return;
+    setState(() => _guardando = false);
+    if (resultado != null) {
+      MensajesApp.mostrar(
+        context,
+        resultado.mensaje,
+        tipo: resultado.advertencia
+            ? TipoMensaje.advertencia
+            : TipoMensaje.exito,
+      );
+    }
   }
 
   /// Botones Cancelar y Guardar; Guardar muestra progreso y se bloquea al enviar.

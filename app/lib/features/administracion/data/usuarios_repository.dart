@@ -296,6 +296,39 @@ class UsuariosRepository {
     }
   }
 
+  /// Restablece Auth desde el servidor; devuelve una advertencia si Auth cambió
+  /// pero no se pudo registrar el resultado final. Nunca retorna la contraseña.
+  Future<String?> restablecerClave(String id, String contrasena) async {
+    try {
+      final respuesta = await _client.functions.invoke(
+        'restablecer-clave',
+        body: {'id': id, 'password': contrasena},
+      );
+      if (respuesta.status != 200 ||
+          respuesta.data is! Map ||
+          respuesta.data['actualizado'] != true) {
+        throw StateError('No se pudo confirmar el cambio de contraseña.');
+      }
+      return respuesta.data['advertencia'] as String?;
+    } on FunctionException catch (error) {
+      if (error.status == 404) {
+        final detalle = error.details;
+        if (detalle is Map && detalle['error'] is String) {
+          throw StateError(detalle['error'] as String);
+        }
+        throw StateError(
+          'Falta desplegar la función restablecer-clave en Supabase.',
+        );
+      }
+      final detalle = error.details;
+      throw StateError(
+        detalle is Map && detalle['error'] is String
+            ? detalle['error'] as String
+            : 'No se pudo confirmar el cambio. Verifica la conexión antes de reintentar.',
+      );
+    }
+  }
+
   /// Actualiza los datos del perfil mediante la RPC atómica y auditada.
   /// El correo de acceso no se modifica aquí: pertenece a Supabase Auth.
   Future<void> editar(String id, UsuarioBorrador datos) =>
