@@ -171,7 +171,7 @@ void main() {
       await _tocarVisible(tester, find.text('Cancelar pedido'));
       expect(vm.accion, 'CANCELAR');
       expect(vm.motivo, 'Duplicado de turno');
-      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(Dialog), findsNothing);
       expect(find.text('Crear nueva'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
@@ -186,7 +186,7 @@ void main() {
       await _tocarVisible(tester, find.text('Cancelar pedido'));
       expect(vm.accion, 'CANCELAR');
       expect(find.text(vm.errorMessage!), findsOneWidget);
-      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.byType(Dialog), findsOneWidget);
       expect(find.text('Crear nueva'), findsNothing);
     },
   );
@@ -286,8 +286,7 @@ void main() {
       final vm = await _abrir(tester, 'EN_PREPARACION', farmacia: false);
       await tester.tap(find.text('Atender y despachar'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Confirmar despacho'));
-      await tester.pumpAndSettle();
+      await _tocarVisible(tester, find.text('Confirmar despacho'));
       expect(vm.accion, isNull);
       expect(
         find.textContaining('No hay unidades a despachar'),
@@ -334,7 +333,7 @@ void main() {
       expect(vm.accion, 'DESPACHAR');
       expect(vm.modalidad, 'ENTREGA');
       expect(vm.aceptadas, {'item': 50});
-      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.byType(Dialog), findsOneWidget);
       expect(find.text(vm.errorMessage!), findsOneWidget);
       expect(tester.takeException(), isNull);
     },

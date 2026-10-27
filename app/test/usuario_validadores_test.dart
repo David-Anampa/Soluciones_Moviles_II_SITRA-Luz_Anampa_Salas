@@ -83,6 +83,7 @@ void main() {
         'cargo': 'Técnica',
         'rol': 'ENFERMERIA',
         'areas': ['SOP'],
+        'puede_gestionar_kits': false,
         'colegio_codigo': null,
         'numero_colegiatura': null,
         'especialidad_codigo': null,

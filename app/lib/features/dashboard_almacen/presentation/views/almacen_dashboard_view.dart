@@ -329,8 +329,9 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -712,8 +713,9 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                   ),
                   const SizedBox(height: 24),
                   // HU-013 / HU-023: Inventario físico con búsqueda y filtros.
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
                     children: [
                       const Text(
                         'Inventario en Almacén General',

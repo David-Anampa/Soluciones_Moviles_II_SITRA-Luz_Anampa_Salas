@@ -276,8 +276,8 @@ class _KitCardState extends State<KitCard> {
                       children: kit.items.map((item) {
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Row(
-                            children: [
+                          child: FilaDetalleAdaptable(
+                            principales: [
                               Container(
                                 width: 6,
                                 height: 6,
@@ -325,29 +325,28 @@ class _KitCardState extends State<KitCard> {
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: const Color(0xFFDDDDDD),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Cant: ${item.cantidad}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF333333),
-                                  ),
+                            ],
+                            detalle: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: const Color(0xFFDDDDDD),
                                 ),
                               ),
-                            ],
+                              child: Text(
+                                'Cant: ${item.cantidad}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF333333),
+                                ),
+                              ),
+                            ),
                           ),
                         );
                       }).toList(),
