@@ -21,8 +21,8 @@ function responder(estado: number, cuerpo: Record<string, unknown>): Response {
 /** Devuelve el error de validación de las credenciales o null si son correctas. */
 function validarCredenciales(email: string, password: string): string | null {
   if (!EMAIL_VALIDO.test(email)) return "El correo de acceso no es válido.";
-  if (password.length < CLAVE_MINIMA || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
-    return `La contraseña debe tener al menos ${CLAVE_MINIMA} caracteres, con letras y números.`;
+  if (password.length < CLAVE_MINIMA) {
+    return `La contraseña debe tener al menos ${CLAVE_MINIMA} caracteres.`;
   }
   return null;
 }

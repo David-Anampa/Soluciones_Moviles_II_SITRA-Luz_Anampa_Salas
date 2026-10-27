@@ -45,15 +45,11 @@ class UsuarioValidadores {
         : 'El correo no tiene un formato válido.';
   }
 
-  /// Valida la contraseña inicial: mínimo 8 caracteres con al menos una letra y un número.
+  /// Valida la contraseña inicial: mínimo 8 caracteres, sin exigir combinación.
   static String? contrasena(String? valor) {
     final texto = valor ?? '';
     if (texto.length < longitudMinimaClave) {
       return 'Usa al menos $longitudMinimaClave caracteres.';
-    }
-    if (!texto.contains(RegExp(r'[A-Za-z]')) ||
-        !texto.contains(RegExp(r'\d'))) {
-      return 'Incluye letras y números.';
     }
     return null;
   }

@@ -68,10 +68,11 @@ void main() {
   });
 
   group('UsuarioValidadores.contrasena', () {
-    test('exige 8 caracteres, letras y números', () {
+    test('exige 8 caracteres sin exigir mezcla de letras y números', () {
       expect(UsuarioValidadores.contrasena('abc1'), isNotNull);
-      expect(UsuarioValidadores.contrasena('abcdefgh'), isNotNull);
-      expect(UsuarioValidadores.contrasena('12345678'), isNotNull);
+      expect(UsuarioValidadores.contrasena('abcdefgh'), isNull);
+      expect(UsuarioValidadores.contrasena('12345678'), isNull);
+      expect(UsuarioValidadores.contrasena('ABCDEFGH'), isNull);
       expect(UsuarioValidadores.contrasena('abcdefg1'), isNull);
     });
   });

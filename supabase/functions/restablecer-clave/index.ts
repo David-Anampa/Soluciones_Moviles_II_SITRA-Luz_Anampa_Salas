@@ -48,9 +48,8 @@ Deno.serve(async (req: Request) => {
   if (typeof id !== "string" || !/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)) {
     return responder(400, { error: "Usuario inválido." });
   }
-  if (typeof password !== "string" || password.length < 8 ||
-      !/[A-Za-z]/.test(password) || !/\d/.test(password) || new TextEncoder().encode(password).length > 72) {
-    return responder(400, { error: "Usa al menos 8 caracteres, con letras y números; máximo 72 bytes." });
+  if (typeof password !== "string" || password.length < 8 || new TextEncoder().encode(password).length > 72) {
+    return responder(400, { error: "Usa al menos 8 caracteres; máximo 72 bytes." });
   }
   const { data: destino, error: errorDestino } = await admin.from("profiles")
     .select("id").eq("id", id).single();

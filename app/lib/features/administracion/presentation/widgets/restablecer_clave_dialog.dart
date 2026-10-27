@@ -151,7 +151,7 @@ class _RestablecerClaveDialogState extends State<RestablecerClaveDialog> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Mínimo 8 caracteres, con letras y números.',
+                    'Mínimo 8 caracteres. Puede contener solo números o solo letras.',
                     style: TextStyle(fontSize: 12),
                   ),
                   const SizedBox(height: 20),

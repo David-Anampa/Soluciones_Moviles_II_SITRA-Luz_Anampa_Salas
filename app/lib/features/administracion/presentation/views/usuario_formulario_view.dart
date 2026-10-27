@@ -609,7 +609,7 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
     autovalidateMode: AutovalidateMode.onUserInteraction,
     decoration: InputDecoration(
       labelText: 'Contraseña inicial',
-      helperText: 'Mínimo 8 caracteres, con letras y números.',
+      helperText: 'Mínimo 8 caracteres. Puede contener solo números o solo letras.',
       prefixIcon: const Icon(Icons.lock_outline_rounded),
       suffixIcon: IconButton(
         tooltip: _verClave ? 'Ocultar contraseña' : 'Mostrar contraseña',
