@@ -4249,6 +4249,7 @@ NOTIFY pgrst,'reload schema';
 COMMIT;
 
 -- INCLUIDA: migracion_temas_areas_2026_10_26.sql
+-- Paleta ampliada con migracion_paleta_areas_2026_10_27.sql (12 colores).
 -- Después de migracion_kits_por_area_2026_10_26.sql. No mueve stock ni modifica fichas.
 BEGIN;
 DO $$ BEGIN
@@ -4259,7 +4260,7 @@ END $$;
 ALTER TABLE public.areas ADD COLUMN IF NOT EXISTS tema_color TEXT NOT NULL DEFAULT 'ROJO';
 ALTER TABLE public.areas DROP CONSTRAINT IF EXISTS areas_tema_color_check;
 ALTER TABLE public.areas ADD CONSTRAINT areas_tema_color_check
- CHECK(tema_color IN ('ROJO','AZUL','CELESTE','LAVANDA','ROSA','GRIS_AZUL'));
+ CHECK(tema_color IN ('ROJO','AZUL','CELESTE','LAVANDA','ROSA','GRIS_AZUL','VERDE','TURQUESA','INDIGO','MORADO','TERRACOTA','AMBAR'));
 
 -- Guardar datos y tema juntos, reutilizando las validaciones vigentes de HU-012.
 -- Si falla cualquier paso se revierten el área, el tema y sus eventos de auditoría.
@@ -4271,7 +4272,7 @@ BEGIN
    RAISE EXCEPTION 'Solo Administrador puede elegir el tema de un área.' USING ERRCODE='42501'; END IF;
  IF p_datos IS NULL OR jsonb_typeof(p_datos)<>'object' THEN RAISE EXCEPTION 'Datos de área inválidos.'; END IF;
  v_tema:=p_datos->>'tema_color';
- IF v_tema IS NULL OR v_tema NOT IN ('ROJO','AZUL','CELESTE','LAVANDA','ROSA','GRIS_AZUL') THEN
+ IF v_tema IS NULL OR v_tema NOT IN ('ROJO','AZUL','CELESTE','LAVANDA','ROSA','GRIS_AZUL','VERDE','TURQUESA','INDIGO','MORADO','TERRACOTA','AMBAR') THEN
    RAISE EXCEPTION 'Selecciona un tema de la paleta disponible.'; END IF;
  PERFORM pg_advisory_xact_lock(12012,1);
  IF p_id IS NOT NULL THEN

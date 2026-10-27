@@ -35,52 +35,71 @@ class SelectorTemaArea extends StatelessWidget {
             color: const Color(0xFFF3F3F3),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: TemaArea.opciones
-                .map(
-                  (opcion) => Semantics(
-                    button: true,
-                    selected: valor == opcion.codigo,
-                    label: opcion.nombre,
-                    child: Tooltip(
-                      message: opcion.nombre,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          customBorder: const CircleBorder(),
-                          hoverColor: opcion.principal.withValues(alpha: 0.12),
-                          onTap: onChanged == null
-                              ? null
-                              : () => onChanged!(opcion.codigo),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 180),
-                            width: 48,
-                            height: 48,
-                            padding: const EdgeInsets.all(5),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: valor == opcion.codigo
-                                    ? opcion.principal
-                                    : Colors.transparent,
-                                width: 2,
-                              ),
-                            ),
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: opcion.principal,
-                                shape: BoxShape.circle,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Distribuye las 12 opciones en filas completas, con al menos 48 px
+              // por objetivo táctil, sin dejar un último círculo aislado.
+              final columnas = [6, 4, 3, 2, 1].firstWhere(
+                (n) => constraints.maxWidth >= n * 48 + (n - 1) * 8,
+                orElse: () => 1,
+              );
+              final ancho =
+                  (constraints.maxWidth - (columnas - 1) * 8) / columnas;
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: TemaArea.opciones
+                    .map(
+                      (opcion) => SizedBox(
+                        width: ancho,
+                        child: Center(
+                          child: Semantics(
+                            button: true,
+                            selected: valor == opcion.codigo,
+                            label: opcion.nombre,
+                            child: Tooltip(
+                              message: opcion.nombre,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  customBorder: const CircleBorder(),
+                                  hoverColor: opcion.principal.withValues(
+                                    alpha: 0.12,
+                                  ),
+                                  onTap: onChanged == null
+                                      ? null
+                                      : () => onChanged!(opcion.codigo),
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 180),
+                                    width: 48,
+                                    height: 48,
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: valor == opcion.codigo
+                                            ? opcion.principal
+                                            : Colors.transparent,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        color: opcion.principal,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                )
-                .toList(),
+                    )
+                    .toList(),
+              );
+            },
           ),
         ),
         const SizedBox(height: 16),

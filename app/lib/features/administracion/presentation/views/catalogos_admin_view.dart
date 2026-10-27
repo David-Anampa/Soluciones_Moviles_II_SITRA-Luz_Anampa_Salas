@@ -493,8 +493,10 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     descripcion: a.descripcion,
     icono: Icons.apartment_rounded,
     activo: a.activo,
-    detalle:
-        'Tema: ${TemaArea.desde(a.temaColor).nombre} · ${a.administraStock ? 'Administra stock propio' : 'Solicita productos o kits'}',
+    tema: TemaArea.desde(a.temaColor),
+    detalle: a.administraStock
+        ? 'Administra stock propio'
+        : 'Solicita productos o kits',
     editar: () => _editar(area: a),
     estado: () => _accion(
       entidad: 'AREA',
@@ -551,18 +553,23 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     required VoidCallback editar,
     required VoidCallback estado,
     required VoidCallback eliminar,
+    TemaArea? tema,
   }) => Padding(
     padding: const EdgeInsets.only(bottom: 14),
     child: Material(
-      color: Colors.white,
+      color: tema?.suave ?? Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Color(0xFFE7E7E7)),
+        side: BorderSide(
+          color:
+              tema?.principal.withValues(alpha: .25) ?? const Color(0xFFE7E7E7),
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: _operando ? null : editar,
-        hoverColor: const Color(0xFFFFF8F8),
+        hoverColor:
+            tema?.principal.withValues(alpha: .06) ?? const Color(0xFFFFF8F8),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -574,10 +581,14 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: CatalogoEstilo.pastel,
+                      color: tema?.principal ?? CatalogoEstilo.pastel,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(icono, color: CatalogoEstilo.rojo, size: 23),
+                    child: Icon(
+                      icono,
+                      color: tema == null ? CatalogoEstilo.rojo : Colors.white,
+                      size: 23,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -634,10 +645,10 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
               const SizedBox(height: 12),
               Text(
                 detalle,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   height: 1.5,
-                  color: CatalogoEstilo.rojo,
+                  color: tema?.principal ?? CatalogoEstilo.rojo,
                 ),
               ),
               const SizedBox(height: 8),
@@ -649,7 +660,7 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
                   _botonAccion(
                     'Editar',
                     Icons.edit_outlined,
-                    CatalogoEstilo.rojo,
+                    tema?.principal ?? CatalogoEstilo.rojo,
                     editar,
                   ),
                   _botonAccion(
