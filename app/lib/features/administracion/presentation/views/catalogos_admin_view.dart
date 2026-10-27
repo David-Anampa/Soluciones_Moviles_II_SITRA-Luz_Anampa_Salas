@@ -495,6 +495,7 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     icono: Icons.apartment_rounded,
     activo: a.activo,
     tema: TemaArea.desde(a.temaColor),
+    usuariosAsignados: a.usuariosAsignados,
     detalle: a.administraStock
         ? 'Administra stock propio'
         : 'Solicita productos o kits',
@@ -563,6 +564,7 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     TemaArea? tema,
     DisenoTarjeta diseno = DisenoTarjeta.area,
     String? porcentaje,
+    int? usuariosAsignados,
   }) => Padding(
     padding: const EdgeInsets.only(bottom: 14),
     child: TarjetaCatalogo(
@@ -638,13 +640,37 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
                         icono,
                         activo ? const Color(0xFF2E7D32) : CatalogoEstilo.rojo,
                         estado,
-                        sinFondo: diseno == DisenoTarjeta.area,
                       ),
                     ),
                   ),
                 ],
               ),
             ),
+            if (usuariosAsignados != null) ...[
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.groups_outlined,
+                    size: 22,
+                    color: Color(0xFF30343F),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      usuariosAsignados == 1
+                          ? '1 usuario asignado'
+                          : '$usuariosAsignados usuarios asignados',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF30343F),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             // Las áreas muestran una ficha compacta; el editor conserva su descripción.
             if (diseno != DisenoTarjeta.area) ...[
               const SizedBox(height: 12),
@@ -725,19 +751,16 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     String tooltip,
     IconData icono,
     Color color,
-    VoidCallback accion, {
-    bool sinFondo = false,
-  }) => Tooltip(
+    VoidCallback accion,
+  ) => Tooltip(
     message: tooltip,
     child: OutlinedButton(
       onPressed: _operando ? null : accion,
       style:
           OutlinedButton.styleFrom(
             foregroundColor: color,
-            backgroundColor: sinFondo ? Colors.transparent : Colors.white,
-            side: sinFondo
-                ? BorderSide.none
-                : BorderSide(color: color.withOpacity(.20)),
+            backgroundColor: Colors.white,
+            side: BorderSide(color: color.withOpacity(.20)),
             minimumSize: const Size(0, 48),
             padding: const EdgeInsets.symmetric(vertical: 12),
             shape: RoundedRectangleBorder(

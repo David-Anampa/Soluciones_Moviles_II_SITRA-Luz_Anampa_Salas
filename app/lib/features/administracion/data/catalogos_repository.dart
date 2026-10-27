@@ -6,6 +6,7 @@ class AreaCatalogo {
   final String id, codigo, nombre, descripcion;
   final bool activo, administraStock;
   final String temaColor;
+  final int usuariosAsignados;
 
   /// Construye el registro de área que utilizan la lista y el formulario de HU-012.
   const AreaCatalogo({
@@ -16,6 +17,7 @@ class AreaCatalogo {
     required this.activo,
     required this.administraStock,
     this.temaColor = 'ROJO',
+    this.usuariosAsignados = 0,
   });
 
   /// Convierte una fila de areas al modelo de la interfaz.
@@ -28,6 +30,10 @@ class AreaCatalogo {
     activo: row['activo'] as bool,
     administraStock: row['administra_stock'] as bool,
     temaColor: row['tema_color'] as String? ?? 'ROJO',
+    usuariosAsignados:
+        ((row['asignaciones'] as List?)?.firstOrNull?['count'] as num?)
+            ?.toInt() ??
+        0,
   );
 }
 
@@ -115,11 +121,13 @@ class CatalogosRepository {
 
   /// Consulta areas ordenadas por nombre, incluyendo habilitadas y deshabilitadas.
   /// Devuelve los campos necesarios para tarjetas y edición, sin modificar datos.
+  /// Cuenta sus asignaciones por UUID en la misma petición, incluidos perfiles
+  /// deshabilitados; la clave compuesta de profile_areas evita contar duplicados.
   Future<List<AreaCatalogo>> areas() async {
     final rows = await _client
         .from('areas')
         .select(
-          'id,codigo_interno,nombre,descripcion,activo,administra_stock,tema_color',
+          'id,codigo_interno,nombre,descripcion,activo,administra_stock,tema_color,asignaciones:profile_areas(count)',
         )
         .order('nombre');
     return rows.map(AreaCatalogo.fromMap).toList();

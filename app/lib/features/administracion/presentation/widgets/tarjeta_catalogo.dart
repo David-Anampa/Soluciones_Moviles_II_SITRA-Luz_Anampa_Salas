@@ -133,28 +133,35 @@ class _FondoTarjeta extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color.lerp(pastel, vivo, .55 * intensidad)!,
-            pastel,
-            Color.lerp(pastel, vivo, .75 * intensidad)!,
-          ],
-          stops: const [0, .48, 1],
+          colors: diseno == DisenoTarjeta.area
+              ? [
+                  Color.lerp(pastel, vivo, .48 * intensidad)!,
+                  Color.lerp(pastel, vivo, .68 * intensidad)!,
+                ]
+              : [
+                  Color.lerp(pastel, vivo, .55 * intensidad)!,
+                  pastel,
+                  Color.lerp(pastel, vivo, .75 * intensidad)!,
+                ],
+          stops: diseno == DisenoTarjeta.area ? null : const [0, .48, 1],
         ).createShader(rect),
     );
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = RadialGradient(
-          center: diseno == DisenoTarjeta.usuario
-              ? const Alignment(-.65, -.55)
-              : const Alignment(.80, -.80),
-          radius: 1.2,
-          colors: [
-            vivo.withValues(alpha: .60 * intensidad),
-            vivo.withValues(alpha: 0),
-          ],
-        ).createShader(rect),
-    );
+    if (diseno != DisenoTarjeta.area) {
+      canvas.drawRect(
+        rect,
+        Paint()
+          ..shader = RadialGradient(
+            center: diseno == DisenoTarjeta.usuario
+                ? const Alignment(-.65, -.55)
+                : const Alignment(.80, -.80),
+            radius: 1.2,
+            colors: [
+              vivo.withValues(alpha: .60 * intensidad),
+              vivo.withValues(alpha: 0),
+            ],
+          ).createShader(rect),
+      );
+    }
     canvas.save();
     canvas.scale(size.width / 360, size.height / 260);
     final linea = Paint()
