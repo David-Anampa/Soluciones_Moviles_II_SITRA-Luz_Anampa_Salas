@@ -626,48 +626,54 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
-            DatosTarjeta(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (porcentaje != null) ...[
-                    Text(
-                      porcentaje,
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF30343F),
+            // Las áreas muestran una ficha compacta; el editor conserva su descripción.
+            if (diseno != DisenoTarjeta.area) ...[
+              const SizedBox(height: 12),
+              DatosTarjeta(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (porcentaje != null) ...[
+                      Text(
+                        porcentaje,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF30343F),
+                        ),
                       ),
-                    ),
-                    const Text(
-                      'Descuento sobre Kairos',
-                      style: TextStyle(fontSize: 13, color: Color(0xFF30343F)),
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-                  if (descripcion.isNotEmpty) ...[
+                      const Text(
+                        'Descuento sobre Kairos',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF30343F),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                    if (descripcion.isNotEmpty) ...[
+                      Text(
+                        descripcion,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          height: 1.5,
+                          color: Color(0xFF30343F),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                     Text(
-                      descripcion,
+                      detalle,
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         height: 1.5,
                         color: Color(0xFF30343F),
                       ),
                     ),
-                    const SizedBox(height: 8),
                   ],
-                  Text(
-                    detalle,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      height: 1.5,
-                      color: Color(0xFF30343F),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
             const SizedBox(height: 8),
             const Divider(color: Color(0xFFEEEEEE)),
             const SizedBox(height: 6),
