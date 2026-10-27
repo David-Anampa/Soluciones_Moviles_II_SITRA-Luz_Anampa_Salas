@@ -17,10 +17,71 @@ class AuthException implements Exception {
 /// Esta clase es la ÚNICA que conoce Supabase en la capa de datos de autenticación.
 class AuthRemoteDataSource {
   final SupabaseClient? _customClient;
+  final Duration _limiteAcceso;
+  bool _credencialesPendientes = false;
 
-  AuthRemoteDataSource({SupabaseClient? client}) : _customClient = client;
+  AuthRemoteDataSource({
+    SupabaseClient? client,
+    Duration limiteAcceso = const Duration(seconds: 20),
+  }) : _customClient = client,
+       _limiteAcceso = limiteAcceso;
 
   SupabaseClient get _supabase => _customClient ?? Supabase.instance.client;
+
+  /// Limita la espera sin sustituir el transporte predeterminado de Supabase.
+  /// Future.timeout no cancela HTTP: mientras siga pendiente no permite otro
+  /// envío, y descarta cualquier sesión que llegue después del plazo.
+  Future<AuthResponse> _validarCredenciales(
+    String email,
+    String password,
+  ) async {
+    if (_credencialesPendientes) {
+      throw const AuthException(
+        'La petición anterior sigue pendiente. Cierra y vuelve a abrir la aplicación antes de intentar de nuevo.',
+      );
+    }
+    _credencialesPendientes = true;
+    var caducada = false;
+    final peticion = _supabase.auth.signInWithPassword(
+      email: email.trim().toLowerCase(),
+      password: password,
+    );
+    try {
+      return await peticion.timeout(_limiteAcceso);
+    } on TimeoutException {
+      caducada = true;
+      DiagnosticoRed.evento(
+        'Sesion.validarCredenciales',
+        'TIEMPO_AGOTADO | ${_limiteAcceso.inMilliseconds}ms',
+      );
+      unawaited(_descartarAccesoTardio(peticion));
+      throw const AuthException(
+        'Supabase no confirmó el acceso en 20 segundos. Revisa la conexión y reinicia la aplicación si la petición sigue pendiente.',
+      );
+    } finally {
+      if (!caducada) _credencialesPendientes = false;
+    }
+  }
+
+  /// Consume respuestas tardías sin publicar acceso ni dejar errores sin manejar.
+  /// El cierre solo corresponde a la sesión creada por esta petición; no toca
+  /// una sesión diferente. Los eventos se mantienen bloqueados hasta limpiarla.
+  Future<void> _descartarAccesoTardio(Future<AuthResponse> peticion) async {
+    try {
+      final respuesta = await peticion;
+      final token = respuesta.session?.accessToken;
+      if (token != null &&
+          _supabase.auth.currentSession?.accessToken == token) {
+        await _supabase.auth
+            .signOut(scope: SignOutScope.local)
+            .timeout(const Duration(seconds: 10));
+      }
+    } catch (e, stack) {
+      DiagnosticoRed.error('Sesion.descartarAccesoTardio', e, stack, 0);
+    } finally {
+      _credencialesPendientes = false;
+    }
+  }
 
   /// Inicia sesión exclusivamente con correo y contraseña mediante Supabase Auth.
   Future<UserModel> login({
@@ -30,10 +91,7 @@ class AuthRemoteDataSource {
     try {
       final response = await DiagnosticoRed.medir(
         'Sesion.validarCredenciales',
-        () => _supabase.auth.signInWithPassword(
-          email: email.trim().toLowerCase(),
-          password: password,
-        ),
+        () => _validarCredenciales(email, password),
       );
 
       final user = response.user;
@@ -128,6 +186,9 @@ class AuthRemoteDataSource {
         final suscripcion = _supabase.auth.onAuthStateChange.listen(
           (data) {
             final actual = ++revision;
+            // La pantalla de login publica el resultado tras validar el perfil.
+            // Nunca admitir por el stream una respuesta de credenciales caducada.
+            if (_credencialesPendientes) return;
             final user = data.session?.user;
             if (user == null) {
               controlador.add(null);
