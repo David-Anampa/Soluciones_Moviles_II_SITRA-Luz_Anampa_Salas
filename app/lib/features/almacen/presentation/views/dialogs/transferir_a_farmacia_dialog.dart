@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/widgets/diseno_adaptable.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../domain/entities/lote_entity.dart';
@@ -24,7 +25,9 @@ class TransferirAFarmaciaDialog extends StatefulWidget {
 class _TransferirAFarmaciaDialogState extends State<TransferirAFarmaciaDialog> {
   final _formKey = GlobalKey<FormState>();
   final _cantidadController = TextEditingController();
-  final _motivoController = TextEditingController(text: 'Reposición de stock para dispensación');
+  final _motivoController = TextEditingController(
+    text: 'Reposición de stock para dispensación',
+  );
 
   StockAlmacenEntity? _selectedStock;
 
@@ -35,7 +38,9 @@ class _TransferirAFarmaciaDialogState extends State<TransferirAFarmaciaDialog> {
       _selectedStock = widget.itemInicial;
     } else if (widget.inventario.isNotEmpty) {
       // Filtrar aquellos que tengan stock disponible > 0
-      final disponibles = widget.inventario.where((i) => i.cantidad > 0).toList();
+      final disponibles = widget.inventario
+          .where((i) => i.cantidad > 0)
+          .toList();
       if (disponibles.isNotEmpty) {
         _selectedStock = disponibles.first;
       }
@@ -63,7 +68,9 @@ class _TransferirAFarmaciaDialogState extends State<TransferirAFarmaciaDialog> {
     if (cantidad <= 0 || cantidad > _selectedStock!.cantidad) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('La cantidad debe ser mayor a 0 y menor o igual al stock disponible.'),
+          content: Text(
+            'La cantidad debe ser mayor a 0 y menor o igual al stock disponible.',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -94,7 +101,9 @@ class _TransferirAFarmaciaDialogState extends State<TransferirAFarmaciaDialog> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('❌ Error: ${vm.errorMessage ?? "No se pudo transferir"}'),
+          content: Text(
+            '❌ Error: ${vm.errorMessage ?? "No se pudo transferir"}',
+          ),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -107,7 +116,7 @@ class _TransferirAFarmaciaDialogState extends State<TransferirAFarmaciaDialog> {
     final isSaving = context.watch<AlmacenViewModel>().isSaving;
     final disponibles = widget.inventario.where((i) => i.cantidad > 0).toList();
 
-    return AlertDialog(
+    return AlertaAdaptable(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20),
@@ -120,7 +129,10 @@ class _TransferirAFarmaciaDialogState extends State<TransferirAFarmaciaDialog> {
               color: AppColors.primary.withOpacity(0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.swap_horiz_rounded, color: AppColors.primary),
+            child: const Icon(
+              Icons.swap_horiz_rounded,
+              color: AppColors.primary,
+            ),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -133,7 +145,10 @@ class _TransferirAFarmaciaDialogState extends State<TransferirAFarmaciaDialog> {
                 ),
                 Text(
                   'Movimiento físico entre depósitos',
-                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -151,28 +166,66 @@ class _TransferirAFarmaciaDialogState extends State<TransferirAFarmaciaDialog> {
 
               // Diagrama visual Origen -> Destino
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceVariant.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.surfaceVariant),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('ORIGEN', style: TextStyle(fontSize: 10, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
-                        Text('Almacén General', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.almacenColor)),
+                        Text(
+                          'ORIGEN',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Almacén General',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.almacenColor,
+                          ),
+                        ),
                       ],
                     ),
-                    const Icon(Icons.arrow_forward_rounded, color: AppColors.primary, size: 20),
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
                     const Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('DESTINO', style: TextStyle(fontSize: 10, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
-                        Text('Farmacia Central', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.farmaciaColor)),
+                        Text(
+                          'DESTINO',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Farmacia Central',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.farmaciaColor,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -191,7 +244,11 @@ class _TransferirAFarmaciaDialogState extends State<TransferirAFarmaciaDialog> {
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 20),
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: AppColors.warning,
+                        size: 20,
+                      ),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -204,6 +261,8 @@ class _TransferirAFarmaciaDialogState extends State<TransferirAFarmaciaDialog> {
                 )
               else
                 DropdownButtonFormField<String>(
+                  itemHeight: null,
+                  isDense: false,
                   value: _selectedStock?.id,
                   isExpanded: true,
                   decoration: const InputDecoration(
@@ -223,7 +282,9 @@ class _TransferirAFarmaciaDialogState extends State<TransferirAFarmaciaDialog> {
                   onChanged: (id) {
                     if (id != null) {
                       setState(() {
-                        _selectedStock = disponibles.firstWhere((i) => i.id == id);
+                        _selectedStock = disponibles.firstWhere(
+                          (i) => i.id == id,
+                        );
                       });
                     }
                   },
@@ -242,28 +303,53 @@ class _TransferirAFarmaciaDialogState extends State<TransferirAFarmaciaDialog> {
                   ),
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
-                          const Text('Stock Físico en Almacén:', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                          const Text(
+                            'Stock Físico en Almacén:',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                           Text(
                             '${_selectedStock!.cantidad} unidades',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.almacenColor),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: AppColors.almacenColor,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 6),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
-                          const Text('Semáforo FEFO:', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                          const Text(
+                            'Semáforo FEFO:',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                           Text(
                             _selectedStock!.lote.etiquetaFefo,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
-                              color: _selectedStock!.lote.estadoFefo == EstadoFefo.critico ||
-                                      _selectedStock!.lote.estadoFefo == EstadoFefo.vencido
+                              color:
+                                  _selectedStock!.lote.estadoFefo ==
+                                          EstadoFefo.critico ||
+                                      _selectedStock!.lote.estadoFefo ==
+                                          EstadoFefo.vencido
                                   ? AppColors.error
                                   : AppColors.success,
                             ),
@@ -300,87 +386,78 @@ class _TransferirAFarmaciaDialogState extends State<TransferirAFarmaciaDialog> {
                 const SizedBox(height: 8),
 
                 // Atajos rápidos de cantidad (proporción uniforme al ancho del diálogo)
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          visualDensity: VisualDensity.compact,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                AccionesAdaptables(
+                  anchoMinimo: 150,
+                  acciones: [
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        visualDensity: VisualDensity.compact,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        onPressed: () => _establecerCantidad(10),
-                        child: const Text(
-                          '+10',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      ),
+                      onPressed: () => _establecerCantidad(10),
+                      child: const Text(
+                        '+10',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          visualDensity: VisualDensity.compact,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        visualDensity: VisualDensity.compact,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        onPressed: () => _establecerCantidad(25),
-                        child: const Text(
-                          '+25',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      ),
+                      onPressed: () => _establecerCantidad(25),
+                      child: const Text(
+                        '+25',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          visualDensity: VisualDensity.compact,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        visualDensity: VisualDensity.compact,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        onPressed: () => _establecerCantidad(50),
-                        child: const Text(
-                          '+50',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      ),
+                      onPressed: () => _establecerCantidad(50),
+                      child: const Text(
+                        '+50',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          visualDensity: VisualDensity.compact,
-                          backgroundColor: AppColors.primary.withOpacity(0.08),
-                          side: const BorderSide(color: AppColors.primary),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        visualDensity: VisualDensity.compact,
+                        backgroundColor: AppColors.primary.withOpacity(0.08),
+                        side: const BorderSide(color: AppColors.primary),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        onPressed: () => _establecerCantidad(_selectedStock!.cantidad),
-                        child: const Text(
-                          'Todo',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
+                      ),
+                      onPressed: () =>
+                          _establecerCantidad(_selectedStock!.cantidad),
+                      child: const Text(
+                        'Todo',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
                         ),
                       ),
                     ),
@@ -409,15 +486,18 @@ class _TransferirAFarmaciaDialogState extends State<TransferirAFarmaciaDialog> {
           child: const Text('Cancelar'),
         ),
         FilledButton.icon(
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.primary,
-          ),
-          onPressed: isSaving || disponibles.isEmpty ? null : _ejecutarTransferencia,
+          style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+          onPressed: isSaving || disponibles.isEmpty
+              ? null
+              : _ejecutarTransferencia,
           icon: isSaving
               ? const SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
               : const Icon(Icons.send_rounded),
           label: Text(isSaving ? 'TRANSFERIENDO...' : 'TRANSFERIR A FARMACIA'),

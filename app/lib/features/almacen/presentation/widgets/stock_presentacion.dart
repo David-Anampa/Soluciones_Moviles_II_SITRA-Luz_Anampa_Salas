@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../domain/entities/stock_ubicacion_entity.dart';
 
 const stockRojo = Color(0xFFC62828);
@@ -116,43 +117,40 @@ class StockContadores extends StatelessWidget {
   final StockUbicacionEntity item;
   const StockContadores({super.key, required this.item});
   @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
+  Widget build(BuildContext context) => AccionesAdaptables(
+    anchoMinimo: 80,
+    separacion: 8,
+    acciones: [
       _dato(Icons.local_pharmacy_outlined, 'Farmacia', item.farmacia),
-      const SizedBox(width: 8),
       _dato(Icons.warehouse_outlined, 'Almacén', item.almacen),
-      const SizedBox(width: 8),
       _dato(Icons.local_shipping_outlined, 'En tránsito', item.transito),
     ],
   );
-  Widget _dato(IconData icono, String nombre, int cantidad) => Expanded(
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
-      decoration: BoxDecoration(
-        color: stockPastel,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Icon(icono, color: stockRojo, size: 21),
-          const SizedBox(height: 8),
-          Text(
-            '$cantidad',
-            style: const TextStyle(
-              fontSize: 19,
-              fontWeight: FontWeight.w700,
-              color: stockRojo,
-            ),
+  Widget _dato(IconData icono, String nombre, int cantidad) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+    decoration: BoxDecoration(
+      color: stockPastel,
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+      children: [
+        Icon(icono, color: stockRojo, size: 21),
+        const SizedBox(height: 8),
+        Text(
+          '$cantidad',
+          style: const TextStyle(
+            fontSize: 19,
+            fontWeight: FontWeight.w700,
+            color: stockRojo,
           ),
-          const SizedBox(height: 4),
-          Text(
-            nombre,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 11),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          nombre,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 11),
+        ),
+      ],
     ),
   );
 }

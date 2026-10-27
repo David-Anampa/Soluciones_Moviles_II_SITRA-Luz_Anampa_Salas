@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -149,67 +150,92 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
   void _mostrarDialogoSimulador() {
     final ejemplos = MedicamentoIaService.ejemplosDemo;
     showModalBottomSheet(
+      isScrollControlled: true,
+      useSafeArea: true,
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.qr_code_2_rounded, color: AppColors.almacenColor),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Simulador de Códigos GTIN / GS1',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Seleccione un medicamento del catálogo para probar el flujo sin escáner físico:',
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: ListView.separated(
-                  itemCount: ejemplos.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (_, index) {
-                    final item = ejemplos[index];
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: CircleAvatar(
-                        backgroundColor: item.requiereCadenaFrio
-                            ? Colors.cyan.shade100
-                            : AppColors.surfaceVariant,
-                        child: Icon(
-                          item.requiereCadenaFrio
-                              ? Icons.ac_unit_rounded
-                              : Icons.medication_rounded,
-                          color: item.requiereCadenaFrio
-                              ? Colors.cyan.shade800
-                              : AppColors.almacenColor,
-                          size: 20,
-                        ),
+        return HojaAdaptable(
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  alignment: WrapAlignment.start,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    const Icon(
+                      Icons.qr_code_2_rounded,
+                      color: AppColors.almacenColor,
+                    ),
+                    const Text(
+                      'Simulador de Códigos GTIN / GS1',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
-                      title: Text(item.nombreComercial ?? 'Medicamento'),
-                      subtitle: Text('GTIN: ${item.gtin} • ${item.presentacion}'),
-                      trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
-                      onTap: () {
-                        Navigator.of(ctx).pop();
-                        _seleccionarCodigoDemo(item);
-                      },
-                    );
-                  },
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 6),
+                const Text(
+                  'Seleccione un medicamento del catálogo para probar el flujo sin escáner físico:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: (DisenoAdaptable.altoDialogo(ctx) * .55).clamp(
+                    80.0,
+                    400.0,
+                  ),
+                  child: ListView.separated(
+                    itemCount: ejemplos.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (_, index) {
+                      final item = ejemplos[index];
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: CircleAvatar(
+                          backgroundColor: item.requiereCadenaFrio
+                              ? Colors.cyan.shade100
+                              : AppColors.surfaceVariant,
+                          child: Icon(
+                            item.requiereCadenaFrio
+                                ? Icons.ac_unit_rounded
+                                : Icons.medication_rounded,
+                            color: item.requiereCadenaFrio
+                                ? Colors.cyan.shade800
+                                : AppColors.almacenColor,
+                            size: 20,
+                          ),
+                        ),
+                        title: Text(item.nombreComercial ?? 'Medicamento'),
+                        subtitle: Text(
+                          'GTIN: ${item.gtin} • ${item.presentacion}',
+                        ),
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 14,
+                        ),
+                        onTap: () {
+                          Navigator.of(ctx).pop();
+                          _seleccionarCodigoDemo(item);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -218,7 +244,8 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+    final isDesktop =
+        !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -237,7 +264,11 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.camera_alt_outlined, size: 64, color: Colors.white.withOpacity(0.3)),
+                    Icon(
+                      Icons.camera_alt_outlined,
+                      size: 64,
+                      color: Colors.white.withOpacity(0.3),
+                    ),
                     const SizedBox(height: 12),
                     const Text(
                       'Visor de Cámara activo en dispositivo móvil',
@@ -260,21 +291,42 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
 
           // 2. HUD y Marco de Escaneo
           SafeArea(
-            child: Column(
-              children: [
-                // Barra superior de controles de cámara
-                _buildTopBar(),
+            child: LayoutBuilder(
+              builder: (context, limites) {
+                final textoGrande =
+                    MediaQuery.textScalerOf(context).scale(14) > 18;
+                final compacto =
+                    limites.maxHeight < 520 ||
+                    limites.maxWidth > limites.maxHeight ||
+                    textoGrande;
+                if (compacto) {
+                  return SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildTopBar(),
+                        SizedBox(
+                          height: (limites.maxHeight * .4).clamp(100.0, 220.0),
+                          child: Center(child: _buildScannerOverlay()),
+                        ),
+                        _buildBottomPanel(),
+                      ],
+                    ),
+                  );
+                }
+                return Column(
+                  children: [
+                    // Barra superior de controles de cámara
+                    _buildTopBar(),
 
-                // Área de encuadre con animación láser
-                Expanded(
-                  child: Center(
-                    child: _buildScannerOverlay(),
-                  ),
-                ),
+                    // Área de encuadre con animación láser
+                    Expanded(child: Center(child: _buildScannerOverlay())),
 
-                // Panel inferior de estado y captura de foto
-                _buildBottomPanel(),
-              ],
+                    // Panel inferior de estado y captura de foto
+                    _buildBottomPanel(),
+                  ],
+                );
+              },
             ),
           ),
 
@@ -283,27 +335,38 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
             Container(
               color: Colors.black87,
               child: Center(
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const CircularProgressIndicator(color: AppColors.almacenColor),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Extrayendo datos con IA...',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Validación cruzada GTIN + Gemini OCR',
-                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                      ),
-                    ],
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const CircularProgressIndicator(
+                          color: AppColors.almacenColor,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Extrayendo datos con IA...',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Validación cruzada GTIN + Gemini OCR',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -364,7 +427,10 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
           // Botón Simulador de Códigos
           IconButton(
             tooltip: 'Probar Códigos Demo',
-            icon: const Icon(Icons.bug_report_outlined, color: Colors.amberAccent),
+            icon: const Icon(
+              Icons.bug_report_outlined,
+              color: Colors.amberAccent,
+            ),
             onPressed: _mostrarDialogoSimulador,
           ),
         ],
@@ -373,78 +439,97 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
   }
 
   Widget _buildScannerOverlay() {
-    const boxSize = 250.0;
-
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        // Cuadro delimitador con esquinas destacadas
-        Container(
-          width: boxSize,
-          height: boxSize,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: _codigoDetectado != null ? AppColors.success : AppColors.almacenColor.withOpacity(0.6),
-              width: 2,
-            ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Stack(
-            children: [
-              // Línea de escaneo animada (láser)
-              if (_codigoDetectado == null)
-                AnimatedBuilder(
-                  animation: _scanAnimation,
-                  builder: (context, child) {
-                    return Positioned(
-                      top: _scanAnimation.value * (boxSize - 4),
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        height: 3,
-                        decoration: BoxDecoration(
-                          color: AppColors.almacenColor,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.almacenColor.withOpacity(0.8),
-                              blurRadius: 8,
-                              spreadRadius: 2,
+    return LayoutBuilder(
+      builder: (context, limites) {
+        final ancho = limites.hasBoundedWidth ? limites.maxWidth : 250.0;
+        final alto = limites.hasBoundedHeight ? limites.maxHeight : 250.0;
+        final espacio = ancho < alto ? ancho : alto;
+        final boxSize = (espacio - 16).clamp(0.0, 250.0);
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            // Cuadro delimitador con esquinas destacadas
+            Container(
+              width: boxSize,
+              height: boxSize,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: _codigoDetectado != null
+                      ? AppColors.success
+                      : AppColors.almacenColor.withOpacity(0.6),
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Stack(
+                children: [
+                  // Línea de escaneo animada (láser)
+                  if (_codigoDetectado == null)
+                    AnimatedBuilder(
+                      animation: _scanAnimation,
+                      builder: (context, child) {
+                        return Positioned(
+                          top: _scanAnimation.value * (boxSize - 4),
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            height: 3,
+                            decoration: BoxDecoration(
+                              color: AppColors.almacenColor,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.almacenColor.withOpacity(
+                                    0.8,
+                                  ),
+                                  blurRadius: 8,
+                                  spreadRadius: 2,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-            ],
-          ),
-        ),
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ),
 
-        // Indicador de éxito centrado si se detectó
-        if (_codigoDetectado != null)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                SizedBox(width: 8),
-                Text(
-                  '¡CÓDIGO CAPTURADO!',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
+            // Indicador de éxito centrado si se detectó
+            if (_codigoDetectado != null)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
                 ),
-              ],
-            ),
-          ),
-      ],
+                decoration: BoxDecoration(
+                  color: AppColors.success.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Wrap(
+                  alignment: WrapAlignment.start,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    Icon(
+                      Icons.check_circle_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    Text(
+                      '¡CÓDIGO CAPTURADO!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -463,7 +548,10 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
           if (_codigoDetectado == null) ...[
             const Row(
               children: [
-                Icon(Icons.center_focus_strong_rounded, color: AppColors.almacenColor),
+                Icon(
+                  Icons.center_focus_strong_rounded,
+                  color: AppColors.almacenColor,
+                ),
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -496,41 +584,57 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
             ),
           ] else ...[
             // Código detectado
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.check_rounded, color: AppColors.success),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Código GTIN / Barcode:',
-                        style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withOpacity(0.12),
+                        shape: BoxShape.circle,
                       ),
-                      Text(
-                        _codigoDetectado!,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                          letterSpacing: 1.1,
-                        ),
+                      child: const Icon(
+                        Icons.check_rounded,
+                        color: AppColors.success,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Código GTIN / Barcode:',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          Text(
+                            _codigoDetectado!,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                TextButton.icon(
-                  onPressed: _reiniciarEscaneo,
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text('Re-escanear'),
+                const SizedBox(height: 8),
+                AccionesAdaptables(
+                  acciones: [
+                    TextButton.icon(
+                      onPressed: _reiniciarEscaneo,
+                      icon: const Icon(Icons.refresh_rounded, size: 18),
+                      label: const Text('Re-escanear'),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -564,7 +668,10 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
                         color: Colors.grey.shade200,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.add_a_photo_outlined, color: Colors.grey),
+                      child: const Icon(
+                        Icons.add_a_photo_outlined,
+                        color: Colors.grey,
+                      ),
                     ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -573,13 +680,19 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
                       children: [
                         const Text(
                           'Foto de la caja (opcional)',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
                         Text(
                           _fotoCajaPath != null
                               ? 'Foto lista para validación IA'
                               : 'Ayuda a la IA a cotejar lote y vencimiento',
-                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
                       ],
                     ),
@@ -587,27 +700,35 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
                   PopupMenuButton<ImageSource>(
                     tooltip: 'Tomar o elegir foto',
                     icon: Icon(
-                      _fotoCajaPath != null ? Icons.edit_rounded : Icons.camera_alt_rounded,
+                      _fotoCajaPath != null
+                          ? Icons.edit_rounded
+                          : Icons.camera_alt_rounded,
                       color: AppColors.almacenColor,
                     ),
                     onSelected: _capturarFotoCaja,
                     itemBuilder: (_) => const [
                       PopupMenuItem(
                         value: ImageSource.camera,
-                        child: Row(
+                        child: Wrap(
+                          alignment: WrapAlignment.start,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 8,
                           children: [
                             Icon(Icons.camera_alt_rounded, size: 20),
-                            SizedBox(width: 8),
                             Text('Tomar con Cámara'),
                           ],
                         ),
                       ),
                       PopupMenuItem(
                         value: ImageSource.gallery,
-                        child: Row(
+                        child: Wrap(
+                          alignment: WrapAlignment.start,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 8,
                           children: [
                             Icon(Icons.photo_library_rounded, size: 20),
-                            SizedBox(width: 8),
                             Text('Elegir de Galería'),
                           ],
                         ),
@@ -626,13 +747,18 @@ class _EscanerGtinViewState extends State<EscanerGtinView>
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.almacenColor,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 onPressed: _continuarConExtraccionIa,
                 icon: const Icon(Icons.auto_awesome_rounded),
                 label: const Text(
                   'EXTRAER DATOS CON IA Y REVISAR',
-                  style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
             ),

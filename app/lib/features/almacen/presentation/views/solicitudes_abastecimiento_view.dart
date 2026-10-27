@@ -1,4 +1,5 @@
 import 'dart:math';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../domain/entities/pedido_abastecimiento_entity.dart';
@@ -152,6 +153,10 @@ class _SolicitudesAbastecimientoViewState
       child: Scaffold(
         backgroundColor: _grisFondo,
         appBar: AppBar(
+          toolbarHeight: DisenoAdaptable.altoCabecera(
+            context,
+            base: kToolbarHeight,
+          ),
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -177,14 +182,23 @@ class _SolicitudesAbastecimientoViewState
           foregroundColor: Colors.white,
           iconTheme: const IconThemeData(color: Colors.white),
           elevation: 0,
-          actions: [IconButton(tooltip: 'Diferencias e historial',
-            icon: const Icon(Icons.fact_check_outlined),
-            onPressed: () async {
-              final vm = context.read<AlmacenViewModel>();
-              await Navigator.of(context).push(MaterialPageRoute(builder: (_) =>
-                DiferenciasAbastecimientoView(esFarmacia: widget.esModoFarmacia)));
-              if (mounted) await vm.cargarInventario();
-            })],
+          actions: [
+            IconButton(
+              tooltip: 'Diferencias e historial',
+              icon: const Icon(Icons.fact_check_outlined),
+              onPressed: () async {
+                final vm = context.read<AlmacenViewModel>();
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => DiferenciasAbastecimientoView(
+                      esFarmacia: widget.esModoFarmacia,
+                    ),
+                  ),
+                );
+                if (mounted) await vm.cargarInventario();
+              },
+            ),
+          ],
         ),
         floatingActionButton: widget.esModoFarmacia
             ? FloatingActionButton.extended(
@@ -207,32 +221,38 @@ class _SolicitudesAbastecimientoViewState
                 },
               )
             : null,
-        body: state is AlmacenLoaded
-            ? _buildBody(context, state, vm.isSaving, themeColor)
-            : state is AlmacenError
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.cloud_off_rounded,
-                        size: 40,
-                        color: _textoSecundario,
+        body: ContenidoAdaptable(
+          anchoMaximo: 1100,
+          padding: EdgeInsets.zero,
+          child: SafeArea(
+            child: state is AlmacenLoaded
+                ? _buildBody(context, state, vm.isSaving, themeColor)
+                : state is AlmacenError
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.cloud_off_rounded,
+                            size: 40,
+                            color: _textoSecundario,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(state.message, textAlign: TextAlign.center),
+                          const SizedBox(height: 12),
+                          FilledButton(
+                            onPressed: vm.cargarInventario,
+                            child: const Text('Reintentar'),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      Text(state.message, textAlign: TextAlign.center),
-                      const SizedBox(height: 12),
-                      FilledButton(
-                        onPressed: vm.cargarInventario,
-                        child: const Text('Reintentar'),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            : Center(child: CircularProgressIndicator(color: themeColor)),
+                    ),
+                  )
+                : Center(child: CircularProgressIndicator(color: themeColor)),
+          ),
+        ),
       ),
     );
   }
@@ -264,14 +284,15 @@ class _SolicitudesAbastecimientoViewState
           // 1. Selector de Filtros
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: Row(
+            child: Wrap(
+              alignment: WrapAlignment.start,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 _buildFilterChip('PENDIENTES', 'Pendientes', _rojo),
-                const SizedBox(width: 8),
                 _buildFilterChip('EN CURSO', 'En curso', _rojo),
-                const SizedBox(width: 8),
                 _buildFilterChip('COMPLETADOS', 'Completados', _rojo),
-                const SizedBox(width: 8),
                 _buildFilterChip(
                   'ARCHIVADOS',
                   'Cancelados / Rechazados',
@@ -316,7 +337,11 @@ class _SolicitudesAbastecimientoViewState
               itemBuilder: (context, index) {
                 final item = filtradas[index];
                 return _buildSolicitudCard(
-                  context, item, loaded, isSaving, numero: index + 1,
+                  context,
+                  item,
+                  loaded,
+                  isSaving,
+                  numero: index + 1,
                 );
               },
             ),
@@ -485,13 +510,20 @@ class _SolicitudesAbastecimientoViewState
                   color: estadoColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Center(child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text('#$numero',
-                    semanticsLabel: 'Solicitud número $numero',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700,
-                      color: estadoColor)),
-                )),
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '#$numero',
+                      semanticsLabel: 'Solicitud número $numero',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: estadoColor,
+                      ),
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -798,10 +830,13 @@ class _SolicitudesAbastecimientoViewState
                 _rojo,
               )
             else if (esCompletado)
-              Row(
+              Wrap(
+                alignment: WrapAlignment.start,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   const Icon(Icons.verified_rounded, color: _rojo, size: 16),
-                  const SizedBox(width: 6),
                   Text(
                     'Recepción completada el ${item.fechaCompletado?.day ?? ""}/${item.fechaCompletado?.month ?? ""}',
                     style: const TextStyle(
@@ -856,10 +891,13 @@ class _SolicitudesAbastecimientoViewState
                 _rojo,
               )
             else if (esCompletado)
-              Row(
+              Wrap(
+                alignment: WrapAlignment.start,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   const Icon(Icons.verified_rounded, color: _rojo, size: 16),
-                  const SizedBox(width: 6),
                   Text(
                     'Completado bilateralmente el ${item.fechaCompletado?.day}/${item.fechaCompletado?.month}',
                     style: const TextStyle(
@@ -881,7 +919,7 @@ class _SolicitudesAbastecimientoViewState
     if (vm.isSaving) return;
     if (nuevoEstado == 'EN_PREPARACION') {
       final confirmar = await _mostrarModal<bool>(
-        (ctx) => AlertDialog(
+        (ctx) => AlertaAdaptable(
           backgroundColor: _blanco,
           surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
@@ -1025,7 +1063,7 @@ class _SolicitudesAbastecimientoViewState
       (ctx) => StatefulBuilder(
         builder: (ctx, actualizar) => PopScope(
           canPop: !guardando,
-          child: AlertDialog(
+          child: AlertaAdaptable(
             backgroundColor: _blanco,
             surfaceTintColor: Colors.transparent,
             insetPadding: const EdgeInsets.symmetric(
@@ -1262,7 +1300,7 @@ class _SolicitudesAbastecimientoViewState
               : 0;
           return PopScope(
             canPop: !guardando,
-            child: AlertDialog(
+            child: AlertaAdaptable(
               backgroundColor: _blanco,
               surfaceTintColor: Colors.transparent,
               insetPadding: const EdgeInsets.symmetric(
@@ -1483,14 +1521,17 @@ class _SolicitudesAbastecimientoViewState
                 ),
               ),
               actions: [
-                if (item.despachoEnTransito) OutlinedButton.icon(
-                  onPressed: guardando ? null : () {
-                    abrirReporte = true;
-                    Navigator.of(ctx).pop(false);
-                  },
-                  icon: const Icon(Icons.report_problem_outlined),
-                  label: const Text('Reportar diferencia'),
-                ),
+                if (item.despachoEnTransito)
+                  OutlinedButton.icon(
+                    onPressed: guardando
+                        ? null
+                        : () {
+                            abrirReporte = true;
+                            Navigator.of(ctx).pop(false);
+                          },
+                    icon: const Icon(Icons.report_problem_outlined),
+                    label: const Text('Reportar diferencia'),
+                  ),
                 TextButton(
                   onPressed: guardando
                       ? null
@@ -1620,7 +1661,7 @@ class _SolicitudesAbastecimientoViewState
       (ctx) => StatefulBuilder(
         builder: (ctx, actualizar) => PopScope(
           canPop: !guardando,
-          child: AlertDialog(
+          child: AlertaAdaptable(
             backgroundColor: _blanco,
             surfaceTintColor: Colors.transparent,
             insetPadding: const EdgeInsets.symmetric(

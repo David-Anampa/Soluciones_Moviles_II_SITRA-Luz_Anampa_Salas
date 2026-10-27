@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:flutter/services.dart';
 import '../../domain/solicitud_id.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -80,6 +81,10 @@ class _DiferenciasState extends State<DiferenciasAbastecimientoView> {
       child: Scaffold(
         backgroundColor: stockFondo,
         appBar: AppBar(
+          toolbarHeight: DisenoAdaptable.altoCabecera(
+            context,
+            base: kToolbarHeight,
+          ),
           title: Text(
             widget.esFarmacia ? 'Mis reportes' : 'Diferencias e historial',
           ),
@@ -91,129 +96,139 @@ class _DiferenciasState extends State<DiferenciasAbastecimientoView> {
             ),
           ],
         ),
-        body: _cargando
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: _cargar,
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    StockSeccion(
-                      titulo: 'Cada diferencia tiene seguimiento',
-                      icono: Icons.fact_check_outlined,
+        body: ContenidoAdaptable(
+          anchoMaximo: 1100,
+          padding: EdgeInsets.zero,
+          child: SafeArea(
+            child: _cargando
+                ? const Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                    onRefresh: _cargar,
+                    child: ListView(
+                      padding: const EdgeInsets.all(16),
                       children: [
-                        const Text(
-                          'Revisa lo reportado, las respuestas y la solución. El historial conserva responsables, cantidades y justificaciones.',
-                          style: TextStyle(height: 1.5),
-                        ),
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
+                        StockSeccion(
+                          titulo: 'Cada diferencia tiene seguimiento',
+                          icono: Icons.fact_check_outlined,
                           children: [
-                            ChoiceChip(
-                              label: const Text('Por resolver'),
-                              avatar: const Icon(
-                                Icons.pending_actions,
-                                size: 18,
-                              ),
-                              selected: !_historial,
-                              onSelected: (_) =>
-                                  setState(() => _historial = false),
+                            const Text(
+                              'Revisa lo reportado, las respuestas y la solución. El historial conserva responsables, cantidades y justificaciones.',
+                              style: TextStyle(height: 1.5),
                             ),
-                            ChoiceChip(
-                              label: const Text('Todos e historial'),
-                              avatar: const Icon(
-                                Icons.history_rounded,
-                                size: 18,
-                              ),
-                              selected: _historial,
-                              onSelected: (_) =>
-                                  setState(() => _historial = true),
+                            Wrap(
+                              spacing: 10,
+                              runSpacing: 10,
+                              children: [
+                                ChoiceChip(
+                                  label: const Text('Por resolver'),
+                                  avatar: const Icon(
+                                    Icons.pending_actions,
+                                    size: 18,
+                                  ),
+                                  selected: !_historial,
+                                  onSelected: (_) =>
+                                      setState(() => _historial = false),
+                                ),
+                                ChoiceChip(
+                                  label: const Text('Todos e historial'),
+                                  avatar: const Icon(
+                                    Icons.history_rounded,
+                                    size: 18,
+                                  ),
+                                  selected: _historial,
+                                  onSelected: (_) =>
+                                      setState(() => _historial = true),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                    if (_error != null) _aviso(_error!),
-                    if (lista.isEmpty && _error == null)
-                      const StockSeccion(
-                        titulo: 'Todo al día',
-                        icono: Icons.task_alt_rounded,
-                        children: [Text('No hay reportes en esta vista.')],
-                      ),
-                    for (final r in lista)
-                      StockSeccion(
-                        titulo: r['codigo'] as String,
-                        icono: Icons.assignment_outlined,
-                        children: [
-                          Text(
-                            _estado(r['estado']),
-                            style: const TextStyle(
-                              color: stockRojo,
-                              fontWeight: FontWeight.w700,
-                            ),
+                        if (_error != null) _aviso(_error!),
+                        if (lista.isEmpty && _error == null)
+                          const StockSeccion(
+                            titulo: 'Todo al día',
+                            icono: Icons.task_alt_rounded,
+                            children: [Text('No hay reportes en esta vista.')],
                           ),
-                          Text(
-                            '${r['reportante']} · ${_fecha(r['created_at'])}',
-                            style: const TextStyle(color: Colors.black54),
-                          ),
-                          Text(
-                            r['motivo'],
-                            style: const TextStyle(height: 1.5),
-                          ),
-                          for (final i in (r['items'] as List))
-                            Text(
-                              '${i['nombre']}\nDespachado: ${i['despachado']} · Contado: ${i['contado']}',
-                              style: const TextStyle(height: 1.6),
-                            ),
-                          OutlinedButton.icon(
-                            onPressed: () => _verHistorial(r),
-                            icon: const Icon(Icons.history_rounded),
-                            label: const Text('Ver detalle e historial'),
-                          ),
-                          if (!widget.soloLectura &&
-                              [
-                                'PENDIENTE',
-                                'PROPUESTA',
-                              ].contains(r['estado'])) ...[
-                            if (widget.esFarmacia) ...[
-                              if (r['estado'] == 'PROPUESTA')
-                                FilledButton.icon(
-                                  onPressed: () => _editar(r, 'CONFIRMAR'),
-                                  icon: const Icon(Icons.fact_check_outlined),
-                                  label: const Text('Revisar propuesta'),
+                        for (final r in lista)
+                          StockSeccion(
+                            titulo: r['codigo'] as String,
+                            icono: Icons.assignment_outlined,
+                            children: [
+                              Text(
+                                _estado(r['estado']),
+                                style: const TextStyle(
+                                  color: stockRojo,
+                                  fontWeight: FontWeight.w700,
                                 ),
-                              if (r['estado'] == 'PROPUESTA')
-                                OutlinedButton.icon(
-                                  onPressed: () =>
-                                      _editar(r, 'DEVOLVER_PROPUESTA'),
-                                  icon: const Icon(Icons.reply_rounded),
-                                  label: const Text('Pedir otra revisión'),
-                                ),
-                              TextButton.icon(
-                                onPressed: () => _editar(r, 'CANCELAR'),
-                                icon: const Icon(Icons.cancel_outlined),
-                                label: const Text('Cancelar reporte'),
                               ),
-                            ] else ...[
-                              if (r['estado'] == 'PENDIENTE')
-                                FilledButton.icon(
-                                  onPressed: () => _editar(r, 'RESOLVER'),
-                                  icon: const Icon(Icons.build_circle_outlined),
-                                  label: const Text('Solucionar'),
+                              Text(
+                                '${r['reportante']} · ${_fecha(r['created_at'])}',
+                                style: const TextStyle(color: Colors.black54),
+                              ),
+                              Text(
+                                r['motivo'],
+                                style: const TextStyle(height: 1.5),
+                              ),
+                              for (final i in (r['items'] as List))
+                                Text(
+                                  '${i['nombre']}\nDespachado: ${i['despachado']} · Contado: ${i['contado']}',
+                                  style: const TextStyle(height: 1.6),
                                 ),
                               OutlinedButton.icon(
-                                onPressed: () => _editar(r, 'RECHAZAR'),
-                                icon: const Icon(Icons.block_rounded),
-                                label: const Text('Rechazar con motivo'),
+                                onPressed: () => _verHistorial(r),
+                                icon: const Icon(Icons.history_rounded),
+                                label: const Text('Ver detalle e historial'),
                               ),
+                              if (!widget.soloLectura &&
+                                  [
+                                    'PENDIENTE',
+                                    'PROPUESTA',
+                                  ].contains(r['estado'])) ...[
+                                if (widget.esFarmacia) ...[
+                                  if (r['estado'] == 'PROPUESTA')
+                                    FilledButton.icon(
+                                      onPressed: () => _editar(r, 'CONFIRMAR'),
+                                      icon: const Icon(
+                                        Icons.fact_check_outlined,
+                                      ),
+                                      label: const Text('Revisar propuesta'),
+                                    ),
+                                  if (r['estado'] == 'PROPUESTA')
+                                    OutlinedButton.icon(
+                                      onPressed: () =>
+                                          _editar(r, 'DEVOLVER_PROPUESTA'),
+                                      icon: const Icon(Icons.reply_rounded),
+                                      label: const Text('Pedir otra revisión'),
+                                    ),
+                                  TextButton.icon(
+                                    onPressed: () => _editar(r, 'CANCELAR'),
+                                    icon: const Icon(Icons.cancel_outlined),
+                                    label: const Text('Cancelar reporte'),
+                                  ),
+                                ] else ...[
+                                  if (r['estado'] == 'PENDIENTE')
+                                    FilledButton.icon(
+                                      onPressed: () => _editar(r, 'RESOLVER'),
+                                      icon: const Icon(
+                                        Icons.build_circle_outlined,
+                                      ),
+                                      label: const Text('Solucionar'),
+                                    ),
+                                  OutlinedButton.icon(
+                                    onPressed: () => _editar(r, 'RECHAZAR'),
+                                    icon: const Icon(Icons.block_rounded),
+                                    label: const Text('Rechazar con motivo'),
+                                  ),
+                                ],
+                              ],
                             ],
-                          ],
-                        ],
-                      ),
-                  ],
-                ),
-              ),
+                          ),
+                      ],
+                    ),
+                  ),
+          ),
+        ),
       ),
     );
   }
@@ -249,43 +264,58 @@ class _DiferenciasState extends State<DiferenciasAbastecimientoView> {
         builder: (context) => Theme(
           data: temaStock(context),
           child: Scaffold(
-            appBar: AppBar(title: const Text('Detalle e historial')),
+            appBar: AppBar(
+              toolbarHeight: DisenoAdaptable.altoCabecera(
+                context,
+                base: kToolbarHeight,
+              ),
+              title: const Text('Detalle e historial'),
+            ),
             backgroundColor: stockFondo,
-            body: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                StockSeccion(
-                  titulo: r['codigo'],
-                  icono: Icons.receipt_long_outlined,
+            body: ContenidoAdaptable(
+              anchoMaximo: 1100,
+              padding: EdgeInsets.zero,
+              child: SafeArea(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
                   children: [
-                    Text(_estado(r['estado'])),
-                    Text('Reporte original: ${r['motivo']}'),
-                    for (final i in r['items'])
-                      Text(
-                        '${i['nombre']}\nDespachado: ${i['despachado']} · Conteo original: ${i['contado']}',
-                        style: const TextStyle(height: 1.6),
+                    StockSeccion(
+                      titulo: r['codigo'],
+                      icono: Icons.receipt_long_outlined,
+                      children: [
+                        Text(_estado(r['estado'])),
+                        Text('Reporte original: ${r['motivo']}'),
+                        for (final i in r['items'])
+                          Text(
+                            '${i['nombre']}\nDespachado: ${i['despachado']} · Conteo original: ${i['contado']}',
+                            style: const TextStyle(height: 1.6),
+                          ),
+                      ],
+                    ),
+                    for (final h in r['historial'])
+                      StockSeccion(
+                        titulo: _accion(h['accion']),
+                        icono: Icons.history_rounded,
+                        children: [
+                          Text(
+                            '${h['usuario']} · ${_fecha(h['fecha'])}',
+                            style: const TextStyle(color: Colors.black54),
+                          ),
+                          Text(
+                            h['motivo'],
+                            style: const TextStyle(height: 1.5),
+                          ),
+                          Text('Estado: ${_estado(h['resultado']['estado'])}'),
+                          if (h['resultado']['propuesta'] != null)
+                            for (final i in r['items'])
+                              Text(
+                                '${i['nombre']}: ${h['resultado']['propuesta'][i['id']]} unidades propuestas',
+                              ),
+                        ],
                       ),
                   ],
                 ),
-                for (final h in r['historial'])
-                  StockSeccion(
-                    titulo: _accion(h['accion']),
-                    icono: Icons.history_rounded,
-                    children: [
-                      Text(
-                        '${h['usuario']} · ${_fecha(h['fecha'])}',
-                        style: const TextStyle(color: Colors.black54),
-                      ),
-                      Text(h['motivo'], style: const TextStyle(height: 1.5)),
-                      Text('Estado: ${_estado(h['resultado']['estado'])}'),
-                      if (h['resultado']['propuesta'] != null)
-                        for (final i in r['items'])
-                          Text(
-                            '${i['nombre']}: ${h['resultado']['propuesta'][i['id']]} unidades propuestas',
-                          ),
-                    ],
-                  ),
-              ],
+              ),
             ),
           ),
         ),
@@ -354,6 +384,10 @@ class _SolucionState extends State<_SolucionView> {
       child: Scaffold(
         backgroundColor: stockFondo,
         appBar: AppBar(
+          toolbarHeight: DisenoAdaptable.altoCabecera(
+            context,
+            base: kToolbarHeight,
+          ),
           title: Text(
             _resolver
                 ? 'Solucionar diferencia'
@@ -362,125 +396,135 @@ class _SolucionState extends State<_SolucionView> {
                 : 'Justificar acción',
           ),
         ),
-        body: Form(
-          key: _form,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              StockSeccion(
-                titulo: r['codigo'],
-                icono: Icons.assignment_outlined,
+        body: ContenidoAdaptable(
+          anchoMaximo: 1100,
+          padding: EdgeInsets.zero,
+          child: SafeArea(
+            child: Form(
+              key: _form,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
                 children: [
-                  Text(
-                    'Farmacia reportó: ${r['motivo']}',
-                    style: const TextStyle(height: 1.5),
-                  ),
-                  if (_resolver)
-                    DropdownButtonFormField<String>(
-                      initialValue: _destino,
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: '¿Qué se comprobó?',
-                        prefixIcon: Icon(Icons.rule_folder_outlined),
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'ALMACEN',
-                          child: Text('Quedaron en Almacén'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'ENTREGA',
-                          child: Text('Entrega pendiente realizada'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'PERDIDA',
-                          child: Text('Pérdida comprobada'),
-                        ),
-                      ],
-                      onChanged: _guardando
-                          ? null
-                          : (v) => setState(() {
-                              _destino = v!;
-                              if (v == 'ENTREGA') {
-                                for (final i in r['items']) {
-                                  _cantidades[i['id']]!.text =
-                                      '${i['despachado']}';
-                                }
-                              }
-                            }),
-                    ),
-                  if (_confirmar)
-                    Text(
-                      'Solución de Almacén: ${r['justificacion']}\n${_destinoTexto(_destino)}',
-                      style: const TextStyle(
-                        height: 1.6,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  if (_resolver || _confirmar)
-                    const Text(
-                      'El conteo original se conserva. Un cambio de conteo necesita la confirmación de Farmacia.',
-                      style: TextStyle(height: 1.5, color: Colors.black54),
-                    ),
-                ],
-              ),
-              if (_resolver || _confirmar)
-                for (final i in r['items'])
                   StockSeccion(
-                    titulo: i['nombre'],
-                    icono: Icons.medication_outlined,
+                    titulo: r['codigo'],
+                    icono: Icons.assignment_outlined,
                     children: [
                       Text(
-                        'Despachado: ${i['despachado']} · Conteo original: ${i['contado']}',
+                        'Farmacia reportó: ${r['motivo']}',
+                        style: const TextStyle(height: 1.5),
                       ),
-                      TextFormField(
-                        controller: _cantidades[i['id']],
-                        enabled:
-                            _resolver && !_guardando && _destino != 'ENTREGA',
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        decoration: const InputDecoration(
-                          labelText: 'Cantidad que Farmacia recibió',
-                          prefixIcon: Icon(Icons.fact_check_outlined),
+                      if (_resolver)
+                        DropdownButtonFormField<String>(
+                          itemHeight: null,
+                          isDense: false,
+                          initialValue: _destino,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            labelText: '¿Qué se comprobó?',
+                            prefixIcon: Icon(Icons.rule_folder_outlined),
+                          ),
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'ALMACEN',
+                              child: Text('Quedaron en Almacén'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'ENTREGA',
+                              child: Text('Entrega pendiente realizada'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'PERDIDA',
+                              child: Text('Pérdida comprobada'),
+                            ),
+                          ],
+                          onChanged: _guardando
+                              ? null
+                              : (v) => setState(() {
+                                  _destino = v!;
+                                  if (v == 'ENTREGA') {
+                                    for (final i in r['items']) {
+                                      _cantidades[i['id']]!.text =
+                                          '${i['despachado']}';
+                                    }
+                                  }
+                                }),
                         ),
-                        validator: (v) {
-                          final n = int.tryParse(v ?? '');
-                          return n == null ||
-                                  n < 0 ||
-                                  n > (i['despachado'] as num)
-                              ? 'Ingrese de 0 a ${i['despachado']}.'
-                              : null;
-                        },
-                      ),
+                      if (_confirmar)
+                        Text(
+                          'Solución de Almacén: ${r['justificacion']}\n${_destinoTexto(_destino)}',
+                          style: const TextStyle(
+                            height: 1.6,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      if (_resolver || _confirmar)
+                        const Text(
+                          'El conteo original se conserva. Un cambio de conteo necesita la confirmación de Farmacia.',
+                          style: TextStyle(height: 1.5, color: Colors.black54),
+                        ),
                     ],
                   ),
-              StockSeccion(
-                titulo: 'Justificación obligatoria',
-                icono: Icons.edit_note_rounded,
-                children: [
-                  TextFormField(
-                    controller: _motivo,
-                    enabled: !_guardando,
-                    minLines: 3,
-                    maxLines: 5,
-                    maxLength: 1000,
-                    decoration: const InputDecoration(
-                      labelText: 'Explica qué verificaste y por qué',
-                    ),
-                    validator: (v) => (v ?? '').trim().isEmpty
-                        ? 'Escribe una justificación.'
-                        : null,
+                  if (_resolver || _confirmar)
+                    for (final i in r['items'])
+                      StockSeccion(
+                        titulo: i['nombre'],
+                        icono: Icons.medication_outlined,
+                        children: [
+                          Text(
+                            'Despachado: ${i['despachado']} · Conteo original: ${i['contado']}',
+                          ),
+                          TextFormField(
+                            controller: _cantidades[i['id']],
+                            enabled:
+                                _resolver &&
+                                !_guardando &&
+                                _destino != 'ENTREGA',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            decoration: const InputDecoration(
+                              labelText: 'Cantidad que Farmacia recibió',
+                              prefixIcon: Icon(Icons.fact_check_outlined),
+                            ),
+                            validator: (v) {
+                              final n = int.tryParse(v ?? '');
+                              return n == null ||
+                                      n < 0 ||
+                                      n > (i['despachado'] as num)
+                                  ? 'Ingrese de 0 a ${i['despachado']}.'
+                                  : null;
+                            },
+                          ),
+                        ],
+                      ),
+                  StockSeccion(
+                    titulo: 'Justificación obligatoria',
+                    icono: Icons.edit_note_rounded,
+                    children: [
+                      TextFormField(
+                        controller: _motivo,
+                        enabled: !_guardando,
+                        minLines: 3,
+                        maxLines: 5,
+                        maxLength: 1000,
+                        decoration: const InputDecoration(
+                          labelText: 'Explica qué verificaste y por qué',
+                        ),
+                        validator: (v) => (v ?? '').trim().isEmpty
+                            ? 'Escribe una justificación.'
+                            : null,
+                      ),
+                      if (_error != null)
+                        Text(
+                          _error!,
+                          style: const TextStyle(color: stockRojo, height: 1.5),
+                        ),
+                    ],
                   ),
-                  if (_error != null)
-                    Text(
-                      _error!,
-                      style: const TextStyle(color: stockRojo, height: 1.5),
-                    ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
         bottomNavigationBar: SafeArea(
@@ -528,7 +572,7 @@ class _SolucionState extends State<_SolucionView> {
       context: context,
       builder: (ctx) => Theme(
         data: temaStock(ctx),
-        child: AlertDialog(
+        child: AlertaAdaptable(
           title: const Row(
             children: [
               Icon(Icons.fact_check_outlined, color: stockRojo),
@@ -673,67 +717,69 @@ class _ComparacionCantidades extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
     ),
     clipBehavior: Clip.antiAlias,
-    child: Table(
-      columnWidths: const {
-        0: FlexColumnWidth(1.5),
-        1: FlexColumnWidth(),
-        2: FlexColumnWidth(1.2),
-      },
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-      border: const TableBorder(
-        horizontalInside: BorderSide(color: Color(0xFFF0E5E5)),
-      ),
-      children: [
-        TableRow(
-          decoration: const BoxDecoration(color: stockRojo),
-          children: [
-            for (final titulo in ['Ubicación', 'Antes', 'Después'])
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 12,
-                ),
-                child: Text(
-                  titulo,
-                  textAlign: titulo == 'Ubicación'
-                      ? TextAlign.left
-                      : TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
+    child: TablaAdaptable(
+      child: Table(
+        columnWidths: const {
+          0: FlexColumnWidth(1.5),
+          1: FlexColumnWidth(),
+          2: FlexColumnWidth(1.2),
+        },
+        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+        border: const TableBorder(
+          horizontalInside: BorderSide(color: Color(0xFFF0E5E5)),
+        ),
+        children: [
+          TableRow(
+            decoration: const BoxDecoration(color: stockRojo),
+            children: [
+              for (final titulo in ['Ubicación', 'Antes', 'Después'])
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 12,
+                  ),
+                  child: Text(
+                    titulo,
+                    textAlign: titulo == 'Ubicación'
+                        ? TextAlign.left
+                        : TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
-          ],
-        ),
-        for (final f in filas)
-          TableRow(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 14,
-                ),
-                child: Row(
-                  children: [
-                    Icon(f.icono, color: stockRojo, size: 16),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        f.nombre,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.copyWith(height: 1.4),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _numero(context, f.antes, false),
-              _numero(context, f.despues, true),
             ],
           ),
-      ],
+          for (final f in filas)
+            TableRow(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 14,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(f.icono, color: stockRojo, size: 16),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          f.nombre,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.copyWith(height: 1.4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                _numero(context, f.antes, false),
+                _numero(context, f.despues, true),
+              ],
+            ),
+        ],
+      ),
     ),
   );
   Widget _numero(BuildContext context, num n, bool finalizado) => Container(
@@ -814,71 +860,87 @@ class _ReporteState extends State<_ReporteView> {
     child: PopScope(
       canPop: !_guardando,
       child: Scaffold(
-        appBar: AppBar(title: const Text('Reportar diferencia')),
+        appBar: AppBar(
+          toolbarHeight: DisenoAdaptable.altoCabecera(
+            context,
+            base: kToolbarHeight,
+          ),
+          title: const Text('Reportar diferencia'),
+        ),
         backgroundColor: stockFondo,
-        body: Form(
-          key: _form,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              StockSeccion(
-                titulo: widget.pedido.codigo,
-                icono: Icons.fact_check_outlined,
-                children: const [
-                  Text(
-                    'Cuenta lo que llegó físicamente. Este reporte no devuelve unidades a Almacén ni acredita stock en Farmacia. El pedido quedará pendiente de revisión.',
-                    style: TextStyle(height: 1.6),
-                  ),
-                ],
-              ),
-              for (final i in widget.pedido.items)
-                StockSeccion(
-                  titulo: i.nombreMedicamento,
-                  icono: Icons.medication_outlined,
-                  children: [
-                    Text(
-                      'Almacén declaró ${i.cantidadDespachada} unidades despachadas.',
-                    ),
-                    TextFormField(
-                      controller: _cantidades[i.id],
-                      enabled: !_guardando,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      decoration: const InputDecoration(
-                        labelText: 'Unidades contadas',
-                        prefixIcon: Icon(Icons.inventory_2_outlined),
-                      ),
-                      validator: (v) {
-                        final n = int.tryParse(v ?? '');
-                        return n == null || n < 0 || n > i.cantidadDespachada
-                            ? 'Ingrese de 0 a ${i.cantidadDespachada}.'
-                            : null;
-                      },
-                    ),
-                  ],
-                ),
-              StockSeccion(
-                titulo: 'Describe la diferencia',
-                icono: Icons.edit_note_rounded,
+        body: ContenidoAdaptable(
+          anchoMaximo: 1100,
+          padding: EdgeInsets.zero,
+          child: SafeArea(
+            child: Form(
+              key: _form,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
                 children: [
-                  TextFormField(
-                    controller: _motivo,
-                    enabled: !_guardando,
-                    minLines: 3,
-                    maxLines: 5,
-                    maxLength: 1000,
-                    decoration: const InputDecoration(
-                      labelText: 'Justificación del reporte',
-                    ),
-                    validator: (v) => (v ?? '').trim().isEmpty
-                        ? 'Escribe una justificación.'
-                        : null,
+                  StockSeccion(
+                    titulo: widget.pedido.codigo,
+                    icono: Icons.fact_check_outlined,
+                    children: const [
+                      Text(
+                        'Cuenta lo que llegó físicamente. Este reporte no devuelve unidades a Almacén ni acredita stock en Farmacia. El pedido quedará pendiente de revisión.',
+                        style: TextStyle(height: 1.6),
+                      ),
+                    ],
                   ),
-                  if (_error != null)
-                    Text(_error!, style: const TextStyle(color: stockRojo)),
+                  for (final i in widget.pedido.items)
+                    StockSeccion(
+                      titulo: i.nombreMedicamento,
+                      icono: Icons.medication_outlined,
+                      children: [
+                        Text(
+                          'Almacén declaró ${i.cantidadDespachada} unidades despachadas.',
+                        ),
+                        TextFormField(
+                          controller: _cantidades[i.id],
+                          enabled: !_guardando,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          decoration: const InputDecoration(
+                            labelText: 'Unidades contadas',
+                            prefixIcon: Icon(Icons.inventory_2_outlined),
+                          ),
+                          validator: (v) {
+                            final n = int.tryParse(v ?? '');
+                            return n == null ||
+                                    n < 0 ||
+                                    n > i.cantidadDespachada
+                                ? 'Ingrese de 0 a ${i.cantidadDespachada}.'
+                                : null;
+                          },
+                        ),
+                      ],
+                    ),
+                  StockSeccion(
+                    titulo: 'Describe la diferencia',
+                    icono: Icons.edit_note_rounded,
+                    children: [
+                      TextFormField(
+                        controller: _motivo,
+                        enabled: !_guardando,
+                        minLines: 3,
+                        maxLines: 5,
+                        maxLength: 1000,
+                        decoration: const InputDecoration(
+                          labelText: 'Justificación del reporte',
+                        ),
+                        validator: (v) => (v ?? '').trim().isEmpty
+                            ? 'Escribe una justificación.'
+                            : null,
+                      ),
+                      if (_error != null)
+                        Text(_error!, style: const TextStyle(color: stockRojo)),
+                    ],
+                  ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
         bottomNavigationBar: SafeArea(
@@ -921,7 +983,7 @@ class _ReporteState extends State<_ReporteView> {
       context: context,
       builder: (ctx) => Theme(
         data: temaStock(ctx),
-        child: AlertDialog(
+        child: AlertaAdaptable(
           title: const Text('Preconfirmación del reporte'),
           content: SingleChildScrollView(
             child: Column(

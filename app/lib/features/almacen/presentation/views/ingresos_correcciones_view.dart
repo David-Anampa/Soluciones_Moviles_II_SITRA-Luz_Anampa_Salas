@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/repositories/ingresos_repository.dart';
@@ -65,6 +66,10 @@ class _IngresosState extends State<IngresosCorreccionesView> {
       child: Scaffold(
         backgroundColor: stockFondo,
         appBar: AppBar(
+          toolbarHeight: DisenoAdaptable.altoCabecera(
+            context,
+            base: kToolbarHeight,
+          ),
           title: const Text('Ingresos y correcciones'),
           actions: [
             IconButton(
@@ -74,90 +79,102 @@ class _IngresosState extends State<IngresosCorreccionesView> {
             ),
           ],
         ),
-        body: _cargando
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: _cargar,
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    StockSeccion(
-                      titulo: 'El ingreso conserva su historia',
-                      icono: Icons.receipt_long_outlined,
+        body: ContenidoAdaptable(
+          anchoMaximo: 1100,
+          padding: EdgeInsets.zero,
+          child: SafeArea(
+            child: _cargando
+                ? const Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                    onRefresh: _cargar,
+                    child: ListView(
+                      padding: const EdgeInsets.all(16),
                       children: [
-                        const Text(
-                          'Una corrección ajusta la diferencia. El ingreso original, su documento y los movimientos posteriores se conservan.',
-                          style: TextStyle(height: 1.5),
+                        StockSeccion(
+                          titulo: 'El ingreso conserva su historia',
+                          icono: Icons.receipt_long_outlined,
+                          children: [
+                            const Text(
+                              'Una corrección ajusta la diferencia. El ingreso original, su documento y los movimientos posteriores se conservan.',
+                              style: TextStyle(height: 1.5),
+                            ),
+                            TextField(
+                              controller: _buscar,
+                              onChanged: (_) => setState(() {}),
+                              decoration: const InputDecoration(
+                                labelText: 'Producto, lote o documento',
+                                prefixIcon: Icon(Icons.search_rounded),
+                              ),
+                            ),
+                          ],
                         ),
-                        TextField(
-                          controller: _buscar,
-                          onChanged: (_) => setState(() {}),
-                          decoration: const InputDecoration(
-                            labelText: 'Producto, lote o documento',
-                            prefixIcon: Icon(Icons.search_rounded),
+                        if (_error != null)
+                          Text(
+                            _error!,
+                            style: const TextStyle(color: stockRojo),
                           ),
-                        ),
+                        if (lista.isEmpty && _error == null)
+                          const StockSeccion(
+                            titulo: 'Sin ingresos en esta vista',
+                            icono: Icons.inventory_2_outlined,
+                            children: [
+                              Text(
+                                'Prueba otra búsqueda o registra un ingreso desde Almacén.',
+                              ),
+                            ],
+                          ),
+                        for (final r in lista)
+                          StockSeccion(
+                            titulo: r['nombre'],
+                            icono: Icons.medication_outlined,
+                            children: [
+                              Text(
+                                'Lote ${r['numero_lote']}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: stockRojo,
+                                ),
+                              ),
+                              Text(
+                                'Documento: ${r['num_boleta'] ?? 'Sin documento'}\nCosto unitario registrado: ${r['precio_compra'] ?? 'Sin costo'}',
+                                style: const TextStyle(height: 1.6),
+                              ),
+                              if (r['cantidad_original'] != null)
+                                Text(
+                                  'Ingreso original: ${r['cantidad_original']}\nCantidad de ingreso vigente: ${r['cantidad_registrada']}',
+                                  style: const TextStyle(height: 1.6),
+                                )
+                              else
+                                const Text(
+                                  'Ingreso histórico pendiente de conciliación: no existe una cantidad original inequívoca.',
+                                  style: TextStyle(
+                                    color: stockRojo,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              Text(
+                                'Existencias actuales · Almacén: ${r['almacen']} · Farmacia: ${r['farmacia']}',
+                                style: const TextStyle(height: 1.5),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: () => _historial(r),
+                                icon: const Icon(Icons.history_rounded),
+                                label: const Text('Ver historial'),
+                              ),
+                              if (!widget.soloLectura &&
+                                  r['cantidad_registrada'] != null)
+                                FilledButton.icon(
+                                  onPressed: () => _corregir(r),
+                                  icon: const Icon(Icons.edit_note_rounded),
+                                  label: const Text('Corregir cantidad'),
+                                ),
+                            ],
+                          ),
                       ],
                     ),
-                    if (_error != null)
-                      Text(_error!, style: const TextStyle(color: stockRojo)),
-                    if (lista.isEmpty && _error == null)
-                      const StockSeccion(
-                        titulo: 'Sin ingresos en esta vista',
-                        icono: Icons.inventory_2_outlined,
-                        children: [
-                          Text(
-                            'Prueba otra búsqueda o registra un ingreso desde Almacén.',
-                          ),
-                        ],
-                      ),
-                    for (final r in lista)
-                      StockSeccion(
-                        titulo: r['nombre'],
-                        icono: Icons.medication_outlined,
-                        children: [
-                          Text(
-                            'Lote ${r['numero_lote']}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: stockRojo,
-                            ),
-                          ),
-                          Text(
-                            'Documento: ${r['num_boleta'] ?? 'Sin documento'}\nCosto unitario registrado: ${r['precio_compra'] ?? 'Sin costo'}',
-                            style: const TextStyle(height: 1.6),
-                          ),
-                          if (r['cantidad_original'] != null)
-                            Text(
-                              'Ingreso original: ${r['cantidad_original']}\nCantidad de ingreso vigente: ${r['cantidad_registrada']}',
-                              style: const TextStyle(height: 1.6),
-                            )
-                          else
-                            const Text(
-                              'Ingreso histórico pendiente de conciliación: no existe una cantidad original inequívoca.',
-                              style: TextStyle(color: stockRojo, height: 1.5),
-                            ),
-                          Text(
-                            'Existencias actuales · Almacén: ${r['almacen']} · Farmacia: ${r['farmacia']}',
-                            style: const TextStyle(height: 1.5),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: () => _historial(r),
-                            icon: const Icon(Icons.history_rounded),
-                            label: const Text('Ver historial'),
-                          ),
-                          if (!widget.soloLectura &&
-                              r['cantidad_registrada'] != null)
-                            FilledButton.icon(
-                              onPressed: () => _corregir(r),
-                              icon: const Icon(Icons.edit_note_rounded),
-                              label: const Text('Corregir cantidad'),
-                            ),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
+                  ),
+          ),
+        ),
       ),
     );
   }
@@ -176,45 +193,57 @@ class _IngresosState extends State<IngresosCorreccionesView> {
       builder: (ctx) => Theme(
         data: temaStock(ctx),
         child: Scaffold(
-          appBar: AppBar(title: const Text('Historial del ingreso')),
+          appBar: AppBar(
+            toolbarHeight: DisenoAdaptable.altoCabecera(
+              context,
+              base: kToolbarHeight,
+            ),
+            title: const Text('Historial del ingreso'),
+          ),
           backgroundColor: stockFondo,
-          body: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              StockSeccion(
-                titulo: r['nombre'],
-                icono: Icons.inventory_2_outlined,
+          body: ContenidoAdaptable(
+            anchoMaximo: 1100,
+            padding: EdgeInsets.zero,
+            child: SafeArea(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
                 children: [
-                  Text('Lote ${r['numero_lote']}'),
-                  Text(
-                    'Cantidad original: ${r['cantidad_original'] ?? 'Por conciliar'}',
+                  StockSeccion(
+                    titulo: r['nombre'],
+                    icono: Icons.inventory_2_outlined,
+                    children: [
+                      Text('Lote ${r['numero_lote']}'),
+                      Text(
+                        'Cantidad original: ${r['cantidad_original'] ?? 'Por conciliar'}',
+                      ),
+                    ],
                   ),
+                  for (final h in r['historial'])
+                    StockSeccion(
+                      titulo: h['evento'] == 'INGRESO_ALMACEN'
+                          ? 'Ingreso original'
+                          : 'Corrección justificada',
+                      icono: Icons.history_rounded,
+                      children: [
+                        Text(
+                          '${h['usuario'] ?? 'Usuario histórico'} · ${_fechaIngreso(h['fecha'])}',
+                          style: const TextStyle(color: Colors.black54),
+                        ),
+                        Text(
+                          h['motivo'] ?? '',
+                          style: const TextStyle(height: 1.5),
+                        ),
+                        Text('Unidades del movimiento: ${h['cantidad']}'),
+                        if (h['evento'] == 'AJUSTE_INGRESO_LOTE')
+                          Text(
+                            'Ingreso: ${h['antes']['cantidad_registrada']} a ${h['despues']['cantidad_registrada']}\nUbicación: ${h['despues']['ubicacion']}',
+                            style: const TextStyle(height: 1.5),
+                          ),
+                      ],
+                    ),
                 ],
               ),
-              for (final h in r['historial'])
-                StockSeccion(
-                  titulo: h['evento'] == 'INGRESO_ALMACEN'
-                      ? 'Ingreso original'
-                      : 'Corrección justificada',
-                  icono: Icons.history_rounded,
-                  children: [
-                    Text(
-                      '${h['usuario'] ?? 'Usuario histórico'} · ${_fechaIngreso(h['fecha'])}',
-                      style: const TextStyle(color: Colors.black54),
-                    ),
-                    Text(
-                      h['motivo'] ?? '',
-                      style: const TextStyle(height: 1.5),
-                    ),
-                    Text('Unidades del movimiento: ${h['cantidad']}'),
-                    if (h['evento'] == 'AJUSTE_INGRESO_LOTE')
-                      Text(
-                        'Ingreso: ${h['antes']['cantidad_registrada']} a ${h['despues']['cantidad_registrada']}\nUbicación: ${h['despues']['ubicacion']}',
-                        style: const TextStyle(height: 1.5),
-                      ),
-                  ],
-                ),
-            ],
+            ),
           ),
         ),
       ),
@@ -267,101 +296,120 @@ class _CorreccionState extends State<_CorreccionIngreso> {
         canPop: !_guardando,
         child: Scaffold(
           backgroundColor: stockFondo,
-          appBar: AppBar(title: const Text('Corregir ingreso')),
-          body: Form(
-            key: _form,
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                StockSeccion(
-                  titulo: r['nombre'],
-                  icono: Icons.edit_note_rounded,
+          appBar: AppBar(
+            toolbarHeight: DisenoAdaptable.altoCabecera(
+              context,
+              base: kToolbarHeight,
+            ),
+            title: const Text('Corregir ingreso'),
+          ),
+          body: ContenidoAdaptable(
+            anchoMaximo: 1100,
+            padding: EdgeInsets.zero,
+            child: SafeArea(
+              child: Form(
+                key: _form,
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
                   children: [
-                    Text(
-                      'Lote ${r['numero_lote']} · Ingreso original: ${r['cantidad_original']}',
-                      style: const TextStyle(
-                        color: stockRojo,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Text(
-                      'Ingresa el total correcto del ingreso, no el stock que queda hoy. Se aplicará únicamente la diferencia.',
-                      style: TextStyle(height: 1.5),
-                    ),
-                    TextFormField(
-                      controller: _cantidad,
-                      enabled: !_guardando,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      onChanged: (_) => setState(() {}),
-                      decoration: const InputDecoration(
-                        labelText: 'Cantidad correcta del ingreso',
-                        prefixIcon: Icon(Icons.inventory_2_outlined),
-                      ),
-                      validator: (v) {
-                        final n = int.tryParse(v ?? '');
-                        return n == null || n < 0 || n > 2147483647
-                            ? 'Ingresa una cantidad válida.'
-                            : null;
-                      },
-                    ),
-                    if (delta < 0)
-                      DropdownButtonFormField<String>(
-                        initialValue: _ubicacion,
-                        isExpanded: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Ubicación física que se corrige',
-                          prefixIcon: Icon(Icons.place_outlined),
+                    StockSeccion(
+                      titulo: r['nombre'],
+                      icono: Icons.edit_note_rounded,
+                      children: [
+                        Text(
+                          'Lote ${r['numero_lote']} · Ingreso original: ${r['cantidad_original']}',
+                          style: const TextStyle(
+                            color: stockRojo,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'ALMACEN',
-                            child: Text('Almacén'),
+                        const Text(
+                          'Ingresa el total correcto del ingreso, no el stock que queda hoy. Se aplicará únicamente la diferencia.',
+                          style: TextStyle(height: 1.5),
+                        ),
+                        TextFormField(
+                          controller: _cantidad,
+                          enabled: !_guardando,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          onChanged: (_) => setState(() {}),
+                          decoration: const InputDecoration(
+                            labelText: 'Cantidad correcta del ingreso',
+                            prefixIcon: Icon(Icons.inventory_2_outlined),
                           ),
-                          DropdownMenuItem(
-                            value: 'FARMACIA',
-                            child: Text('Farmacia'),
+                          validator: (v) {
+                            final n = int.tryParse(v ?? '');
+                            return n == null || n < 0 || n > 2147483647
+                                ? 'Ingresa una cantidad válida.'
+                                : null;
+                          },
+                        ),
+                        if (delta < 0)
+                          DropdownButtonFormField<String>(
+                            itemHeight: null,
+                            isDense: false,
+                            initialValue: _ubicacion,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Ubicación física que se corrige',
+                              prefixIcon: Icon(Icons.place_outlined),
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'ALMACEN',
+                                child: Text('Almacén'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'FARMACIA',
+                                child: Text('Farmacia'),
+                              ),
+                            ],
+                            onChanged: _guardando
+                                ? null
+                                : (v) => setState(() => _ubicacion = v!),
                           ),
-                        ],
-                        onChanged: _guardando
-                            ? null
-                            : (v) => setState(() => _ubicacion = v!),
-                      ),
-                    Text(
-                      delta > 0
-                          ? 'Las $delta unidades adicionales quedarán en Almacén.'
-                          : delta < 0
-                          ? 'Se descontarán ${-delta} unidades solo de la ubicación físicamente verificada. No se tocará el stock de las áreas ni el tránsito.'
-                          : 'Modifica la cantidad para preparar un ajuste.',
-                      style: const TextStyle(height: 1.5),
+                        Text(
+                          delta > 0
+                              ? 'Las $delta unidades adicionales quedarán en Almacén.'
+                              : delta < 0
+                              ? 'Se descontarán ${-delta} unidades solo de la ubicación físicamente verificada. No se tocará el stock de las áreas ni el tránsito.'
+                              : 'Modifica la cantidad para preparar un ajuste.',
+                          style: const TextStyle(height: 1.5),
+                        ),
+                      ],
+                    ),
+                    StockSeccion(
+                      titulo: 'Justificación de la corrección',
+                      icono: Icons.description_outlined,
+                      children: [
+                        TextFormField(
+                          controller: _motivo,
+                          enabled: !_guardando,
+                          minLines: 3,
+                          maxLines: 5,
+                          maxLength: 1000,
+                          decoration: const InputDecoration(
+                            labelText: 'Qué se verificó y por qué se corrige',
+                          ),
+                          validator: (v) => (v ?? '').trim().isEmpty
+                              ? 'La justificación es obligatoria.'
+                              : null,
+                        ),
+                        if (_error != null)
+                          Text(
+                            _error!,
+                            style: const TextStyle(
+                              color: stockRojo,
+                              height: 1.5,
+                            ),
+                          ),
+                      ],
                     ),
                   ],
                 ),
-                StockSeccion(
-                  titulo: 'Justificación de la corrección',
-                  icono: Icons.description_outlined,
-                  children: [
-                    TextFormField(
-                      controller: _motivo,
-                      enabled: !_guardando,
-                      minLines: 3,
-                      maxLines: 5,
-                      maxLength: 1000,
-                      decoration: const InputDecoration(
-                        labelText: 'Qué se verificó y por qué se corrige',
-                      ),
-                      validator: (v) => (v ?? '').trim().isEmpty
-                          ? 'La justificación es obligatoria.'
-                          : null,
-                    ),
-                    if (_error != null)
-                      Text(
-                        _error!,
-                        style: const TextStyle(color: stockRojo, height: 1.5),
-                      ),
-                  ],
-                ),
-              ],
+              ),
             ),
           ),
           bottomNavigationBar: SafeArea(
@@ -425,7 +473,7 @@ class _CorreccionState extends State<_CorreccionIngreso> {
       context: context,
       builder: (ctx) => Theme(
         data: temaStock(ctx),
-        child: AlertDialog(
+        child: AlertaAdaptable(
           title: const Text('Preconfirmar corrección'),
           content: SingleChildScrollView(
             child: Column(
@@ -437,41 +485,43 @@ class _CorreccionState extends State<_CorreccionIngreso> {
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 16),
-                Table(
-                  columnWidths: const {
-                    0: FlexColumnWidth(1.5),
-                    1: FlexColumnWidth(),
-                    2: FlexColumnWidth(1.2),
-                  },
-                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                  children: [
-                    TableRow(
-                      decoration: const BoxDecoration(color: stockPastel),
-                      children: [
-                        for (final t in ['Nombre', 'Antes', 'Después'])
-                          Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: Text(
-                              t,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: stockRojo,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    for (final f in filas)
+                TablaAdaptable(
+                  child: Table(
+                    columnWidths: const {
+                      0: FlexColumnWidth(1.5),
+                      1: FlexColumnWidth(),
+                      2: FlexColumnWidth(1.2),
+                    },
+                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                    children: [
                       TableRow(
+                        decoration: const BoxDecoration(color: stockPastel),
                         children: [
-                          for (final v in [f.$1, '${f.$2}', '${f.$3}'])
+                          for (final t in ['Nombre', 'Antes', 'Después'])
                             Padding(
                               padding: const EdgeInsets.all(6),
-                              child: Text(v),
+                              child: Text(
+                                t,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: stockRojo,
+                                ),
+                              ),
                             ),
                         ],
                       ),
-                  ],
+                      for (final f in filas)
+                        TableRow(
+                          children: [
+                            for (final v in [f.$1, '${f.$2}', '${f.$3}'])
+                              Padding(
+                                padding: const EdgeInsets.all(6),
+                                child: Text(v),
+                              ),
+                          ],
+                        ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Text(

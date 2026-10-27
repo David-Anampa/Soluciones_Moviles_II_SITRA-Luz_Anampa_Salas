@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../data/repositories/stock_ubicaciones_repository.dart';
@@ -180,239 +181,257 @@ class _CrearSolicitudAbastecimientoViewState
       child: Scaffold(
         backgroundColor: stockFondo,
         appBar: AppBar(
+          toolbarHeight: DisenoAdaptable.altoCabecera(
+            context,
+            base: kToolbarHeight,
+          ),
           title: Text(
             _envio ? 'Enviar a Farmacia' : 'Solicitar a Almacén',
             style: const TextStyle(fontSize: 18),
           ),
         ),
-        body: _cargando
-            ? const Center(child: CircularProgressIndicator(color: stockRojo))
-            : Form(
-                key: _form,
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  children: [
-                    StockSeccion(
-                      titulo: _envio
-                          ? 'Envío desde Almacén'
-                          : 'Reposición de Farmacia',
-                      icono: _envio
-                          ? Icons.local_shipping_outlined
-                          : Icons.add_shopping_cart_rounded,
+        body: ContenidoAdaptable(
+          anchoMaximo: 1100,
+          padding: EdgeInsets.zero,
+          child: SafeArea(
+            child: _cargando
+                ? const Center(
+                    child: CircularProgressIndicator(color: stockRojo),
+                  )
+                : Form(
+                    key: _form,
+                    child: ListView(
+                      padding: const EdgeInsets.all(16),
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       children: [
-                        Text(
-                          _envio
-                              ? 'Elige cuánto enviar. El resto queda en Almacén y Farmacia contará lo recibido antes de disponer de ello.'
-                              : 'Consulta lo que hay en ambas ubicaciones y solicita únicamente lo que necesitas.',
-                          style: const TextStyle(height: 1.5),
-                        ),
-                        _selector(
-                          'Turno',
-                          _turno,
-                          {'DIA': 'Día', 'TARDE': 'Tarde', 'NOCHE': 'Noche'},
-                          Icons.schedule_rounded,
-                          (v) => setState(() => _turno = v),
-                          guardando,
-                        ),
-                        _selector(
-                          'Justificación',
-                          _justificacion,
-                          {
-                            'STOCK_CERO': 'Sin stock en Farmacia',
-                            'RELLENAR_STOCK': 'Reposición de stock',
-                          },
-                          Icons.assignment_outlined,
-                          (v) => setState(() => _justificacion = v),
-                          guardando,
-                        ),
-                        if (_envio)
-                          _selector(
-                            'Modalidad',
-                            _modalidad,
-                            {
-                              'ENTREGA': 'Almacén entrega',
-                              'RECOJO': 'Farmacia recoge',
-                            },
-                            Icons.route_outlined,
-                            (v) => setState(() => _modalidad = v),
-                            guardando,
-                          ),
-                        TextFormField(
-                          controller: _notas,
-                          enabled: !guardando,
-                          maxLines: 3,
-                          maxLength: 1000,
-                          validator: (v) => _envio && (v ?? '').trim().isEmpty
-                              ? 'Indica el motivo del envío.'
-                              : null,
-                          decoration: InputDecoration(
-                            labelText: _envio
-                                ? 'Motivo del envío'
-                                : 'Observaciones (opcional)',
-                            prefixIcon: const Icon(
-                              Icons.edit_note_rounded,
-                              color: stockRojo,
+                        StockSeccion(
+                          titulo: _envio
+                              ? 'Envío desde Almacén'
+                              : 'Reposición de Farmacia',
+                          icono: _envio
+                              ? Icons.local_shipping_outlined
+                              : Icons.add_shopping_cart_rounded,
+                          children: [
+                            Text(
+                              _envio
+                                  ? 'Elige cuánto enviar. El resto queda en Almacén y Farmacia contará lo recibido antes de disponer de ello.'
+                                  : 'Consulta lo que hay en ambas ubicaciones y solicita únicamente lo que necesitas.',
+                              style: const TextStyle(height: 1.5),
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    StockSeccion(
-                      titulo: 'Productos seleccionados',
-                      icono: Icons.checklist_rounded,
-                      children: [
-                        if (elegidos.isEmpty)
-                          const Text('Agrega productos desde el buscador.'),
-                        for (final p in elegidos) ...[
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  p.nombre,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                            _selector(
+                              'Turno',
+                              _turno,
+                              {
+                                'DIA': 'Día',
+                                'TARDE': 'Tarde',
+                                'NOCHE': 'Noche',
+                              },
+                              Icons.schedule_rounded,
+                              (v) => setState(() => _turno = v),
+                              guardando,
+                            ),
+                            _selector(
+                              'Justificación',
+                              _justificacion,
+                              {
+                                'STOCK_CERO': 'Sin stock en Farmacia',
+                                'RELLENAR_STOCK': 'Reposición de stock',
+                              },
+                              Icons.assignment_outlined,
+                              (v) => setState(() => _justificacion = v),
+                              guardando,
+                            ),
+                            if (_envio)
+                              _selector(
+                                'Modalidad',
+                                _modalidad,
+                                {
+                                  'ENTREGA': 'Almacén entrega',
+                                  'RECOJO': 'Farmacia recoge',
+                                },
+                                Icons.route_outlined,
+                                (v) => setState(() => _modalidad = v),
+                                guardando,
                               ),
-                              IconButton(
-                                tooltip: 'Quitar producto',
-                                onPressed: guardando
-                                    ? null
-                                    : () => _quitar(p.id),
-                                icon: const Icon(
-                                  Icons.close_rounded,
+                            TextFormField(
+                              controller: _notas,
+                              enabled: !guardando,
+                              maxLines: 3,
+                              maxLength: 1000,
+                              validator: (v) =>
+                                  _envio && (v ?? '').trim().isEmpty
+                                  ? 'Indica el motivo del envío.'
+                                  : null,
+                              decoration: InputDecoration(
+                                labelText: _envio
+                                    ? 'Motivo del envío'
+                                    : 'Observaciones (opcional)',
+                                prefixIcon: const Icon(
+                                  Icons.edit_note_rounded,
                                   color: stockRojo,
                                 ),
                               ),
-                            ],
-                          ),
-                          StockContadores(item: p),
-                          TextFormField(
-                            key: ValueKey('cantidad-${p.id}'),
-                            controller: _cantidades[p.id],
-                            enabled: !guardando,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(10),
-                            ],
-                            validator: (v) {
-                              final n = int.tryParse(v ?? '') ?? 0;
-                              if (n <= 0 || n > 2147483647) {
-                                return 'Escribe una cantidad entera mayor que cero.';
-                              }
-                              if (_envio && n > p.almacen) {
-                                return 'Almacén dispone de ${p.almacen}.';
-                              }
-                              return null;
-                            },
-                            decoration: InputDecoration(
-                              labelText: _envio
-                                  ? 'Cantidad a enviar'
-                                  : 'Cantidad a solicitar',
-                              prefixIcon: const Icon(
-                                Icons.numbers_rounded,
-                                color: stockRojo,
-                              ),
                             ),
-                          ),
-                          if (_envio)
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: TextButton.icon(
-                                onPressed: guardando || p.almacen == 0
-                                    ? null
-                                    : () => setState(
-                                        () => _cantidades[p.id]!.text = p
-                                            .almacen
-                                            .toString(),
+                          ],
+                        ),
+                        StockSeccion(
+                          titulo: 'Productos seleccionados',
+                          icono: Icons.checklist_rounded,
+                          children: [
+                            if (elegidos.isEmpty)
+                              const Text('Agrega productos desde el buscador.'),
+                            for (final p in elegidos) ...[
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      p.nombre,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
                                       ),
-                                icon: const Icon(Icons.select_all_rounded),
-                                label: const Text(
-                                  'Todo lo disponible de este producto',
+                                    ),
+                                  ),
+                                  IconButton(
+                                    tooltip: 'Quitar producto',
+                                    onPressed: guardando
+                                        ? null
+                                        : () => _quitar(p.id),
+                                    icon: const Icon(
+                                      Icons.close_rounded,
+                                      color: stockRojo,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              StockContadores(item: p),
+                              TextFormField(
+                                key: ValueKey('cantidad-${p.id}'),
+                                controller: _cantidades[p.id],
+                                enabled: !guardando,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  LengthLimitingTextInputFormatter(10),
+                                ],
+                                validator: (v) {
+                                  final n = int.tryParse(v ?? '') ?? 0;
+                                  if (n <= 0 || n > 2147483647) {
+                                    return 'Escribe una cantidad entera mayor que cero.';
+                                  }
+                                  if (_envio && n > p.almacen) {
+                                    return 'Almacén dispone de ${p.almacen}.';
+                                  }
+                                  return null;
+                                },
+                                decoration: InputDecoration(
+                                  labelText: _envio
+                                      ? 'Cantidad a enviar'
+                                      : 'Cantidad a solicitar',
+                                  prefixIcon: const Icon(
+                                    Icons.numbers_rounded,
+                                    color: stockRojo,
+                                  ),
+                                ),
+                              ),
+                              if (_envio)
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: TextButton.icon(
+                                    onPressed: guardando || p.almacen == 0
+                                        ? null
+                                        : () => setState(
+                                            () => _cantidades[p.id]!.text = p
+                                                .almacen
+                                                .toString(),
+                                          ),
+                                    icon: const Icon(Icons.select_all_rounded),
+                                    label: const Text(
+                                      'Todo lo disponible de este producto',
+                                    ),
+                                  ),
+                                ),
+                              const Divider(height: 12),
+                            ],
+                          ],
+                        ),
+                        StockSeccion(
+                          titulo: 'Buscar productos',
+                          icono: Icons.search_rounded,
+                          children: [
+                            TextField(
+                              controller: _buscar,
+                              enabled: !guardando,
+                              onChanged: (_) => setState(() {}),
+                              decoration: const InputDecoration(
+                                labelText: 'Nombre, principio activo o código',
+                                prefixIcon: Icon(
+                                  Icons.search_rounded,
+                                  color: stockRojo,
                                 ),
                               ),
                             ),
-                          const Divider(height: 12),
-                        ],
-                      ],
-                    ),
-                    StockSeccion(
-                      titulo: 'Buscar productos',
-                      icono: Icons.search_rounded,
-                      children: [
-                        TextField(
-                          controller: _buscar,
-                          enabled: !guardando,
-                          onChanged: (_) => setState(() {}),
-                          decoration: const InputDecoration(
-                            labelText: 'Nombre, principio activo o código',
-                            prefixIcon: Icon(
-                              Icons.search_rounded,
-                              color: stockRojo,
-                            ),
-                          ),
+                            if (resultados.isEmpty)
+                              const Text('No hay más coincidencias.'),
+                            for (final p in resultados)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    p.nombre,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  StockContadores(item: p),
+                                  const SizedBox(height: 10),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton.icon(
+                                      onPressed:
+                                          guardando ||
+                                              (_envio && p.almacen == 0)
+                                          ? null
+                                          : () => _agregar(p),
+                                      icon: const Icon(Icons.add_rounded),
+                                      label: const Text('Agregar producto'),
+                                    ),
+                                  ),
+                                  const Divider(height: 24),
+                                ],
+                              ),
+                          ],
                         ),
-                        if (resultados.isEmpty)
-                          const Text('No hay más coincidencias.'),
-                        for (final p in resultados)
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        if (_error != null)
+                          StockSeccion(
+                            titulo: 'Revisar operación',
+                            icono: Icons.error_outline_rounded,
                             children: [
                               Text(
-                                p.nombre,
+                                _error!,
                                 style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
+                                  height: 1.5,
+                                  color: stockRojo,
                                 ),
                               ),
-                              const SizedBox(height: 10),
-                              StockContadores(item: p),
-                              const SizedBox(height: 10),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton.icon(
-                                  onPressed:
-                                      guardando || (_envio && p.almacen == 0)
-                                      ? null
-                                      : () => _agregar(p),
-                                  icon: const Icon(Icons.add_rounded),
-                                  label: const Text('Agregar producto'),
-                                ),
+                              TextButton.icon(
+                                onPressed: guardando ? null : _cargar,
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Actualizar stock'),
                               ),
-                              const Divider(height: 24),
                             ],
                           ),
                       ],
                     ),
-                    if (_error != null)
-                      StockSeccion(
-                        titulo: 'Revisar operación',
-                        icono: Icons.error_outline_rounded,
-                        children: [
-                          Text(
-                            _error!,
-                            style: const TextStyle(
-                              height: 1.5,
-                              color: stockRojo,
-                            ),
-                          ),
-                          TextButton.icon(
-                            onPressed: guardando ? null : _cargar,
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('Actualizar stock'),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
+                  ),
+          ),
+        ),
         bottomNavigationBar: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: SizedBox(
-              height: 54,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: 54),
               child: FilledButton.icon(
                 onPressed: guardando || _cargando || _productos.isEmpty
                     ? null
@@ -454,6 +473,8 @@ class _CrearSolicitudAbastecimientoViewState
     ValueChanged<String> cambiar,
     bool bloqueado,
   ) => DropdownButtonFormField<String>(
+    itemHeight: null,
+    isDense: false,
     value: valor,
     isExpanded: true,
     decoration: InputDecoration(
