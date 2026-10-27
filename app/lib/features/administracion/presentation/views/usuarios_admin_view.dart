@@ -610,100 +610,112 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
   /// Resume un usuario con avatar, cargo/rol, correo y áreas.
   /// Tocar la tarjeta o el ojo abre sus datos completos; el lápiz edita y el icono
   /// de persona habilita o deshabilita (con confirmación).
-  Widget _tarjeta(UsuarioAdministrativo u) => TarjetaCatalogo(
-    principal: CatalogoEstilo.rojo,
-    pastel: CatalogoEstilo.pastel,
-    onTap: () => _detalle(u),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          FilaDetalleAdaptable(
-            principales: [
-              CircleAvatar(
-                radius: 23,
-                backgroundColor: CatalogoEstilo.rojo,
-                child: Text(
-                  u.iniciales,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+  Widget _tarjeta(UsuarioAdministrativo u) {
+    final tema = PaletaTarjeta.usuario(u.rol);
+    return TarjetaCatalogo(
+      principal: tema.principal,
+      pastel: tema.suave,
+      diseno: DisenoTarjeta.usuario,
+      onTap: () => _detalle(u),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            FilaDetalleAdaptable(
+              principales: [
+                CircleAvatar(
+                  radius: 23,
+                  backgroundColor: tema.principal,
+                  child: Text(
+                    u.iniciales,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      u.nombreCompleto,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: CatalogoEstilo.texto,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        u.nombreCompleto,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: CatalogoEstilo.texto,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        u.cargo.isEmpty ? u.rolVisible : u.cargo,
+                        style: const TextStyle(fontSize: 12, height: 1.4),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              detalle: _etiquetaEstado(u.activo),
+            ),
+            const SizedBox(height: 14),
+            _linea(
+              Icons.alternate_email_rounded,
+              u.usuario.isEmpty ? 'Usuario por definir' : u.usuario,
+              color: tema.principal,
+            ),
+            const SizedBox(height: 8),
+            _linea(Icons.mail_outline_rounded, u.correo, color: tema.principal),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _chip(
+                  u.rolVisible,
+                  icono: Icons.badge_outlined,
+                  color: tema.principal,
+                ),
+                ...u.areas
+                    .take(2)
+                    .map(
+                      (a) => _chip(
+                        _nombreArea(a),
+                        icono: Icons.apartment_rounded,
+                        color: tema.principal,
                       ),
                     ),
-                    const SizedBox(height: 5),
-                    Text(
-                      u.cargo.isEmpty ? u.rolVisible : u.cargo,
-                      style: const TextStyle(fontSize: 12, height: 1.4),
-                    ),
-                  ],
+                if (u.areas.length > 2) _chip('+${u.areas.length - 2} áreas'),
+                if (u.areas.isEmpty) _chip('Sin áreas asignadas'),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Divider(color: Color(0xFFEEEEEE)),
+            AccionesAdaptables(
+              anchoMinimo: 80,
+              acciones: [
+                _accion(
+                  'Ver detalle del usuario',
+                  Icons.visibility_outlined,
+                  tema.principal,
+                  () => _detalle(u),
                 ),
-              ),
-            ],
-            detalle: _etiquetaEstado(u.activo),
-          ),
-          const SizedBox(height: 14),
-          _linea(
-            Icons.alternate_email_rounded,
-            u.usuario.isEmpty ? 'Usuario por definir' : u.usuario,
-          ),
-          const SizedBox(height: 8),
-          _linea(Icons.mail_outline_rounded, u.correo),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              _chip(u.rolVisible, icono: Icons.badge_outlined),
-              ...u.areas
-                  .take(2)
-                  .map(
-                    (a) =>
-                        _chip(_nombreArea(a), icono: Icons.apartment_rounded),
-                  ),
-              if (u.areas.length > 2) _chip('+${u.areas.length - 2} áreas'),
-              if (u.areas.isEmpty) _chip('Sin áreas asignadas'),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Divider(color: Color(0xFFEEEEEE)),
-          AccionesAdaptables(
-            anchoMinimo: 80,
-            acciones: [
-              _accion(
-                'Ver detalle del usuario',
-                Icons.visibility_outlined,
-                CatalogoEstilo.rojo,
-                () => _detalle(u),
-              ),
-              _accion(
-                'Editar usuario',
-                Icons.edit_outlined,
-                CatalogoEstilo.rojo,
-                () => _editar(u),
-              ),
-              _accionEstado(u),
-            ],
-          ),
-        ],
+                _accion(
+                  'Editar usuario',
+                  Icons.edit_outlined,
+                  tema.principal,
+                  () => _editar(u),
+                ),
+                _accionEstado(u),
+              ],
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 
   /// Botón de icono de tarjeta con tooltip, hover y objetivo táctil de 48 px.
   /// Con `alPresionar` nulo aparece deshabilitado.
@@ -748,9 +760,13 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
   }
 
   /// Dibuja una línea compacta de icono/texto; el detalle conserva el valor completo.
-  Widget _linea(IconData icono, String texto) => Row(
+  Widget _linea(
+    IconData icono,
+    String texto, {
+    Color color = CatalogoEstilo.rojo,
+  }) => Row(
     children: [
-      Icon(icono, color: CatalogoEstilo.rojo, size: 17),
+      Icon(icono, color: color, size: 17),
       const SizedBox(width: 9),
       Expanded(
         child: Text(
@@ -767,7 +783,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
   Widget _etiquetaEstado(bool activo) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
     decoration: BoxDecoration(
-      color: activo ? CatalogoEstilo.pastel : const Color(0xFFEEEEEE),
+      color: activo ? const Color(0xFFEDF7EF) : const Color(0xFFEEEEEE),
       borderRadius: BorderRadius.circular(8),
     ),
     child: Text(
@@ -775,23 +791,28 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
       style: TextStyle(
         fontSize: 10,
         fontWeight: FontWeight.w600,
-        color: activo ? CatalogoEstilo.rojo : const Color(0xFF66666E),
+        color: activo ? const Color(0xFF2E7D32) : const Color(0xFF66666E),
       ),
     ),
   );
 
   /// Construye una etiqueta compacta de rol o área para las tarjetas y el detalle.
-  Widget _chip(String texto, {IconData? icono}) => Container(
+  Widget _chip(
+    String texto, {
+    IconData? icono,
+    Color color = CatalogoEstilo.rojo,
+  }) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
     decoration: BoxDecoration(
-      color: const Color(0xFFF5F5F5),
+      color: Colors.white,
+      border: Border.all(color: color.withValues(alpha: .18)),
       borderRadius: BorderRadius.circular(8),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (icono != null) ...[
-          Icon(icono, size: 14, color: CatalogoEstilo.rojo),
+          Icon(icono, size: 14, color: color),
           const SizedBox(width: 5),
         ],
         Flexible(

@@ -523,8 +523,11 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     descripcion: f.descripcion,
     icono: f.tipo == 'SEGURO' ? Icons.shield_outlined : Icons.handshake_rounded,
     activo: f.activo,
-    detalle:
-        '${f.porcentaje.toStringAsFixed(2)} % sobre Kairos · ${f.medicamentos.length} medicamentos incluidos',
+    tema: PaletaTarjeta.financiamiento(f.tipo),
+    diseno: f.tipo == 'SEGURO' ? DisenoTarjeta.seguro : DisenoTarjeta.convenio,
+    porcentaje:
+        '${f.porcentaje.toStringAsFixed(f.porcentaje % 1 == 0 ? 0 : 2)} %',
+    detalle: '${f.medicamentos.length} medicamentos incluidos',
     editar: () => _editar(financiamiento: f),
     estado: () => _accion(
       entidad: 'FINANCIAMIENTO',
@@ -555,11 +558,14 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     required VoidCallback estado,
     required VoidCallback eliminar,
     TemaArea? tema,
+    DisenoTarjeta diseno = DisenoTarjeta.area,
+    String? porcentaje,
   }) => Padding(
     padding: const EdgeInsets.only(bottom: 14),
     child: TarjetaCatalogo(
       principal: tema?.principal ?? CatalogoEstilo.rojo,
       pastel: tema?.suave ?? CatalogoEstilo.pastel,
+      diseno: diseno,
       onTap: _operando ? null : editar,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -618,6 +624,21 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
                 ),
               ],
             ),
+            if (porcentaje != null) ...[
+              const SizedBox(height: 14),
+              Text(
+                porcentaje,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: tema?.principal ?? CatalogoEstilo.rojo,
+                ),
+              ),
+              const Text(
+                'Descuento sobre Kairos',
+                style: TextStyle(fontSize: 13, color: CatalogoEstilo.texto),
+              ),
+            ],
             if (descripcion.isNotEmpty) ...[
               const SizedBox(height: 14),
               Text(
