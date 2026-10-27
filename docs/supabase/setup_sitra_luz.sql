@@ -1404,7 +1404,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_profiles_nombre_usuario
   ON public.profiles(lower(btrim(nombre_usuario))) WHERE nombre_usuario IS NOT NULL;
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS hu020_nombre_usuario_check;
 ALTER TABLE public.profiles ADD CONSTRAINT hu020_nombre_usuario_check
-  CHECK (nombre_usuario IS NULL OR nombre_usuario ~ '^[a-z0-9][a-z0-9_.-]{2,31}$');
+  -- Conserva nombres históricos; exige al menos una letra en altas/actualizaciones.
+  CHECK (nombre_usuario IS NULL OR (
+    nombre_usuario ~ '^[A-Za-z0-9][A-Za-z0-9_.-]{2,31}$'
+    AND nombre_usuario ~ '[A-Za-z]'
+  )) NOT VALID;
 
 -- Selección explícita: nunca devuelve fcm_token, auth.users ni contraseñas.
 -- RPC de solo lectura para Administrador activo: recibe desplazamiento y tamaño
@@ -1471,12 +1475,12 @@ BEGIN
     RAISE EXCEPTION 'Escribe los apellidos (2 a 80 caracteres).';
   END IF;
 
-  v_usuario := lower(btrim(COALESCE(p_datos->>'nombre_usuario', '')));
-  IF v_usuario !~ '^[a-z0-9][a-z0-9_.-]{2,31}$' THEN
-    RAISE EXCEPTION 'El nombre de usuario debe tener 3 a 32 caracteres: minúsculas, números, punto, guion o guion bajo.';
+  v_usuario := btrim(COALESCE(p_datos->>'nombre_usuario', ''));
+  IF v_usuario !~ '^[A-Za-z0-9][A-Za-z0-9_.-]{2,31}$' OR v_usuario !~ '[A-Za-z]' THEN
+    RAISE EXCEPTION 'El nombre de usuario debe tener 3 a 32 caracteres e incluir al menos una letra. Se permiten letras, números, punto, guion o guion bajo.';
   END IF;
   IF EXISTS (SELECT 1 FROM public.profiles
-             WHERE lower(btrim(nombre_usuario)) = v_usuario AND id IS DISTINCT FROM p_id) THEN
+             WHERE lower(btrim(nombre_usuario)) = lower(v_usuario) AND id IS DISTINCT FROM p_id) THEN
     RAISE EXCEPTION 'Ese nombre de usuario ya está registrado.';
   END IF;
 
@@ -2040,12 +2044,12 @@ BEGIN
     RAISE EXCEPTION 'Escribe los apellidos (2 a 80 caracteres).';
   END IF;
 
-  v_usuario := lower(btrim(COALESCE(p_datos->>'nombre_usuario', '')));
-  IF v_usuario !~ '^[a-z0-9][a-z0-9_.-]{2,31}$' THEN
-    RAISE EXCEPTION 'El nombre de usuario debe tener 3 a 32 caracteres: minúsculas, números, punto, guion o guion bajo.';
+  v_usuario := btrim(COALESCE(p_datos->>'nombre_usuario', ''));
+  IF v_usuario !~ '^[A-Za-z0-9][A-Za-z0-9_.-]{2,31}$' OR v_usuario !~ '[A-Za-z]' THEN
+    RAISE EXCEPTION 'El nombre de usuario debe tener 3 a 32 caracteres e incluir al menos una letra. Se permiten letras, números, punto, guion o guion bajo.';
   END IF;
   IF EXISTS (SELECT 1 FROM public.profiles
-             WHERE lower(btrim(nombre_usuario)) = v_usuario AND id IS DISTINCT FROM p_id) THEN
+             WHERE lower(btrim(nombre_usuario)) = lower(v_usuario) AND id IS DISTINCT FROM p_id) THEN
     RAISE EXCEPTION 'Ese nombre de usuario ya está registrado.';
   END IF;
 
@@ -2419,12 +2423,12 @@ BEGIN
     RAISE EXCEPTION 'Escribe los apellidos (2 a 80 caracteres).';
   END IF;
 
-  v_usuario := lower(btrim(COALESCE(p_datos->>'nombre_usuario', '')));
-  IF v_usuario !~ '^[a-z0-9][a-z0-9_.-]{2,31}$' THEN
-    RAISE EXCEPTION 'El nombre de usuario debe tener 3 a 32 caracteres: minúsculas, números, punto, guion o guion bajo.';
+  v_usuario := btrim(COALESCE(p_datos->>'nombre_usuario', ''));
+  IF v_usuario !~ '^[A-Za-z0-9][A-Za-z0-9_.-]{2,31}$' OR v_usuario !~ '[A-Za-z]' THEN
+    RAISE EXCEPTION 'El nombre de usuario debe tener 3 a 32 caracteres e incluir al menos una letra. Se permiten letras, números, punto, guion o guion bajo.';
   END IF;
   IF EXISTS (SELECT 1 FROM public.profiles
-             WHERE lower(btrim(nombre_usuario)) = v_usuario AND id IS DISTINCT FROM p_id) THEN
+             WHERE lower(btrim(nombre_usuario)) = lower(v_usuario) AND id IS DISTINCT FROM p_id) THEN
     RAISE EXCEPTION 'Ese nombre de usuario ya está registrado.';
   END IF;
 

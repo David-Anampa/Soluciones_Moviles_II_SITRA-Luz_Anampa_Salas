@@ -287,7 +287,8 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
                       'Nombre de usuario',
                       Icons.alternate_email_rounded,
                       validador: UsuarioValidadores.nombreUsuario,
-                      ayuda: 'Minúsculas, números, punto, guion o guion bajo.',
+                      ayuda:
+                          'Mayúsculas y minúsculas, números; al menos una letra. También punto, guion y guion bajo.',
                     ),
                     _campo(
                       _correo,

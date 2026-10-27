@@ -26,13 +26,34 @@ void main() {
   });
 
   group('UsuarioValidadores.nombreUsuario', () {
-    test('acepta minúsculas, números y separadores permitidos', () {
-      for (final v in ['dav', 'david.anampa', 'd_a-1', '1abc']) {
+    test('acepta letras de ambas cajas, números y separadores permitidos', () {
+      for (final v in [
+        'dav',
+        'david.anampa',
+        'd_a-1',
+        '1abc',
+        'Dav',
+        'JHuancune',
+        'ABC',
+        'WALTER',
+        'ABC123',
+        '123A',
+      ]) {
         expect(UsuarioValidadores.nombreUsuario(v), isNull, reason: v);
       }
     });
-    test('rechaza mayúsculas, espacios, cortos y largos', () {
-      for (final v in ['Da', 'ab', 'Dav', 'da vid', '.abc', 'a' * 33, '']) {
+    test('rechaza valores sin letras, espacios y longitud inválida', () {
+      for (final v in [
+        'Da',
+        'ab',
+        '123',
+        '123456',
+        '12_-',
+        'da vid',
+        '.abc',
+        'a' * 33,
+        '',
+      ]) {
         expect(UsuarioValidadores.nombreUsuario(v), isNotNull, reason: v);
       }
     });
@@ -67,7 +88,7 @@ void main() {
   });
 
   group('UsuarioBorrador.toJson', () {
-    test('limpia espacios y normaliza a minúsculas los identificadores', () {
+    test('limpia espacios y conserva las mayúsculas del nombre de usuario', () {
       const borrador = UsuarioBorrador(
         nombres: ' Ana ',
         apellidos: ' Pérez ',
@@ -79,7 +100,7 @@ void main() {
       expect(borrador.toJson(), {
         'nombres': 'Ana',
         'apellidos': 'Pérez',
-        'nombre_usuario': 'ana.perez',
+        'nombre_usuario': 'Ana.Perez',
         'cargo': 'Técnica',
         'rol': 'ENFERMERIA',
         'areas': ['SOP'],

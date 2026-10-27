@@ -28,7 +28,7 @@ class UsuarioBorrador {
   Map<String, dynamic> toJson() => {
     'nombres': nombres.trim(),
     'apellidos': apellidos.trim(),
-    'nombre_usuario': nombreUsuario.trim().toLowerCase(),
+    'nombre_usuario': nombreUsuario.trim(),
     'cargo': cargo.trim(),
     'rol': rol,
     'areas': areas,

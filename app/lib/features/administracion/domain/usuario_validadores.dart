@@ -9,7 +9,7 @@ class UsuarioValidadores {
   UsuarioValidadores._();
 
   static final _correo = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-  static final _usuario = RegExp(r'^[a-z0-9][a-z0-9_.-]{2,31}$');
+  static final _usuario = RegExp(r'^[A-Za-z0-9][A-Za-z0-9_.-]{2,31}$');
   static const longitudMinimaClave = 8;
   static const longitudMaximaNombre = 80;
 
@@ -23,12 +23,15 @@ class UsuarioValidadores {
     return null;
   }
 
-  /// Valida el nombre de usuario: 3 a 32 caracteres en minúsculas, números, `.`, `-` o `_`.
+  /// Admite mayúsculas, minúsculas y números; exige una letra y conserva los separadores existentes.
   static String? nombreUsuario(String? valor) {
     final texto = (valor ?? '').trim();
     if (texto.isEmpty) return 'Escribe el nombre de usuario.';
     if (!_usuario.hasMatch(texto)) {
-      return '3 a 32 caracteres: minúsculas, números, punto, guion o guion bajo.';
+      return '3 a 32 caracteres: letras, números, punto, guion o guion bajo.';
+    }
+    if (!RegExp(r'[A-Za-z]').hasMatch(texto)) {
+      return 'Incluye al menos una letra.';
     }
     return null;
   }
