@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'diseno_adaptable.dart';
 
 enum TipoMensaje { informacion, exito, advertencia, error }
 
@@ -88,7 +89,7 @@ class MensajesApp {
       );
   }
 
-  /// Modal para decisiones. Cancelar o cerrar nunca confirma la operación.
+  /// Confirma sin recortar el mensaje ni las acciones con letra grande o teclado.
   static Future<bool> confirmar(
     BuildContext context, {
     required String titulo,
@@ -100,65 +101,77 @@ class MensajesApp {
   }) async {
     return await showDialog<bool>(
           context: context,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: Colors.white,
-            surfaceTintColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
-            title: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(9),
-                  decoration: BoxDecoration(
-                    color: fondo(tipo),
-                    borderRadius: BorderRadius.circular(12),
+          builder: (ctx) => DialogoAdaptable(
+            anchoMaximo: 520,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(9),
+                        decoration: BoxDecoration(
+                          color: fondo(tipo),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(icono(tipo), color: color(tipo), size: 26),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Semantics(
+                          header: true,
+                          child: Text(
+                            titulo,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF262630),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  child: Icon(icono(tipo), color: color(tipo), size: 26),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    titulo,
+                  const SizedBox(height: 16),
+                  Text(
+                    mensaje,
                     style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF262630),
+                      fontSize: 14,
+                      height: 1.5,
+                      color: Color(0xFF424242),
                     ),
                   ),
-                ),
-              ],
-            ),
-            content: Text(
-              mensaje,
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.5,
-                color: Color(0xFF424242),
+                  const SizedBox(height: 20),
+                  AccionesAdaptables(
+                    acciones: [
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFF616161),
+                          minimumSize: const Size(48, 48),
+                        ),
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: Text(cancelar),
+                      ),
+                      FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: destructivo
+                              ? color(TipoMensaje.error)
+                              : color(tipo),
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(48, 48),
+                        ),
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: Text(accion),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            actions: [
-              TextButton(
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF616161),
-                  minimumSize: const Size(48, 48),
-                ),
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(cancelar),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: destructivo
-                      ? color(TipoMensaje.error)
-                      : color(tipo),
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(48, 48),
-                ),
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(accion),
-              ),
-            ],
           ),
         ) ==
         true;

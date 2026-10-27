@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../data/catalogos_repository.dart';
 import 'catalogo_estilo.dart';
 import 'selector_tema_area.dart';
@@ -513,89 +514,68 @@ class CatalogoDialogo extends StatelessWidget {
     required this.child,
   });
 
-  /// Construye el modal con cabecera y acciones visibles y formulario con scroll.
-  /// Mientras se guarda impide cerrar/reenviar para evitar operaciones duplicadas.
+  /// Desplaza también cabecera y acciones si el teclado o el texto reducen el alto.
   @override
   Widget build(BuildContext context) => PopScope(
     canPop: !guardando,
-    child: Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 620),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              color: CatalogoEstilo.rojo,
-              padding: const EdgeInsets.all(18),
-              child: Row(
-                children: [
-                  Icon(icono, color: Colors.white),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      titulo,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
+    child: DialogoAdaptable(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            color: CatalogoEstilo.rojo,
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Icon(icono, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    titulo,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
                     ),
                   ),
-                  IconButton(
-                    tooltip: 'Cerrar',
-                    onPressed: guardando
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                    color: Colors.white,
-                    disabledColor: Colors.white54,
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                ],
-              ),
+                ),
+                IconButton(
+                  tooltip: 'Cerrar',
+                  onPressed: guardando ? null : () => Navigator.pop(context),
+                  color: Colors.white,
+                  disabledColor: Colors.white54,
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ],
             ),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: child,
-              ),
+          ),
+          Padding(padding: const EdgeInsets.all(16), child: child),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: AccionesAdaptables(
+              acciones: [
+                TextButton(
+                  onPressed: guardando ? null : () => Navigator.pop(context),
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton.icon(
+                  onPressed: guardando ? null : guardar,
+                  icon: guardando
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.check_rounded, size: 20),
+                  label: Text(guardando ? 'Guardando…' : 'Guardar'),
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: guardando
-                          ? null
-                          : () => Navigator.of(context).pop(),
-                      child: const Text('Cancelar'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: guardando ? null : guardar,
-                      icon: guardando
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.check_rounded, size: 20),
-                      label: Text(guardando ? 'Guardando…' : 'Guardar'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     ),
   );
