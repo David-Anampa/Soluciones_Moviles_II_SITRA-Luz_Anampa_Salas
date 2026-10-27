@@ -908,30 +908,62 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                     ),
                     const SizedBox(height: 16),
                     _seccionDetalle('Cuenta', Icons.alternate_email_rounded, [
-                      _dato('Nombre de usuario', u.usuario),
-                      _dato('Correo electrónico', u.correo),
+                      _dato(
+                        Icons.alternate_email_rounded,
+                        'Nombre de usuario',
+                        u.usuario,
+                      ),
+                      _dato(
+                        Icons.mail_outline_rounded,
+                        'Correo electrónico',
+                        u.correo,
+                      ),
                     ]),
                     _seccionDetalle('Datos personales', Icons.badge_outlined, [
-                      _dato('Nombres', u.nombres),
-                      _dato('Apellidos', u.apellidos),
+                      _dato(Icons.person_outline_rounded, 'Nombres', u.nombres),
+                      _dato(Icons.badge_outlined, 'Apellidos', u.apellidos),
                       if (u.nombres.isEmpty && u.apellidos.isEmpty)
-                        _dato('Nombre completo registrado', u.nombreAnterior),
+                        _dato(
+                          Icons.account_box_outlined,
+                          'Nombre completo registrado',
+                          u.nombreAnterior,
+                        ),
                     ]),
                     _seccionDetalle(
                       'Asignación y permisos',
                       Icons.apartment_rounded,
                       [
-                        _dato('Rol', u.rolVisible),
-                        _dato('Cargo / ocupación', u.cargo),
+                        _dato(
+                          Icons.admin_panel_settings_outlined,
+                          'Rol',
+                          u.rolVisible,
+                        ),
+                        _dato(
+                          Icons.work_outline_rounded,
+                          'Cargo / ocupación',
+                          u.cargo,
+                        ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Áreas asignadas',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF777780),
-                              ),
+                            const Row(
+                              children: [
+                                Icon(
+                                  Icons.apartment_rounded,
+                                  size: 18,
+                                  color: CatalogoEstilo.rojo,
+                                ),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Áreas asignadas',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF777780),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 6),
                             if (u.areas.isEmpty)
@@ -962,17 +994,20 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                         Icons.medical_information_outlined,
                         [
                           _dato(
+                            Icons.school_outlined,
                             'Colegio profesional',
                             u.colegioNombre.isEmpty
                                 ? u.colegioCodigo
                                 : u.colegioNombre,
                           ),
                           _dato(
+                            Icons.verified_outlined,
                             'Número de colegiatura (${u.colegioCodigo})',
                             u.numeroColegiatura,
                           ),
                           if (u.especialidadCodigo.isNotEmpty)
                             _dato(
+                              Icons.medical_services_outlined,
                               'Especialidad / área profesional',
                               u.especialidadNombre.isEmpty
                                   ? u.especialidadCodigo
@@ -981,8 +1016,16 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                         ],
                       ),
                     _seccionDetalle('Registro', Icons.history_rounded, [
-                      _dato('Registrado', _fecha(u.creado)),
-                      _dato('Última actualización', _fecha(u.actualizado)),
+                      _dato(
+                        Icons.event_available_outlined,
+                        'Registrado',
+                        _fecha(u.creado),
+                      ),
+                      _dato(
+                        Icons.update_rounded,
+                        'Última actualización',
+                        _fecha(u.actualizado),
+                      ),
                     ]),
                   ],
                 ),
@@ -998,7 +1041,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
   Widget _seccionDetalle(String titulo, IconData icono, List<Widget> campos) =>
       Container(
         width: double.infinity,
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(bottom: 18),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: const Color(0xFFFAFAFA),
@@ -1024,7 +1067,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const Divider(height: 24, color: Color(0xFFFFDADA)),
             LayoutBuilder(
               builder: (context, limites) {
                 final dosColumnas =
@@ -1047,23 +1090,36 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
         ),
       );
 
-  /// Muestra etiqueta y valor seleccionable, usando Sin registrar cuando está vacío.
-  Widget _dato(String etiqueta, String valor) => Padding(
-    padding: EdgeInsets.zero,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          etiqueta,
-          style: const TextStyle(fontSize: 12, color: Color(0xFF777780)),
+  /// Identifica cada campo con icono y conserva el valor seleccionable completo.
+  Widget _dato(IconData icono, String etiqueta, String valor) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        padding: const EdgeInsets.all(7),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(9),
         ),
-        const SizedBox(height: 6),
-        SelectableText(
-          valor.isEmpty ? 'Sin registrar' : valor,
-          style: const TextStyle(fontSize: 14, color: CatalogoEstilo.texto),
+        child: Icon(icono, size: 18, color: CatalogoEstilo.rojo),
+      ),
+      const SizedBox(width: 10),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              etiqueta,
+              style: const TextStyle(fontSize: 12, color: Color(0xFF777780)),
+            ),
+            const SizedBox(height: 5),
+            SelectableText(
+              valor.isEmpty ? 'Sin registrar' : valor,
+              style: const TextStyle(fontSize: 14, color: CatalogoEstilo.texto),
+            ),
+          ],
         ),
-      ],
-    ),
+      ),
+    ],
   );
 
   /// Formatea una fecha en la zona horaria del dispositivo como día/mes/año y hora.
