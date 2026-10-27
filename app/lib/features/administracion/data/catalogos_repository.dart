@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/network/diagnostico_red.dart';
 
 class AreaCatalogo {
   final String id, codigo, nombre, descripcion;
@@ -90,8 +92,26 @@ class MedicamentoCobertura {
 
 /// HU-012: lecturas reales y escrituras atómicas; no utiliza datos de demostración.
 class CatalogosRepository {
+  final SupabaseClient? _customClient;
+  final Duration _limiteEscritura;
+
+  CatalogosRepository({
+    SupabaseClient? client,
+    Duration limiteEscritura = const Duration(seconds: 20),
+  }) : _customClient = client,
+       _limiteEscritura = limiteEscritura;
+
   /// Obtiene el cliente compartido de Supabase con la sesión activa del usuario.
-  SupabaseClient get _client => Supabase.instance.client;
+  SupabaseClient get _client => _customClient ?? Supabase.instance.client;
+
+  /// Limita la espera del formulario, incluida la renovación automática del token.
+  /// No reintenta escrituras: agotar el plazo no implica que el servidor canceló
+  /// la operación. Los registros de diagnóstico no incluyen datos del formulario.
+  Future<void> _escribir(String operacion, Future<void> Function() ejecutar) =>
+      DiagnosticoRed.medir(
+        'Catalogos.$operacion',
+        () => ejecutar().timeout(_limiteEscritura),
+      );
 
   /// Consulta areas ordenadas por nombre, incluyendo habilitadas y deshabilitadas.
   /// Devuelve los campos necesarios para tarjetas y edición, sin modificar datos.
@@ -140,7 +160,7 @@ class CatalogosRepository {
     String entidad,
     Map<String, dynamic> datos, {
     String? id,
-  }) async {
+  }) => _escribir('guardar', () async {
     if (entidad == 'AREA') {
       await _client.rpc(
         'guardar_area_con_tema',
@@ -157,34 +177,39 @@ class CatalogosRepository {
         'p_datos': datos,
       },
     );
-  }
+  });
 
   /// Envía la nueva habilitación a la RPC; no elimina registros ni asociaciones.
   /// El bool activo representa el estado deseado, no una inversión en el servidor.
-  Future<void> cambiarEstado(String entidad, String id, bool activo) async {
-    await _client.rpc(
-      'administrar_catalogo_hu012',
-      params: {
-        'p_entidad': entidad,
-        'p_accion': 'ESTADO',
-        'p_id': id,
-        'p_datos': {'activo': activo},
-      },
-    );
-  }
+  Future<void> cambiarEstado(String entidad, String id, bool activo) =>
+      _escribir('cambiarEstado', () async {
+        await _client.rpc(
+          'administrar_catalogo_hu012',
+          params: {
+            'p_entidad': entidad,
+            'p_accion': 'ESTADO',
+            'p_id': id,
+            'p_datos': {'activo': activo},
+          },
+        );
+      });
 
   /// Solicita eliminar el registro identificado por entidad e id.
   /// La RPC comprueba asociaciones y permisos; si existen, rechaza el borrado.
-  Future<void> eliminar(String entidad, String id) async {
-    await _client.rpc(
-      'administrar_catalogo_hu012',
-      params: {'p_entidad': entidad, 'p_accion': 'ELIMINAR', 'p_id': id},
-    );
-  }
+  Future<void> eliminar(String entidad, String id) =>
+      _escribir('eliminar', () async {
+        await _client.rpc(
+          'administrar_catalogo_hu012',
+          params: {'p_entidad': entidad, 'p_accion': 'ELIMINAR', 'p_id': id},
+        );
+      });
 
   /// Traduce fallos de autenticación, permisos, estructura y asociaciones para la UI.
   /// Solo transforma el mensaje: no oculta el error con registros de demostración.
   static String mensajeError(Object error) {
+    if (error is TimeoutException) {
+      return 'No llegó la confirmación de Supabase a tiempo. El cambio podría haberse guardado. Cierra el formulario y actualiza la lista antes de volver a intentarlo.';
+    }
     if (error is AuthException) return error.message;
     if (error is PostgrestException) {
       if (error.message.contains('tema_color') ||
