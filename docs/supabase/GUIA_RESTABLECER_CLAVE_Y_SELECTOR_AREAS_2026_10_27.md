@@ -26,7 +26,9 @@ También puede desplegarse desde el editor de Edge Functions del Dashboard de Su
 
 Se utilizan las variables de entorno del servidor `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY`, igual que en crear-usuario. No copiar la clave service-role a Flutter. Conservar la verificación JWT del despliegue.
 
-**No se desplegó la función ni se cambiaron contraseñas reales durante esta entrega.** No requiere nueva migración SQL: utiliza `auditoria_trazabilidad` y sus columnas/eventos de texto existentes. Por eso no cambia el setup. La migración anterior de nombres de usuario sigue siendo independiente.
+**Actualización del 27/10: función desplegada por solicitud del usuario.** `restablecer-clave` está ACTIVE, versión 1, en `nedeqnvpkalrchswrapr`, con verificación JWT habilitada. Se desplegó mediante la API de Supabase, sin Docker. Una solicitud sin sesión devolvió HTTP 401. No se cambiaron contraseñas reales: queda pendiente verificar el cambio autenticado desde la app con una cuenta de prueba.
+
+No requiere nueva migración SQL: utiliza `auditoria_trazabilidad` y sus columnas/eventos de texto existentes. Por eso no cambia el setup. La migración anterior de nombres de usuario sigue siendo independiente.
 
 ## Áreas asignadas
 
