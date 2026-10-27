@@ -301,30 +301,43 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                                     style: TextStyle(fontSize: 13, height: 1.5),
                                   ),
                                   const SizedBox(height: 18),
-                                  AccionesAdaptables(
-                                    anchoMinimo: 150,
-                                    acciones: [
-                                      _contador(
-                                        'Todos',
-                                        _usuarios.length,
-                                        'TODOS',
-                                        Icons.groups_outlined,
-                                      ),
-                                      _contador(
-                                        'Habilitados',
-                                        _usuarios.where((u) => u.activo).length,
-                                        'ACTIVOS',
-                                        Icons.person_outline_rounded,
-                                      ),
-                                      _contador(
-                                        'Deshabilitados',
-                                        _usuarios
-                                            .where((u) => !u.activo)
-                                            .length,
-                                        'INACTIVOS',
-                                        Icons.person_off_outlined,
-                                      ),
-                                    ],
+                                  IntrinsicHeight(
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        Expanded(
+                                          child: _contador(
+                                            'Todos',
+                                            _usuarios.length,
+                                            'TODOS',
+                                            Icons.groups_outlined,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: _contador(
+                                            'Habilitados',
+                                            _usuarios
+                                                .where((u) => u.activo)
+                                                .length,
+                                            'ACTIVOS',
+                                            Icons.person_outline_rounded,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: _contador(
+                                            'Deshabilitados',
+                                            _usuarios
+                                                .where((u) => !u.activo)
+                                                .length,
+                                            'INACTIVOS',
+                                            Icons.person_off_outlined,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                   const SizedBox(height: 18),
                                   TextField(
@@ -616,14 +629,16 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
       principal: tema.principal,
       pastel: tema.suave,
       diseno: DisenoTarjeta.usuario,
+      intensidad: u.rol == 'FARMACIA' ? .35 : 1,
       onTap: () => _detalle(u),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            FilaDetalleAdaptable(
-              principales: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 CircleAvatar(
                   radius: 23,
                   backgroundColor: tema.principal,
@@ -652,13 +667,21 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                       const SizedBox(height: 5),
                       Text(
                         u.cargo.isEmpty ? u.rolVisible : u.cargo,
-                        style: const TextStyle(fontSize: 12, height: 1.4),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          height: 1.4,
+                          color: Color(0xFF30343F),
+                        ),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 48,
+                  child: Semantics(toggled: u.activo, child: _accionEstado(u)),
+                ),
               ],
-              detalle: _etiquetaEstado(u.activo),
             ),
             const SizedBox(height: 14),
             _linea(
@@ -708,7 +731,6 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                   tema.principal,
                   () => _editar(u),
                 ),
-                _accionEstado(u),
               ],
             ),
           ],
@@ -818,7 +840,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
         Flexible(
           child: Text(
             texto,
-            style: const TextStyle(fontSize: 11),
+            style: const TextStyle(fontSize: 11, color: Color(0xFF30343F)),
             overflow: TextOverflow.ellipsis,
           ),
         ),

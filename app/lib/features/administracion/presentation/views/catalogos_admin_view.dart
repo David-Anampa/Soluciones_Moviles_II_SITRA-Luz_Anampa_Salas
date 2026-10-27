@@ -601,7 +601,7 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
                         subtitulo,
                         style: const TextStyle(
                           fontSize: 12,
-                          color: Color(0xFF555560),
+                          color: Color(0xFF30343F),
                         ),
                       ),
                     ],
@@ -631,7 +631,7 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
-                  color: tema?.principal ?? CatalogoEstilo.rojo,
+                  color: const Color(0xFF30343F),
                 ),
               ),
               const Text(
@@ -646,7 +646,7 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
                 style: const TextStyle(
                   fontSize: 13,
                   height: 1.5,
-                  color: Color(0xFF50505B),
+                  color: Color(0xFF30343F),
                 ),
               ),
             ],
@@ -656,7 +656,7 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
               style: TextStyle(
                 fontSize: 12,
                 height: 1.5,
-                color: tema?.principal ?? CatalogoEstilo.rojo,
+                color: const Color(0xFF30343F),
               ),
             ),
             const SizedBox(height: 8),

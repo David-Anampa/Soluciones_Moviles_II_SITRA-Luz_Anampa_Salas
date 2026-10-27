@@ -8,10 +8,10 @@ class PaletaTarjeta {
   static TemaArea usuario(String rol) => switch (rol) {
     'ALMACEN' => seguro,
     'FARMACIA' => const TemaArea(
-      'TURQUESA',
-      'Turquesa',
-      Color(0xFF007F79),
-      Color(0xFFE3FAF6),
+      'CELESTE',
+      'Celeste',
+      Color(0xFF1B6F96),
+      Color(0xFFE6F5FC),
     ),
     'ENFERMERIA' => const TemaArea(
       'LAVANDA',
@@ -43,6 +43,7 @@ class PaletaTarjeta {
 class TarjetaCatalogo extends StatelessWidget {
   final Color principal, pastel;
   final DisenoTarjeta diseno;
+  final double intensidad;
   final Widget child;
   final VoidCallback? onTap;
   const TarjetaCatalogo({
@@ -51,6 +52,7 @@ class TarjetaCatalogo extends StatelessWidget {
     required this.pastel,
     required this.child,
     this.diseno = DisenoTarjeta.area,
+    this.intensidad = 1,
     this.onTap,
   });
 
@@ -70,7 +72,7 @@ class TarjetaCatalogo extends StatelessWidget {
           child: IgnorePointer(
             child: ExcludeSemantics(
               child: CustomPaint(
-                painter: _FondoTarjeta(principal, pastel, diseno),
+                painter: _FondoTarjeta(principal, pastel, diseno, intensidad),
               ),
             ),
           ),
@@ -91,7 +93,8 @@ class TarjetaCatalogo extends StatelessWidget {
 class _FondoTarjeta extends CustomPainter {
   final Color color, pastel;
   final DisenoTarjeta diseno;
-  const _FondoTarjeta(this.color, this.pastel, this.diseno);
+  final double intensidad;
+  const _FondoTarjeta(this.color, this.pastel, this.diseno, this.intensidad);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -112,9 +115,9 @@ class _FondoTarjeta extends CustomPainter {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color.lerp(pastel, vivo, .55)!,
+            Color.lerp(pastel, vivo, .55 * intensidad)!,
             pastel,
-            Color.lerp(pastel, vivo, .75)!,
+            Color.lerp(pastel, vivo, .75 * intensidad)!,
           ],
           stops: const [0, .48, 1],
         ).createShader(rect),
@@ -127,7 +130,10 @@ class _FondoTarjeta extends CustomPainter {
               ? const Alignment(-.65, -.55)
               : const Alignment(.80, -.80),
           radius: 1.2,
-          colors: [vivo.withValues(alpha: .60), vivo.withValues(alpha: 0)],
+          colors: [
+            vivo.withValues(alpha: .60 * intensidad),
+            vivo.withValues(alpha: 0),
+          ],
         ).createShader(rect),
     );
     canvas.save();
@@ -163,7 +169,10 @@ class _FondoTarjeta extends CustomPainter {
             ..cubicTo(180 + d, 132, 310, 188 - d, 380, 100 - d)
             ..lineTo(380, 280)
             ..close();
-          canvas.drawPath(onda, Paint()..color = vivo.withValues(alpha: .18));
+          canvas.drawPath(
+            onda,
+            Paint()..color = vivo.withValues(alpha: .18 * intensidad),
+          );
           canvas.drawPath(onda, linea);
         }
       case DisenoTarjeta.convenio:
@@ -177,7 +186,7 @@ class _FondoTarjeta extends CustomPainter {
               ..lineTo(50 + d, 275)
               ..lineTo(-30 + d, 275)
               ..close(),
-            Paint()..color = vivo.withValues(alpha: .13),
+            Paint()..color = vivo.withValues(alpha: .13 * intensidad),
           );
           canvas.drawPath(
             Path()
@@ -203,5 +212,6 @@ class _FondoTarjeta extends CustomPainter {
   bool shouldRepaint(covariant _FondoTarjeta oldDelegate) =>
       oldDelegate.color != color ||
       oldDelegate.pastel != pastel ||
-      oldDelegate.diseno != diseno;
+      oldDelegate.diseno != diseno ||
+      oldDelegate.intensidad != intensidad;
 }
