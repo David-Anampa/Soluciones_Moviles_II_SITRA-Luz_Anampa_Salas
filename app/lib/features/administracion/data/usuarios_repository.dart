@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
+import '../../../core/network/diagnostico_red.dart';
 import '../domain/usuario_borrador.dart';
 import '../domain/catalogos_profesionales.dart';
 import 'catalogos_repository.dart';
@@ -132,7 +133,13 @@ class UsuariosRepository {
 
   /// Lee catálogos reales, incluidos deshabilitados para conservar valores históricos.
   /// Una migración ausente se comunica; no se sustituyen datos por listas ficticias.
-  Future<CatalogosProfesionales> cargarCatalogosProfesionales() async {
+  Future<CatalogosProfesionales> cargarCatalogosProfesionales() =>
+      DiagnosticoRed.medir(
+        'Usuarios.catalogosProfesionales',
+        _cargarCatalogosProfesionales,
+      );
+
+  Future<CatalogosProfesionales> _cargarCatalogosProfesionales() async {
     final colegios = await _client
         .from('colegios_profesionales')
         .select('codigo,nombre,activo')
@@ -179,10 +186,13 @@ class UsuariosRepository {
   /// Administrador activo. Pagina la RPC y luego carga las áreas para los filtros.
   /// Solo si falta la RPC utiliza el esquema anterior y señala estructuraPendiente;
   /// los errores de permiso o red siguen propagándose a la vista.
-  Future<UsuariosConsulta> cargar() => _cargar().timeout(
-    const Duration(seconds: 20),
-    onTimeout: () => throw TimeoutException(
-      'La consulta de usuarios tardó demasiado. Revisa la conexión y pulsa Reintentar.',
+  Future<UsuariosConsulta> cargar() => DiagnosticoRed.medir(
+    'Usuarios.listado',
+    () => _cargar().timeout(
+      const Duration(seconds: 20),
+      onTimeout: () => throw TimeoutException(
+        'La consulta de usuarios tardó demasiado. Revisa la conexión y pulsa Reintentar.',
+      ),
     ),
   );
 
@@ -201,9 +211,9 @@ class UsuariosRepository {
       );
     }
     final resultados = await Future.wait<Object>([
-      _consultarPermisos(),
-      _consultarPerfiles(),
-      _consultarAreas(),
+      DiagnosticoRed.medir('Usuarios.listarPermisos', _consultarPermisos),
+      DiagnosticoRed.medir('Usuarios.listarPerfiles', _consultarPerfiles),
+      DiagnosticoRed.medir('Usuarios.listarAreas', _consultarAreas),
     ], eagerError: true);
     if (_client.auth.currentUser?.id != uid) {
       throw const AuthException('La sesión cambió. Vuelve a ingresar.');
@@ -380,25 +390,34 @@ class UsuariosRepository {
     String accion,
     String id,
     Map<String, dynamic> datos,
-  ) async {
+  ) => DiagnosticoRed.medir('Usuarios.$accion', () async {
     if (accion == 'EDITAR') await _verificarContratoProfesional();
-    await _client.rpc(
-      'administrar_usuario_con_kits',
-      params: {'p_accion': accion, 'p_id': id, 'p_datos': datos},
+    await DiagnosticoRed.medir(
+      'Usuarios.actualizarPerfilRPC',
+      () => _client.rpc(
+        'administrar_usuario_con_kits',
+        params: {'p_accion': accion, 'p_id': id, 'p_datos': datos},
+      ),
     );
-  }
+  });
 
   /// Evita que las RPC antiguas ignoren silenciosamente la colegiatura enviada.
   /// El Administrador autenticado debe aparecer al menos en una fila del listado.
   Future<void> _verificarContratoProfesional() async {
     // Evita que una función antigua ignore silenciosamente el permiso enviado.
-    await _client.rpc(
-      'listar_permisos_kits',
-      params: {'p_desde': 0, 'p_limite': 1},
+    await DiagnosticoRed.medir(
+      'Usuarios.verificarPermisosKits',
+      () => _client.rpc(
+        'listar_permisos_kits',
+        params: {'p_desde': 0, 'p_limite': 1},
+      ),
     );
-    final filas = await _client.rpc(
-      'listar_usuarios_hu020',
-      params: {'p_desde': 0, 'p_limite': 1},
+    final filas = await DiagnosticoRed.medir(
+      'Usuarios.verificarContratoPerfil',
+      () => _client.rpc(
+        'listar_usuarios_hu020',
+        params: {'p_desde': 0, 'p_limite': 1},
+      ),
     );
     if (filas is! List ||
         filas.isEmpty ||

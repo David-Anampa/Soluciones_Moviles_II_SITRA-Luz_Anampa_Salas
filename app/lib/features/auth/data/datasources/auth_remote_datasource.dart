@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../../core/network/diagnostico_red.dart';
 import '../models/user_model.dart';
 
 /// Excepción específica del módulo de autenticación
@@ -28,9 +28,12 @@ class AuthRemoteDataSource {
     required String password,
   }) async {
     try {
-      final response = await _supabase.auth.signInWithPassword(
-        email: email.trim(),
-        password: password,
+      final response = await DiagnosticoRed.medir(
+        'Sesion.validarCredenciales',
+        () => _supabase.auth.signInWithPassword(
+          email: email.trim(),
+          password: password,
+        ),
       );
 
       final user = response.user;
@@ -44,8 +47,8 @@ class AuthRemoteDataSource {
       // Sincronizar el token de notificaciones FCM con Supabase si está disponible
       try {
         await NotificationService.instance.syncTokenWithSupabase();
-      } catch (e) {
-        debugPrint('⚠️ No se pudo sincronizar token FCM tras login: $e');
+      } catch (e, stack) {
+        DiagnosticoRed.error('Sesion.sincronizarNotificaciones', e, stack, 0);
       }
 
       return userModel;
@@ -66,35 +69,40 @@ class AuthRemoteDataSource {
         throw const AuthException('Sin conexión a internet');
       }
       throw AuthException(_mapSupabaseAuthError(e.code ?? e.message));
-    } on PostgrestException catch (e) {
-      debugPrint('Error Postgrest al obtener perfil: ${e.message}');
+    } on PostgrestException catch (e, stack) {
+      DiagnosticoRed.error('Sesion.perfil', e, stack, 0);
       if (_isNetworkError('${e.message} ${e.details}')) {
         throw const AuthException('Sin conexión a internet');
       }
       throw const AuthException(
         'Error al cargar el perfil de usuario en la base de datos.',
       );
-    } catch (e) {
+    } catch (e, stack) {
       if (e is AuthException) rethrow;
       if (e is TimeoutException) {
         throw const AuthException(
           'La consulta del perfil tardó demasiado. Revisa la conexión y vuelve a intentar.',
         );
       }
-      debugPrint('Error inesperado en login: $e');
+      DiagnosticoRed.error('Sesion.iniciar', e, stack, 0);
       if (_isNetworkError(e.toString())) {
         throw const AuthException('Sin conexión a internet');
       }
-      throw AuthException('Error al iniciar sesión: ${e.toString()}');
+      throw const AuthException(
+        'No se pudo completar el inicio de sesión. Revisa la conexión y vuelve a intentar.',
+      );
     }
   }
 
   /// Cierra la sesión activa en Supabase
   Future<void> logout() async {
     try {
-      await _supabase.auth.signOut(scope: SignOutScope.local);
-    } catch (e) {
-      debugPrint('Error al cerrar sesión en Supabase: $e');
+      await DiagnosticoRed.medir(
+        'Sesion.cerrar',
+        () => _supabase.auth.signOut(scope: SignOutScope.local),
+      );
+    } catch (e, stack) {
+      DiagnosticoRed.error('Sesion.cerrar', e, stack, 0);
       throw const AuthException(
         'No se pudo cerrar la sesión. Revisa la conexión e inténtalo de nuevo.',
       );
@@ -157,7 +165,11 @@ class AuthRemoteDataSource {
   }
 
   /// Consulta la fila del usuario en la tabla `profiles` de Supabase
-  Future<UserModel> _getUserModel(String uid) async {
+  Future<UserModel> _getUserModel(String uid) =>
+      DiagnosticoRed.medir('Sesion.cargarPerfil', () => _consultarPerfil(uid));
+
+  /// Consulta el perfil; su identificador no se imprime en los registros.
+  Future<UserModel> _consultarPerfil(String uid) async {
     final response = await _supabase
         .from('profiles')
         .select()
