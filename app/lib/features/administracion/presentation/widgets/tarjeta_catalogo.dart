@@ -133,8 +133,8 @@ class _FondoTarjeta extends CustomPainter {
     // Luz elíptica central: aclara los datos sin borrar los extremos ni el patrón.
     canvas.save();
     canvas.translate(size.width * .47, size.height * .42);
-    // Conserva el 60% del diámetro anterior en ambos ejes (reducción del 40%).
-    canvas.scale(size.width * .384, size.height * .36);
+    // Reduce otro 15% el diámetro en ambos ejes respecto al halo anterior.
+    canvas.scale(size.width * .3264, size.height * .306);
     canvas.drawCircle(
       Offset.zero,
       1,
