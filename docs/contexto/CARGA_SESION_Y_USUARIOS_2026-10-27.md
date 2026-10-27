@@ -25,4 +25,16 @@ La comprobación HTTP sin credenciales desde la computadora alcanzó el servicio
 
 ## Comprobar en el dispositivo
 
+### Diagnóstico posterior con el emulador ya abierto
+
+Se comprobó HTTPS desde Android sin credenciales: Google respondió 204 (~1159 ms), y el endpoint público de Auth respondió 401 (~678 ms). Desde Windows, Auth con la clave pública respondió 200 (~1032 ms); REST sin sesión respondió 401 (~762 ms).
+
+En la VM Dart de la app se hizo una petición pública a la URL raíz: un cliente HTTP nuevo produjo una respuesta; la misma petición a través del cliente compartido de Supabase permaneció pendiente en dos inspecciones separadas. No se leyeron credenciales, perfiles ni cuerpos de respuesta mediante el depurador.
+
+La inspección remota de solo lectura no mostró conexiones bloqueadas. Se verificaron las columnas profesionales, nombres y permiso de Kits en profiles, y las firmas de `listar_permisos_kits`, `listar_usuarios_hu020`, `administrar_usuario_con_kits` y `registrar_perfil_usuario_hu021`: coinciden con las llamadas del repositorio. También se confirmó la instalación de reglas de áreas por rol y nombres con mayúsculas. No se encontró un desfase de contrato en ese flujo; no equivale a validar todas las consultas de la aplicación.
+
+Se corrigió el transporte por defecto: usa un cliente propio por petición y lo cierra al terminar/abandonar la lectura o agotar el tiempo. El cliente general libera todos sus transportes al cerrarse. La inyección de clientes para pruebas se conserva. No reintenta escrituras ni interpreta un timeout como rollback en PostgreSQL. No cambian SQL, RLS, contraseñas ni setup.
+
+Doce pruebas específicas aprobadas: tres de transporte (aislamiento tras timeout, cuerpo detenido y cierre), siete de sesión/listado y dos de registros seguros. `flutter analyze --no-pub` sin incidencias. Prueba nueva externa: `pruebas-responsive/transporte_aislado_test.dart` en el mismo directorio externo indicado anteriormente. Falta aceptación después de reiniciar la app; no afirmar que el login autenticado ya se probó en el dispositivo.
+
 Detener y volver a ejecutar `flutter run`: el cliente HTTP se configura en `main`, por lo que Hot Reload no basta. Cerrar sesión y volver a entrar; abrir Gestión de usuarios. Si sigue fallando la conexión, el formulario debe terminar con un mensaje y permitir reintentar. Anotar ese mensaje y el tiempo aproximado para separar problemas del emulador/red de errores del servidor.
