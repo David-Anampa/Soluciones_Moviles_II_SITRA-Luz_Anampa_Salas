@@ -2,6 +2,8 @@
 
 ## Comportamiento
 
+Acuerdo final de la sesión: temporalmente aceptar correo o nombre de usuario con contraseña, porque las cuentas de prueba usan correo. Cuando se incorporen los usuarios finales, la interfaz deberá pasar a usuario y contraseña. Esa transición futura no se aplica todavía. El correo seguirá siendo el identificador interno de Supabase Auth, aunque luego no se solicite en el formulario.
+
 El campo de acceso acepta **Correo o nombre de usuario**. Con correo conserva el acceso directo a Supabase Auth. Con nombre usa `login-usuario`, que encuentra el correo únicamente en el servidor y verifica la contraseña con Auth.
 
 Los nombres no distinguen mayúsculas/minúsculas. Se escapan los comodines de ILIKE para que un guion bajo sea literal. Se permiten identificadores numéricos históricos al iniciar sesión; la regla actual de creación de nombres sigue exigiendo una letra. No se aplica la longitud mínima de contraseñas nuevas al login, para conservar accesos históricos válidos.
