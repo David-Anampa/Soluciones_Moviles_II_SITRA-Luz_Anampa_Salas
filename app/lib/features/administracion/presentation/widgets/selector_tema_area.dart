@@ -28,33 +28,60 @@ class SelectorTemaArea extends StatelessWidget {
           style: TextStyle(fontSize: 12, color: Color(0xFF64646D), height: 1.4),
         ),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: TemaArea.opciones
-              .map(
-                (opcion) => ChoiceChip(
-                  label: Text(opcion.nombre),
-                  selected: valor == opcion.codigo,
-                  selectedColor: opcion.suave,
-                  backgroundColor: Colors.white,
-                  labelStyle: TextStyle(color: opcion.principal, fontSize: 13),
-                  checkmarkColor: opcion.principal,
-                  avatar: CircleAvatar(
-                    backgroundColor: opcion.principal,
-                    radius: 9,
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF3F3F3),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: TemaArea.opciones
+                .map(
+                  (opcion) => Semantics(
+                    button: true,
+                    selected: valor == opcion.codigo,
+                    label: opcion.nombre,
+                    child: Tooltip(
+                      message: opcion.nombre,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          hoverColor: opcion.principal.withValues(alpha: 0.12),
+                          onTap: onChanged == null
+                              ? null
+                              : () => onChanged!(opcion.codigo),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            width: 48,
+                            height: 48,
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: valor == opcion.codigo
+                                    ? opcion.principal
+                                    : Colors.transparent,
+                                width: 2,
+                              ),
+                            ),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: opcion.principal,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                  side: BorderSide(
-                    color: valor == opcion.codigo
-                        ? opcion.principal
-                        : const Color(0xFFE0E0E0),
-                  ),
-                  onSelected: onChanged == null
-                      ? null
-                      : (_) => onChanged!(opcion.codigo),
-                ),
-              )
-              .toList(),
+                )
+                .toList(),
+          ),
         ),
         const SizedBox(height: 16),
         ClipRRect(
