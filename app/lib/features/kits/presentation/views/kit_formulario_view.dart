@@ -592,10 +592,7 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                         cantidad: item.cantidad,
                                       ),
                                       const SizedBox(height: 8),
-                                      Wrap(
-                                        alignment: WrapAlignment.end,
-                                        crossAxisAlignment:
-                                            WrapCrossAlignment.center,
+                                      Row(
                                         children: [
                                           // Cantidad en otra fila para dar espacio al nombre completo.
                                           IconButton(
@@ -613,25 +610,28 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                                   )
                                                 : null,
                                           ),
-                                          Container(
-                                            constraints: const BoxConstraints(
-                                              minWidth: 36,
-                                            ),
-                                            alignment: Alignment.center,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFF5F5F5),
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-                                            child: Text(
-                                              '${item.cantidad}',
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.bold,
+                                          Expanded(
+                                            child: Container(
+                                              constraints: const BoxConstraints(
+                                                minWidth: 36,
+                                              ),
+                                              alignment: Alignment.center,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 4,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFF5F5F5),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: Text(
+                                                '${item.cantidad}',
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                             ),
                                           ),
