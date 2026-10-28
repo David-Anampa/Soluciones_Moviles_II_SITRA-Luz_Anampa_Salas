@@ -69,16 +69,18 @@ class StockSeccion extends StatelessWidget {
   final String titulo;
   final IconData icono;
   final List<Widget> children;
+  final bool compacta;
   const StockSeccion({
     super.key,
     required this.titulo,
     required this.icono,
     required this.children,
+    this.compacta = false,
   });
   @override
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.only(bottom: 20),
-    padding: const EdgeInsets.all(20),
+    padding: EdgeInsets.all(compacta ? 14 : 20),
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),
@@ -109,10 +111,10 @@ class StockSeccion extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: compacta ? 12 : 20),
         for (var i = 0; i < children.length; i++) ...[
           children[i],
-          if (i < children.length - 1) const SizedBox(height: 18),
+          if (i < children.length - 1) SizedBox(height: compacta ? 12 : 18),
         ],
       ],
     ),
@@ -121,7 +123,8 @@ class StockSeccion extends StatelessWidget {
 
 class StockContadores extends StatelessWidget {
   final StockUbicacionEntity item;
-  const StockContadores({super.key, required this.item});
+  final bool compacto;
+  const StockContadores({super.key, required this.item, this.compacto = false});
   @override
   Widget build(BuildContext context) => AccionesAdaptables(
     anchoMinimo: 80,
@@ -133,19 +136,19 @@ class StockContadores extends StatelessWidget {
     ],
   );
   Widget _dato(IconData icono, String nombre, int cantidad) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+    padding: EdgeInsets.symmetric(horizontal: 6, vertical: compacto ? 7 : 12),
     decoration: BoxDecoration(
       color: stockPastel,
       borderRadius: BorderRadius.circular(12),
     ),
     child: Column(
       children: [
-        Icon(icono, color: stockRojo, size: 21),
-        const SizedBox(height: 8),
+        Icon(icono, color: stockRojo, size: compacto ? 18 : 21),
+        SizedBox(height: compacto ? 3 : 8),
         Text(
           '$cantidad',
-          style: const TextStyle(
-            fontSize: 19,
+          style: TextStyle(
+            fontSize: compacto ? 16 : 19,
             fontWeight: FontWeight.w700,
             color: stockRojo,
           ),
