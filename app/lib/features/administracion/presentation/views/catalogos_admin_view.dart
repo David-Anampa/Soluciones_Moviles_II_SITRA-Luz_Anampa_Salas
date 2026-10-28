@@ -548,9 +548,6 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
 
   /// Compone el registro con el control de estado junto al nombre, sin etiqueta.
   /// La fila inferior reparte el ancho entre Editar y Eliminar; no hace consultas.
-  Widget _encabezadoTarjeta(DisenoTarjeta diseno, Widget child) =>
-      diseno == DisenoTarjeta.area ? child : DatosTarjeta(child: child);
-
   Widget _tarjeta({
     required String nombre,
     required String subtitulo,
@@ -577,74 +574,71 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _encabezadoTarjeta(
-              diseno,
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: tema?.principal ?? CatalogoEstilo.rojo,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(icono, color: Colors.white, size: 23),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: tema?.principal ?? CatalogoEstilo.rojo,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          nombre,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: CatalogoEstilo.texto,
-                          ),
+                  child: Icon(icono, color: Colors.white, size: 23),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        nombre,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: CatalogoEstilo.texto,
                         ),
-                        const SizedBox(height: 5),
-                        Container(
-                          padding: diseno == DisenoTarjeta.area
-                              ? const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                )
-                              : EdgeInsets.zero,
-                          decoration: diseno == DisenoTarjeta.area
-                              ? BoxDecoration(
-                                  color: Colors.white.withValues(alpha: .90),
-                                  borderRadius: BorderRadius.circular(6),
-                                )
-                              : null,
-                          child: Text(
-                            subtitulo,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF30343F),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Semantics(
-                    toggled: activo,
-                    child: SizedBox(
-                      width: 48,
-                      child: _botonAccion(
-                        activo
-                            ? 'Habilitado · Toca para deshabilitar'
-                            : 'Deshabilitado · Toca para habilitar',
-                        icono,
-                        activo ? const Color(0xFF2E7D32) : CatalogoEstilo.rojo,
-                        estado,
                       ),
+                      const SizedBox(height: 5),
+                      Container(
+                        padding: diseno == DisenoTarjeta.area
+                            ? const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              )
+                            : EdgeInsets.zero,
+                        decoration: diseno == DisenoTarjeta.area
+                            ? BoxDecoration(
+                                color: Colors.white.withValues(alpha: .90),
+                                borderRadius: BorderRadius.circular(6),
+                              )
+                            : null,
+                        child: Text(
+                          subtitulo,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF30343F),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Semantics(
+                  toggled: activo,
+                  child: SizedBox(
+                    width: 48,
+                    child: _botonAccion(
+                      activo
+                          ? 'Habilitado · Toca para deshabilitar'
+                          : 'Deshabilitado · Toca para habilitar',
+                      icono,
+                      activo ? const Color(0xFF2E7D32) : CatalogoEstilo.rojo,
+                      estado,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
             if (usuariosAsignados != null) ...[
               const SizedBox(height: 14),
