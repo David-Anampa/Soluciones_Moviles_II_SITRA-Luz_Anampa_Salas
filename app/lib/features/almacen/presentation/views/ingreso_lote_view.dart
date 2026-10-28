@@ -776,9 +776,9 @@ class _IngresoLoteViewState extends State<IngresoLoteView> {
                             ),
                           ),
                           const SizedBox(height: 14),
-                          AccionesAdaptables(
-                            anchoMinimo: 150,
-                            acciones: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
                               TextFormField(
                                 controller: _numBoletaController,
                                 textCapitalization:
@@ -789,6 +789,7 @@ class _IngresoLoteViewState extends State<IngresoLoteView> {
                                   prefixIcon: Icon(Icons.receipt_long_rounded),
                                 ),
                               ),
+                              const SizedBox(height: 18),
                               DropdownButtonFormField<String>(
                                 itemHeight: null,
                                 isDense: false,
