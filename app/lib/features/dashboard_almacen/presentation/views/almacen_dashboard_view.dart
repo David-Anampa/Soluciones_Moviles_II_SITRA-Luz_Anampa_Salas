@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/acciones_rapidas_almacen.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../almacen/presentation/views/diferencias_abastecimiento_view.dart';
 import '../../../almacen/presentation/views/ingresos_correcciones_view.dart';
@@ -542,174 +543,70 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                   ),
                   const SizedBox(height: 12),
 
-                  AccionesAdaptables(
-                    anchoMinimo: 150,
+                  AccionesRapidasAlmacen(
                     acciones: [
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.surface,
-                          foregroundColor: AppColors.almacenColor,
-                          fixedSize: const Size.fromHeight(48),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 8,
-                          ),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: const BorderSide(
-                              color: AppColors.almacenColor,
-                              width: 1.5,
-                            ),
-                          ),
-                        ),
-                        onPressed: _abrirRegistroMedicamento,
-                        icon: const Icon(
-                          Icons.add_circle_outline_rounded,
-                          size: 18,
-                        ),
-                        label: const Text(
-                          'Nuevo',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
+                      AccionRapidaAlmacen(
+                        titulo: 'Nuevo medicamento',
+                        descripcion: 'Registrar un producto y su primer lote.',
+                        icono: Icons.medication_outlined,
+                        onTap: _abrirRegistroMedicamento,
                       ),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.surface,
-                          foregroundColor: AppColors.primary,
-                          fixedSize: const Size.fromHeight(48),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 8,
-                          ),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: const BorderSide(
-                              color: AppColors.primary,
-                              width: 1.5,
-                            ),
-                          ),
-                        ),
-                        onPressed: state is AlmacenLoaded
+                      AccionRapidaAlmacen(
+                        titulo: 'Ingresar lote',
+                        descripcion:
+                            'Añadir existencias de un producto registrado.',
+                        icono: Icons.playlist_add_rounded,
+                        onTap: state is AlmacenLoaded
                             ? () => _abrirIngresoLote(state)
                             : null,
-                        icon: const Icon(Icons.playlist_add_rounded, size: 18),
-                        label: const Text(
-                          'Ingreso',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
                       ),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.surface,
-                          foregroundColor: AppColors.farmaciaColor,
-                          fixedSize: const Size.fromHeight(48),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 8,
-                          ),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: const BorderSide(
-                              color: AppColors.farmaciaColor,
-                              width: 1.5,
-                            ),
-                          ),
-                        ),
-                        onPressed: state is AlmacenLoaded
+                      AccionRapidaAlmacen(
+                        titulo: 'Despachar pedidos',
+                        descripcion: 'Atender las solicitudes de Farmacia.',
+                        icono: Icons.inventory_2_outlined,
+                        onTap: state is AlmacenLoaded
                             ? _abrirAbastecimiento
                             : null,
-                        icon: const Icon(Icons.swap_horiz_rounded, size: 18),
-                        label: const Text(
-                          'Despachar',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                      ),
+                      AccionRapidaAlmacen(
+                        titulo: 'Enviar a Farmacia',
+                        descripcion: 'Iniciar un envío desde Almacén.',
+                        icono: Icons.local_shipping_outlined,
+                        onTap: _abrirEnvioFarmacia,
+                      ),
+                      AccionRapidaAlmacen(
+                        titulo: 'Stock por ubicación',
+                        descripcion: 'Consultar Almacén y Farmacia.',
+                        icono: Icons.warehouse_outlined,
+                        onTap: _abrirStockUbicaciones,
+                      ),
+                      AccionRapidaAlmacen(
+                        titulo: 'Ingresos y correcciones',
+                        descripcion:
+                            'Revisar entradas y registrar correcciones.',
+                        icono: Icons.receipt_long_outlined,
+                        onTap: () async {
+                          final vm = context.read<AlmacenViewModel>();
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const IngresosCorreccionesView(),
+                            ),
+                          );
+                          if (mounted) await vm.cargarInventario();
+                        },
+                      ),
+                      AccionRapidaAlmacen(
+                        titulo: 'Diferencias e historial',
+                        descripcion: 'Revisar discrepancias de abastecimiento.',
+                        icono: Icons.fact_check_outlined,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const DiferenciasAbastecimientoView(),
                           ),
                         ),
                       ),
                     ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: _abrirEnvioFarmacia,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFC62828),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      icon: const Icon(Icons.local_shipping_outlined),
-                      label: const Text('Enviar a Farmacia'),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _abrirStockUbicaciones,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFFC62828),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      icon: const Icon(Icons.warehouse_outlined),
-                      label: const Text('Stock por ubicación'),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () async {
-                        final vm = context.read<AlmacenViewModel>();
-                        await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const IngresosCorreccionesView(),
-                          ),
-                        );
-                        if (mounted) await vm.cargarInventario();
-                      },
-                      icon: const Icon(Icons.receipt_long_outlined),
-                      label: const Text('Ingresos y correcciones'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFFC62828),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const DiferenciasAbastecimientoView(),
-                        ),
-                      ),
-                      icon: const Icon(Icons.fact_check_outlined),
-                      label: const Text('Diferencias por resolver e historial'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFFC62828),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                    ),
                   ),
                   const SizedBox(height: 24),
                   // HU-013 / HU-023: Inventario físico con búsqueda y filtros.
