@@ -649,46 +649,48 @@ class _EditarMedicamentoViewState extends State<EditarMedicamentoView> {
                     ),
                     child: Column(
                       children: [
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          secondary: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: _requiereCadenaFrio
-                                  ? Colors.cyan.withOpacity(0.15)
-                                  : AppColors.surfaceVariant,
-                              borderRadius: BorderRadius.circular(10),
+                        Material(
+                          color: Colors.transparent,
+                          child: SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            secondary: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: _requiereCadenaFrio
+                                    ? Colors.cyan.withOpacity(0.15)
+                                    : AppColors.surfaceVariant,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                Icons.ac_unit_rounded,
+                                color: _requiereCadenaFrio
+                                    ? Colors.cyan.shade800
+                                    : AppColors.textSecondary,
+                              ),
                             ),
-                            child: Icon(
-                              Icons.ac_unit_rounded,
-                              color: _requiereCadenaFrio
-                                  ? Colors.cyan.shade800
-                                  : AppColors.textSecondary,
+                            title: const Text(
+                              'Requiere Cadena de Frío',
+                              style: TextStyle(fontWeight: FontWeight.bold),
                             ),
+                            subtitle: Text(
+                              _requiereCadenaFrio
+                                  ? 'Monitoreo térmico estricto en Almacén y Farmacia'
+                                  : 'Almacenamiento a temperatura ambiente controlada (15-25 °C)',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            value: _requiereCadenaFrio,
+                            activeColor: Colors.cyan.shade800,
+                            onChanged: (val) {
+                              setState(() {
+                                _requiereCadenaFrio = val;
+                                if (val) {
+                                  _tempMinController.text = '2.0';
+                                  _tempMaxController.text = '8.0';
+                                }
+                              });
+                            },
                           ),
-                          title: const Text(
-                            'Requiere Cadena de Frío',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            _requiereCadenaFrio
-                                ? 'Monitoreo térmico estricto en Almacén y Farmacia'
-                                : 'Almacenamiento a temperatura ambiente controlada (15-25 °C)',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          value: _requiereCadenaFrio,
-                          activeColor: Colors.cyan.shade800,
-                          onChanged: (val) {
-                            setState(() {
-                              _requiereCadenaFrio = val;
-                              if (val) {
-                                _tempMinController.text = '2.0';
-                                _tempMaxController.text = '8.0';
-                              }
-                            });
-                          },
                         ),
-
                         if (_requiereCadenaFrio) ...[
                           const Divider(height: 24),
                           AccionesAdaptables(
@@ -804,29 +806,32 @@ class _EditarMedicamentoViewState extends State<EditarMedicamentoView> {
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: AppColors.surfaceVariant),
                     ),
-                    child: SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      secondary: Icon(
-                        _activo
-                            ? Icons.check_circle_outline_rounded
-                            : Icons.block_rounded,
-                        color: _activo ? AppColors.success : AppColors.error,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        secondary: Icon(
+                          _activo
+                              ? Icons.check_circle_outline_rounded
+                              : Icons.block_rounded,
+                          color: _activo ? AppColors.success : AppColors.error,
+                        ),
+                        title: const Text(
+                          'Medicamento Activo',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          _activo
+                              ? 'Disponible para pedidos y recepción de lotes'
+                              : 'Descontinuado / Bloqueado para nuevas solicitudes',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        value: _activo,
+                        activeColor: AppColors.success,
+                        onChanged: (val) {
+                          setState(() => _activo = val);
+                        },
                       ),
-                      title: const Text(
-                        'Medicamento Activo',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        _activo
-                            ? 'Disponible para pedidos y recepción de lotes'
-                            : 'Descontinuado / Bloqueado para nuevas solicitudes',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      value: _activo,
-                      activeColor: AppColors.success,
-                      onChanged: (val) {
-                        setState(() => _activo = val);
-                      },
                     ),
                   ),
 
