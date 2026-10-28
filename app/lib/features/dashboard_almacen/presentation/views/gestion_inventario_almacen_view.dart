@@ -94,6 +94,11 @@ class _GestionInventarioAlmacenViewState
           }).toList()
         : [];
 
+    // Vista inicial acotada; la búsqueda conserva todas las coincidencias.
+    final itemsVisibles = _searchController.text.trim().isEmpty
+        ? itemsFiltrados.take(5).toList()
+        : itemsFiltrados;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -103,6 +108,13 @@ class _GestionInventarioAlmacenViewState
         ),
         backgroundColor: const Color(0xFFC62828),
         foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        actionsIconTheme: const IconThemeData(color: Colors.white),
+        titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+        ),
         surfaceTintColor: Colors.transparent,
         toolbarHeight: DisenoAdaptable.altoCabecera(
           context,
@@ -159,7 +171,7 @@ class _GestionInventarioAlmacenViewState
                       if (state is AlmacenLoaded)
                         Text(
                           _searchController.text.trim().isEmpty
-                              ? 'Mostrando ${itemsFiltrados.length} de ${state.inventario.length} lotes'
+                              ? 'Mostrando ${itemsVisibles.length} de ${state.inventario.length} lotes'
                               : '${itemsFiltrados.length} resultados encontrados',
                           style: const TextStyle(
                             fontSize: 12,
@@ -359,10 +371,10 @@ class _GestionInventarioAlmacenViewState
                       ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: itemsFiltrados.length,
+                        itemCount: itemsVisibles.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
-                          final item = itemsFiltrados[index];
+                          final item = itemsVisibles[index];
                           return _buildStockItemCard(item, state);
                         },
                       ),

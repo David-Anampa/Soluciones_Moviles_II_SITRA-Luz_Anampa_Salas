@@ -39,10 +39,16 @@ ThemeData temaStock(BuildContext context) => Theme.of(context).copyWith(
     titleTextStyle: Theme.of(context).textTheme.titleLarge,
     contentTextStyle: Theme.of(context).textTheme.bodyMedium,
   ),
-  appBarTheme: const AppBarTheme(
+  appBarTheme: AppBarTheme(
     backgroundColor: stockRojo,
     foregroundColor: Colors.white,
-    iconTheme: IconThemeData(color: Colors.white),
+    iconTheme: const IconThemeData(color: Colors.white),
+    actionsIconTheme: const IconThemeData(color: Colors.white),
+    titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
+      color: Colors.white,
+      fontSize: 18,
+      fontWeight: FontWeight.w600,
+    ),
   ),
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
