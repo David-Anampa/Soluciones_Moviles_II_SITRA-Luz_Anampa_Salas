@@ -63,8 +63,10 @@ class AlmacenViewModel extends ChangeNotifier {
     }
   }
 
-  /// Registra un nuevo medicamento maestro y su lote inicial en Almacén
+  /// Registra un nuevo medicamento maestro y su lote inicial en Almacén (HU-015 / HU-024).
+  /// Si el GTIN ya existe en el catálogo maestro, sincroniza sus metadatos y registra el nuevo lote.
   Future<bool> registrarMedicamentoYPrimerLote({
+    String? medicamentoExistenteId,
     required String gtin,
     required String nombreComercial,
     required String principioActivo,
@@ -78,6 +80,7 @@ class AlmacenViewModel extends ChangeNotifier {
     bool requiereCadenaFrio = false,
     double temperaturaMin = 2.0,
     double temperaturaMax = 8.0,
+    String categoria = 'MEDICAMENTO',
     required String numeroLote,
     required DateTime fechaVencimiento,
     DateTime? fechaFabricacion,
@@ -95,23 +98,91 @@ class AlmacenViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Si falla el ingreso tampoco queda un medicamento creado a medias.
-      await _repository.registrarMedicamentoConIngreso(medicamento: {
-        'gtin': gtin, 'nombre_comercial': nombreComercial,
-        'principio_activo': principioActivo, 'presentacion': presentacion,
-        'laboratorio': laboratorio, 'cod_art': codArt, 'precio_kairos': precioKairos,
-        'registro_sanitario': registroSanitario, 'unidad_presentacion': unidadPresentacion,
-        'cantidad_por_presentacion': cantidadPorPresentacion,
-        'requiere_cadena_frio': requiereCadenaFrio,
-        'temperatura_min': temperaturaMin, 'temperatura_max': temperaturaMax,
-      }, ingreso: {
-        'numero_lote': numeroLote, 'fecha_vencimiento': fechaVencimiento.toIso8601String().split('T').first,
-        'fecha_fabricacion': fechaFabricacion?.toIso8601String().split('T').first,
-        'laboratorio': laboratorio, 'proveedor': proveedor, 'precio_compra': precioCompra,
-        'precio_venta': precioVenta, 'num_boleta': numBoleta,
-        'justificacion': justificacion ?? 'Compra', 'temperatura_recepcion': temperaturaRecepcion,
-        'observaciones': observaciones, 'cantidad': cantidadInicial,
-      });
+      final gtinLimpio = gtin.trim();
+      String? idExistente = medicamentoExistenteId?.trim();
+      if (idExistente == null || idExistente.isEmpty) {
+        final catalogoActual = _state is AlmacenLoaded
+            ? (_state as AlmacenLoaded).catalogo
+            : const [];
+        for (final med in catalogoActual) {
+          if (med.gtin.trim() == gtinLimpio) {
+            idExistente = med.id;
+            break;
+          }
+        }
+      }
+
+      if (idExistente != null && idExistente.isNotEmpty) {
+        await _repository.editarMedicamento(
+          id: idExistente,
+          gtin: gtinLimpio,
+          nombreComercial: nombreComercial,
+          principioActivo: principioActivo,
+          presentacion: presentacion,
+          laboratorio: laboratorio,
+          codArt: codArt,
+          precioKairos: precioKairos,
+          registroSanitario: registroSanitario,
+          unidadPresentacion: unidadPresentacion,
+          cantidadPorPresentacion: cantidadPorPresentacion,
+          requiereCadenaFrio: requiereCadenaFrio,
+          temperaturaMin: temperaturaMin,
+          temperaturaMax: temperaturaMax,
+          categoria: categoria,
+          activo: true,
+        );
+        await _repository.registrarIngresoLote(
+          medicamentoId: idExistente,
+          numeroLote: numeroLote,
+          fechaVencimiento: fechaVencimiento,
+          fechaFabricacion: fechaFabricacion,
+          laboratorio: laboratorio,
+          proveedor: proveedor,
+          precioCompra: precioCompra,
+          precioVenta: precioVenta,
+          numBoleta: numBoleta,
+          justificacion: justificacion,
+          temperaturaRecepcion: temperaturaRecepcion,
+          observaciones: observaciones,
+          cantidadInicial: cantidadInicial,
+        );
+      } else {
+        // Si falla el ingreso tampoco queda un medicamento creado a medias.
+        await _repository.registrarMedicamentoConIngreso(
+          medicamento: {
+            'gtin': gtinLimpio,
+            'nombre_comercial': nombreComercial,
+            'principio_activo': principioActivo,
+            'presentacion': presentacion,
+            'laboratorio': laboratorio,
+            'cod_art': codArt,
+            'precio_kairos': precioKairos,
+            'registro_sanitario': registroSanitario,
+            'unidad_presentacion': unidadPresentacion,
+            'cantidad_por_presentacion': cantidadPorPresentacion,
+            'requiere_cadena_frio': requiereCadenaFrio,
+            'temperatura_min': temperaturaMin,
+            'temperatura_max': temperaturaMax,
+            'categoria': categoria,
+          },
+          ingreso: {
+            'numero_lote': numeroLote,
+            'fecha_vencimiento':
+                fechaVencimiento.toIso8601String().split('T').first,
+            'fecha_fabricacion':
+                fechaFabricacion?.toIso8601String().split('T').first,
+            'laboratorio': laboratorio,
+            'proveedor': proveedor,
+            'precio_compra': precioCompra,
+            'precio_venta': precioVenta,
+            'num_boleta': numBoleta,
+            'justificacion': justificacion ?? 'Compra',
+            'temperatura_recepcion': temperaturaRecepcion,
+            'observaciones': observaciones,
+            'cantidad': cantidadInicial,
+          },
+        );
+      }
 
       // 3. Recargar el inventario
       await cargarInventario();
@@ -141,6 +212,7 @@ class AlmacenViewModel extends ChangeNotifier {
     bool requiereCadenaFrio = false,
     double temperaturaMin = 2.0,
     double temperaturaMax = 8.0,
+    String categoria = 'MEDICAMENTO',
     bool activo = true,
   }) async {
     _isSaving = true;
@@ -163,6 +235,7 @@ class AlmacenViewModel extends ChangeNotifier {
         requiereCadenaFrio: requiereCadenaFrio,
         temperaturaMin: temperaturaMin,
         temperaturaMax: temperaturaMax,
+        categoria: categoria,
         activo: activo,
       );
 
