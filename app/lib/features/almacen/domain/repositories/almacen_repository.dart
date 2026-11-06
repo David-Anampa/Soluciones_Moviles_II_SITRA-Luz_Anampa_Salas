@@ -29,6 +29,7 @@ abstract class AlmacenRepository {
     bool requiereCadenaFrio = false,
     double temperaturaMin = 2.0,
     double temperaturaMax = 8.0,
+    String categoria = 'MEDICAMENTO',
   });
 
   /// HU-016: Actualiza los datos técnicos de un medicamento existente en el catálogo.
@@ -47,6 +48,7 @@ abstract class AlmacenRepository {
     bool requiereCadenaFrio = false,
     double temperaturaMin = 2.0,
     double temperaturaMax = 8.0,
+    String categoria = 'MEDICAMENTO',
     bool activo = true,
   });
 

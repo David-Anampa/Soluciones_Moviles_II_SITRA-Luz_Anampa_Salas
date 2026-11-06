@@ -25,9 +25,28 @@ class AlmacenRemoteDataSource {
   SupabaseClient get _supabase => _customClient ?? Supabase.instance.client;
   late final _ingresos = IngresosRepository(client: _supabase);
 
-  Future<void> registrarMedicamentoConIngreso({required Map<String,dynamic> medicamento,
-    required Map<String,dynamic> ingreso}) async {
-    await _ingresos.registrar(ingreso, medicamento: medicamento);
+  Future<void> registrarMedicamentoConIngreso({
+    required Map<String, dynamic> medicamento,
+    required Map<String, dynamic> ingreso,
+  }) async {
+    final loteResult = await _ingresos.registrar(
+      ingreso,
+      medicamento: medicamento,
+    );
+    final rawCategoria = medicamento['categoria']?.toString().trim().toUpperCase();
+    final medId = loteResult['medicamento_id']?.toString();
+    if (rawCategoria == 'DISPOSITIVO_MEDICO' &&
+        medId != null &&
+        medId.isNotEmpty) {
+      try {
+        await _supabase
+            .from('medicamentos')
+            .update({'categoria': 'DISPOSITIVO_MEDICO'})
+            .eq('id', medId);
+      } catch (e) {
+        debugPrint('Aviso sincronizando categoría de medicamento: $e');
+      }
+    }
   }
 
   /// HU-029: una única transacción guarda solicitud, ítems y auditoría.

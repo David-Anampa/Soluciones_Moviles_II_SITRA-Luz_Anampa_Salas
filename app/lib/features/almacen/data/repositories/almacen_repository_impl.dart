@@ -43,6 +43,7 @@ class AlmacenRepositoryImpl implements AlmacenRepository {
     bool requiereCadenaFrio = false,
     double temperaturaMin = 2.0,
     double temperaturaMax = 8.0,
+    String categoria = 'MEDICAMENTO',
   }) async {
     final model = MedicamentoModel(
       id: '', // Se autogenera en la BD
@@ -59,6 +60,7 @@ class AlmacenRepositoryImpl implements AlmacenRepository {
       requiereCadenaFrio: requiereCadenaFrio,
       temperaturaMin: temperaturaMin,
       temperaturaMax: temperaturaMax,
+      categoria: categoria,
     );
     return await _dataSource.registrarMedicamento(model);
   }
@@ -79,6 +81,7 @@ class AlmacenRepositoryImpl implements AlmacenRepository {
     bool requiereCadenaFrio = false,
     double temperaturaMin = 2.0,
     double temperaturaMax = 8.0,
+    String categoria = 'MEDICAMENTO',
     bool activo = true,
   }) async {
     final model = MedicamentoModel(
@@ -96,6 +99,7 @@ class AlmacenRepositoryImpl implements AlmacenRepository {
       requiereCadenaFrio: requiereCadenaFrio,
       temperaturaMin: temperaturaMin,
       temperaturaMax: temperaturaMax,
+      categoria: categoria,
       activo: activo,
     );
     return await _dataSource.editarMedicamento(model);
