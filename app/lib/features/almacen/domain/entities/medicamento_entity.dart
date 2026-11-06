@@ -14,6 +14,7 @@ class MedicamentoEntity {
   final bool requiereCadenaFrio;
   final double temperaturaMin;
   final double temperaturaMax;
+  final String categoria;
   final bool activo;
 
   const MedicamentoEntity({
@@ -31,6 +32,7 @@ class MedicamentoEntity {
     this.requiereCadenaFrio = false,
     this.temperaturaMin = 2.0,
     this.temperaturaMax = 8.0,
+    this.categoria = 'MEDICAMENTO',
     this.activo = true,
   });
 

@@ -17,10 +17,12 @@ class MedicamentoModel extends MedicamentoEntity {
     super.requiereCadenaFrio,
     super.temperaturaMin,
     super.temperaturaMax,
+    super.categoria,
     super.activo,
   });
 
   factory MedicamentoModel.fromMap(Map<String, dynamic> map) {
+    final rawCategoria = map['categoria']?.toString().trim().toUpperCase();
     return MedicamentoModel(
       id: map['id']?.toString() ?? '',
       gtin: map['gtin']?.toString() ?? '',
@@ -36,6 +38,7 @@ class MedicamentoModel extends MedicamentoEntity {
       requiereCadenaFrio: map['requiere_cadena_frio'] as bool? ?? false,
       temperaturaMin: (map['temperatura_min'] as num?)?.toDouble() ?? 2.0,
       temperaturaMax: (map['temperatura_max'] as num?)?.toDouble() ?? 8.0,
+      categoria: rawCategoria == 'DISPOSITIVO_MEDICO' ? 'DISPOSITIVO_MEDICO' : 'MEDICAMENTO',
       activo: map['activo'] as bool? ?? true,
     );
   }
@@ -56,6 +59,7 @@ class MedicamentoModel extends MedicamentoEntity {
       'requiere_cadena_frio': requiereCadenaFrio,
       'temperatura_min': temperaturaMin,
       'temperatura_max': temperaturaMax,
+      'categoria': categoria == 'DISPOSITIVO_MEDICO' ? 'DISPOSITIVO_MEDICO' : 'MEDICAMENTO',
       'activo': activo,
     };
   }
