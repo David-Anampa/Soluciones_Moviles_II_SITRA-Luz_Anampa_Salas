@@ -30,6 +30,12 @@ class AdminDashboardView extends StatelessWidget {
       '/admin/kits',
     ),
     _Module(
+      'Registro de fichas de pedido',
+      'Emisión de fichas General y Neonatología con stock real y aplicación de kits.',
+      Icons.assignment_add,
+      '/fichas/nueva',
+    ),
+    _Module(
       'Farmacia',
       'Inventario, abastecimiento y recepción de medicamentos.',
       Icons.local_pharmacy_rounded,

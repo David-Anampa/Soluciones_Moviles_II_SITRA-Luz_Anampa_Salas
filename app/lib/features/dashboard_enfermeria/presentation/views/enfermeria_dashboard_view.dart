@@ -32,17 +32,30 @@ class EnfermeriaDashboardView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFC62828),
-                      minimumSize: const Size(48, 48),
+                AccionesAdaptables(
+                  anchoMinimo: 220,
+                  acciones: [
+                    FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.enfermeriaColor,
+                        minimumSize: const Size(48, 48),
+                      ),
+                      icon: const Icon(Icons.assignment_add),
+                      label: const Text(
+                        'Registrar ficha de pedido (General / Neonatología)',
+                      ),
+                      onPressed: () => context.push('/fichas/nueva'),
                     ),
-                    icon: const Icon(Icons.medical_services_outlined),
-                    label: const Text('Kits de mi área'),
-                    onPressed: () => context.push('/kits'),
-                  ),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFC62828),
+                        minimumSize: const Size(48, 48),
+                      ),
+                      icon: const Icon(Icons.medical_services_outlined),
+                      label: const Text('Kits de mi área'),
+                      onPressed: () => context.push('/kits'),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 // Banner de Enfermería
@@ -213,10 +226,7 @@ class EnfermeriaDashboardView extends StatelessWidget {
                       letterSpacing: 0.5,
                     ),
                   ),
-                  onPressed: () => _showActionSnackbar(
-                    context,
-                    'Solicitud Urgente de Reposición',
-                  ),
+                  onPressed: () => context.push('/fichas/nueva'),
                 ),
 
                 const SizedBox(height: 24),
@@ -232,6 +242,15 @@ class EnfermeriaDashboardView extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
+                _buildModuleTile(
+                  icon: Icons.assignment_add,
+                  title: 'Registrar Ficha de Pedido (General / Neonatología)',
+                  subtitle:
+                      'HU-003 / HU-004 / HU-005: Paciente, área, médico, financiamiento, receptor, stock en tiempo real y aplicación de kits.',
+                  color: AppColors.enfermeriaColor,
+                  onTap: () => context.push('/fichas/nueva'),
+                ),
+                const SizedBox(height: 10),
                 _buildModuleTile(
                   icon: Icons.medication_liquid_rounded,
                   title: 'Kardex y Stock del Coche de Paro',

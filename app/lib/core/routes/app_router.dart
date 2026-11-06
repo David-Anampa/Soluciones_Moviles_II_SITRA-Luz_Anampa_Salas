@@ -12,6 +12,7 @@ import '../../features/dashboard_almacen/presentation/views/almacen_dashboard_vi
 import '../../features/dashboard_enfermeria/presentation/views/enfermeria_dashboard_view.dart';
 import '../../features/dashboard_farmacia/presentation/views/farmacia_dashboard_view.dart';
 import '../../features/dashboard_jefatura/presentation/views/jefatura_dashboard_view.dart';
+import '../../features/fichas/presentation/views/registro_ficha_view.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -22,6 +23,7 @@ class AppRoutes {
   static const String usuarios = '/admin/usuarios';
   static const String kits = '/admin/kits';
   static const String kitsArea = '/kits';
+  static const String nuevaFicha = '/fichas/nueva';
   static const String jefatura = '/jefatura';
   static const String farmacia = '/farmacia';
   static const String almacen = '/almacen';
@@ -94,6 +96,12 @@ GoRouter createRouter(AuthViewModel authViewModel) {
         builder: (context, state) => const KitsAdminView(),
       ),
       GoRoute(
+        path: AppRoutes.nuevaFicha,
+        builder: (context, state) => RegistroFichaView(
+          areaInicial: state.uri.queryParameters['area'],
+        ),
+      ),
+      GoRoute(
         path: AppRoutes.farmacia,
         builder: (context, state) => const FarmaciaDashboardView(),
       ),
@@ -133,6 +141,14 @@ GoRouter createRouter(AuthViewModel authViewModel) {
               UserRole.administrador,
               UserRole.jefaturaFarmacia,
               UserRole.farmacia,
+              UserRole.enfermeria,
+            }.contains(currentUser.rol)
+            ? null
+            : AppRoutes.routeForRole(currentUser.rol);
+      }
+      if (state.uri.path == AppRoutes.nuevaFicha) {
+        return const {
+              UserRole.administrador,
               UserRole.enfermeria,
             }.contains(currentUser.rol)
             ? null
