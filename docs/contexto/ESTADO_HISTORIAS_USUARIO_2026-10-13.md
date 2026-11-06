@@ -20,8 +20,8 @@ Actualización posterior del 13 de octubre: por solicitud del usuario se ejecut�
 | HU | Historia | Estado y observación |
 |---|---|---|
 | HU-013 | Gestionar catálogo de medicamentos e insumos | **Implementada según el alcance del sprint; pendiente de validación funcional manual.** Consulta a PostgreSQL, búsqueda y filtros. Empezar sin productos o cargarlos mediante SQL no implica que la HU esté incompleta. La gestión corresponde a Almacén/Logística y Administrador. El Kardex se desarrolla en HU-025; las mejoras del catálogo se documentan como trabajo futuro. |
-| HU-014 | Registrar mediante escaneo GTIN y fotografía | **Parcial.** Existen cámara, lectura del código y fotografía. La validación cruzada con IA todavía es simulada. |
-| HU-015 | Revisar y corregir datos extraídos por IA | **Parcial.** El formulario permite revisar y guardar, pero no recibe una extracción real de Gemini/OCR. |
+| HU-014 | Registrar mediante escaneo GTIN y fotografía | **Implementada en código el 6 de noviembre (Sprint 6 — Walter Salas); pendiente de validación funcional con fotografías reales.** Escaneo local offline de códigos EAN-13 y GS1-128/DataMatrix (`Gs1BarcodeParser`: AI `01` GTIN, AI `17` vencimiento, AI `10` lote, validación de dígito de control Modulo-10), verificación de red activa antes de pasos online (`RNF-011` con `SinConexionIaException` que conserva el código y la foto capturados), consulta real a `public.medicamentos` en Supabase y extracción multimodal real con Google Gemini Vision (`gemini-2.5-flash` / `gemini-2.0-flash`) sin datos simulados ni aleatorios. |
+| HU-015 | Revisar y corregir datos extraídos por IA | **Implementada en código el 6 de noviembre (Sprint 6 — Walter Salas); pendiente de validación funcional manual.** Pantalla de revisión editable (`RegistroMedicamentoView`) sincronizada con `MedicamentoExtraccionIA`, alertas de validación cruzada entre código, catálogo de Supabase y fotografía del empaque, selector de categoría (`MEDICAMENTO` vs `DISPOSITIVO_MEDICO`) compartido con HU-003/HU-004, y guardado atómico en Supabase (`registrar_ingreso_lote_hu024`). |
 | HU-016 | Editar medicamento registrado | **Implementada en código; pendiente de validación funcional manual.** Existe formulario precargado y actualización en Supabase. La consulta remota confirmó `presentacion` y `laboratorio`; se corrigió el `setup` para reconstruir esos mismos campos. Edición por Almacén/Logística y Administrador. |
 
 ## 3. Inventario y trazabilidad
@@ -45,9 +45,9 @@ Estas historias **no quedan cubiertas por HU-029/HU-030**: corresponden a otro f
 
 | HU | Historia | Estado |
 |---|---|---|
-| HU-003 | Registrar ficha General o Neonatología | **Pendiente** |
-| HU-004 | Seleccionar medicamentos e insumos con stock disponible | **Pendiente** |
-| HU-005 | Aplicar kit al registrar ficha de Neonatología | **Pendiente** |
+| HU-003 | Registrar ficha General o Neonatología | **Implementada en código el 6 de noviembre por David Anampa; pendiente de ejecutar migración y validación funcional manual.** Vista dinámica única (`RegistroFichaView`) para Ficha General y Ficha de Neonatología con área activa, turno, prioridad, financiamiento (`PARTICULAR`, `SEGURO`, `CONVENIO`), médico a cargo, personal receptor del área y edición auditada en estado `SOLICITADO` mediante RPC atómica `registrar_ficha_hu003`. Ver `docs/supabase/GUIA_HU003_HU004_HU005_FICHAS.md`. |
+| HU-004 | Seleccionar medicamentos e insumos con stock disponible | **Implementada en código el 6 de noviembre por David Anampa; pendiente de ejecutar migración y validación funcional manual.** Consulta en tiempo real a `catalogo_stock_ficha_hu004`, deshabilita selección individual cuando `farmacia_disponible <= 0`, permite editar cantidades dentro del stock de Farmacia y separa visualmente Medicamentos y Dispositivos médicos/insumos. |
+| HU-005 | Aplicar kit al registrar ficha | **Implementada en código el 6 de noviembre por David Anampa; pendiente de ejecutar migración y validación funcional manual.** Aplica plantillas de kits activos del área copiando sus ítems y cantidades a la ficha (`FichaBorrador.aplicarKit` / `dispensacion_items` con `origen_kit = true`), permitiendo editarlos sin alterar la plantilla del kit ni fichas históricas. |
 | HU-006 | Listar fichas con filtros | **Pendiente** |
 | HU-007 | Mostrar detalle completo e historial de la ficha | **Pendiente** |
 | HU-008 | Actualizar estados de preparación y despacho | **Pendiente** |
