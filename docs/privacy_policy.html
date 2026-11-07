@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidad — SITRA-Luz</title>
+    <style>
+        :root {
+            --primary: #C62828;
+            --primary-dark: #8E0000;
+            --text: #212121;
+            --text-secondary: #555555;
+            --bg: #F8F9FA;
+            --card-bg: #FFFFFF;
+            --border: #E0E0E0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border);
+        }
+        .header {
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+        h1 {
+            color: var(--primary);
+            margin: 0 0 10px 0;
+            font-size: 26px;
+        }
+        .badge {
+            display: inline-block;
+            background: #FFEBEE;
+            color: var(--primary-dark);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        h2 {
+            color: var(--primary-dark);
+            margin-top: 28px;
+            font-size: 18px;
+            border-left: 4px solid var(--primary);
+            padding-left: 10px;
+        }
+        p, li {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .contact-box {
+            background: #F1F3F4;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-top: 30px;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 13px;
+            color: #888;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Política de Privacidad de SITRA-Luz</h1>
+            <span class="badge">Aplicación Móvil: com.sitra_luz.miapp</span>
+            <p style="margin-top: 10px; color: #777; font-size: 13px;">Última actualización: 6 de noviembre de 2026</p>
+        </div>
+
+        <p>
+            La presente Política de Privacidad describe el tratamiento, recopilación, uso y protección de los datos recopilados por la aplicación móvil <strong>SITRA-Luz</strong> (Sistema de Trazabilidad y Dispensación de Medicamentos), desarrollada para la gestión operativa y clínica de la <strong>Clínica La Luz</strong> (Tacna, Perú).
+        </p>
+
+        <h2>1. Identidad del Responsable</h2>
+        <p>
+            La aplicación <strong>SITRA-Luz</strong> ha sido desarrollada por el equipo de ingeniería del proyecto (David Anampa y Walter Salas) en coordinación con el área asistencial y farmacéutica de la Clínica La Luz. Correo de contacto y soporte: <a href="mailto:da2022074268@virtual.upt.pe">da2022074268@virtual.upt.pe</a>.
+        </p>
+
+        <h2>2. Permisos del Dispositivo y Finalidad</h2>
+        <p>SITRA-Luz requiere los siguientes permisos técnicos para cumplir con sus funciones operativas:</p>
+        <ul>
+            <li><strong>Cámara (<code>android.permission.CAMERA</code>):</strong> Se utiliza exclusivamente dentro del módulo de Almacén para escanear códigos de barras GS1/GTIN y capturar fotografías del empaque de los medicamentos con el fin de extraer datos de lote, registro sanitario y fecha de vencimiento. No se capturan imágenes de rostros ni del entorno fuera del empaque del medicamento.</li>
+            <li><strong>Almacenamiento y Galería:</strong> Permite guardar localmente en el dispositivo copia de las fotos capturadas del empaque del medicamento (en la carpeta <code>Pictures/SITRA_Luz</code>) como respaldo de trazabilidad farmacéutica física.</li>
+            <li><strong>Acceso a Internet y Estado de Red:</strong> Requerido para sincronizar los registros de inventario con el backend seguro en la nube y verificar la conectividad antes de realizar llamadas a los servicios.</li>
+        </ul>
+
+        <h2>3. Datos Recopilados y su Uso</h2>
+        <p>SITRA-Luz recopila únicamente los datos necesarios para la gestión interna de trazabilidad:</p>
+        <ul>
+            <li><strong>Datos de Cuenta y Acceso:</strong> Correo electrónico institucional y credenciales de acceso para autenticación con control de acceso basado en roles (RBAC: Administrador, Jefatura, Farmacia, Almacén, Enfermería).</li>
+            <li><strong>Datos de Inventario y Fichas:</strong> Nombres estandarizados de medicamentos, números de lote, fechas de vencimiento, laboratorios, existencias por área y solicitudes de pedidos internos entre áreas asistenciales (SOP, Emergencia, Neonatología) y Farmacia.</li>
+        </ul>
+
+        <h2>4. Servicios de Terceros y Transferencia de Datos</h2>
+        <p>Para su correcto funcionamiento, la aplicación interactúa con proveedores de servicios de infraestructura tecnológica bajo estrictos estándares de seguridad:</p>
+        <ul>
+            <li><strong>Supabase (PostgreSQL & Auth):</strong> Proporciona autenticación segura, control de acceso mediante Row Level Security (RLS) y persistencia cifrada de datos en reposo y en tránsito (HTTPS/TLS).</li>
+            <li><strong>Google Gemini Vision API:</strong> Utilizado en el módulo de Almacén para realizar análisis óptico y extracción asistida de datos a partir de las fotografías del empaque de medicamentos. No se envían datos personales de pacientes ni información sensible a este servicio.</li>
+            <li><strong>Firebase Cloud Messaging (Google):</strong> Utilizado como infraestructura para notificaciones operativas entre turnos.</li>
+        </ul>
+
+        <h2>5. Seguridad de la Información</h2>
+        <p>
+            Implementamos rigurosas medidas técnicas de seguridad:
+        </p>
+        <ul>
+            <li>Todo el tráfico de red se realiza mediante protocolos cifrados HTTPS / TLS (con <code>usesCleartextTraffic="false"</code>).</li>
+            <li>Las contraseñas de los usuarios no se almacenan en texto plano; están protegidas por algoritmos robustos de derivación de claves en Supabase Auth.</li>
+            <li>No vendemos, comercializamos ni cedemos información personal a terceros con fines publicitarios o comerciales.</li>
+        </ul>
+
+        <h2>6. Privacidad de Menores</h2>
+        <p>
+            La aplicación está destinada exclusivamente a profesionales y personal autorizado de la clínica. No está dirigida a niños ni recopila deliberadamente datos personales de menores sin el consentimiento de sus tutores en el marco de la atención médica hospitalaria regulada.
+        </p>
+
+        <h2>7. Derechos del Usuario y Eliminación de Datos</h2>
+        <p>
+            Cualquier usuario con cuenta registrada puede solicitar la corrección, actualización o desactivación de su perfil dirigiéndose al Administrador del sistema o enviando una solicitud por correo a <a href="mailto:da2022074268@virtual.upt.pe">da2022074268@virtual.upt.pe</a>.
+        </p>
+
+        <div class="contact-box">
+            <strong>Contacto para consultas sobre privacidad:</strong><br>
+            SITRA-Luz — Clínica La Luz / Universidad Privada de Tacna<br>
+            Correo: <a href="mailto:da2022074268@virtual.upt.pe">da2022074268@virtual.upt.pe</a><br>
+            Tacna, Perú
+        </div>
+
+        <div class="footer">
+            © 2026 SITRA-Luz — Sistema de Trazabilidad y Dispensación de Medicamentos. Todos los derechos reservados.
+        </div>
+    </div>
+</body>
+</html>
