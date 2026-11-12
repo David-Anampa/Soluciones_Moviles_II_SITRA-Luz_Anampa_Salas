@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sitra_luz/features/almacen/data/services/medicamento_ia_service.dart';
 import 'package:sitra_luz/features/almacen/domain/entities/medicamento_extraccion_ia.dart';
 
@@ -177,6 +178,53 @@ void main() {
             (a) => a.contains('Aviso de validación cruzada'),
           ),
           isTrue,
+        );
+      },
+    );
+
+    test(
+      'Código de barras manual sin fotos genera borrador limpio sin datos hardcodeados',
+      () {
+        final service = MedicamentoIaService();
+        final borrador = service.construirBorradorLocal(
+          codigoBruto: '7759307007733',
+        );
+
+        expect(borrador.gtin, '7759307007733');
+        expect(borrador.nombreComercial, isEmpty);
+        expect(borrador.principioActivo, isEmpty);
+        expect(borrador.existeEnCatalogo, isFalse);
+        expect(borrador.extraidoPorIaReal, isFalse);
+      },
+    );
+
+    test(
+      'Administrador puede mostrar/ocultar el botón de API Key y guardar clave global',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+
+        expect(
+          await MedicamentoIaService.obtenerVisibilidadBotonApiKeyAdmin(),
+          isTrue,
+        );
+
+        await MedicamentoIaService.guardarVisibilidadBotonApiKeyAdmin(false);
+        expect(
+          await MedicamentoIaService.obtenerVisibilidadBotonApiKeyAdmin(),
+          isFalse,
+        );
+
+        await MedicamentoIaService.guardarVisibilidadBotonApiKeyAdmin(true);
+        expect(
+          await MedicamentoIaService.obtenerVisibilidadBotonApiKeyAdmin(),
+          isTrue,
+        );
+
+        await MedicamentoIaService.guardarApiKey('AIzaSyTestKeyClinica12345');
+        expect(await MedicamentoIaService.tieneApiKeyConfigurada(), isTrue);
+        expect(
+          await MedicamentoIaService.obtenerApiKeyConfigurada(),
+          'AIzaSyTestKeyClinica12345',
         );
       },
     );
