@@ -11,6 +11,8 @@ import '../../../almacen/presentation/viewmodels/almacen_viewmodel.dart';
 import '../../../almacen/presentation/views/crear_solicitud_abastecimiento_view.dart';
 import '../../../almacen/presentation/views/solicitudes_abastecimiento_view.dart';
 import '../../../almacen/presentation/views/stock_ubicaciones_view.dart';
+import '../../../fichas/data/repositories/fichas_repository.dart';
+import '../../../fichas/presentation/views/fichas_listado_view.dart';
 
 class FarmaciaDashboardView extends StatefulWidget {
   const FarmaciaDashboardView({super.key});
@@ -20,12 +22,45 @@ class FarmaciaDashboardView extends StatefulWidget {
 }
 
 class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
+  final FichasRepository _fichasRepo = FichasRepository();
+  int _fichasPendientes = 0;
+  int _fichasUrgentes = 0;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AlmacenViewModel>().cargarInventario();
+      _cargarResumenFichas();
     });
+  }
+
+  Future<void> _cargarResumenFichas() async {
+    try {
+      final fichas = await _fichasRepo.listarFichasConFiltros(limite: 120);
+      if (!mounted) return;
+      final activas = fichas.where(
+        (f) =>
+            f.estado == 'SOLICITADO' ||
+            f.estado == 'EN_PREPARACION' ||
+            f.estado == 'LISTO_PARA_RECOJO',
+      );
+      setState(() {
+        _fichasPendientes = activas.length;
+        _fichasUrgentes = activas.where((f) => f.esUrgente).length;
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _abrirAtencionFichas({String? estadoInicial}) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => FichasListadoView(estadoInicial: estadoInicial),
+      ),
+    );
+    if (!mounted) return;
+    context.read<AlmacenViewModel>().cargarInventario();
+    _cargarResumenFichas();
   }
 
   void _abrirCrearSolicitud() {
@@ -116,7 +151,12 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
         child: SafeArea(
           child: RefreshIndicator(
             color: AppColors.farmaciaColor,
-            onRefresh: () => almacenVM.cargarInventario(),
+            onRefresh: () async {
+              await Future.wait([
+                almacenVM.cargarInventario(),
+                _cargarResumenFichas(),
+              ]);
+            },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
@@ -205,9 +245,9 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                                 color: Colors.amberAccent.withOpacity(0.9),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Text(
-                                '7 Pendientes',
-                                style: TextStyle(
+                              child: Text(
+                                '$_fichasPendientes Pendiente(s)',
+                                style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                   color: Color(0xFF1A1A2E),
@@ -325,6 +365,15 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                     anchoMinimo: 150,
                     acciones: [
                       _buildMetricCard(
+                        title: 'Fichas de pisos',
+                        value: '$_fichasPendientes',
+                        subtitle: _fichasUrgentes > 0
+                            ? '$_fichasUrgentes urgente(s) por atender'
+                            : 'Solicitadas / En preparación',
+                        icon: Icons.assignment_ind_rounded,
+                        color: const Color(0xFFC62828),
+                      ),
+                      _buildMetricCard(
                         title: 'Solicitudes activas',
                         value: '$transferenciasActivas',
                         subtitle: 'Pedidos a Almacén',
@@ -393,12 +442,11 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
 
                   _buildModuleTile(
                     icon: Icons.inventory_rounded,
-                    title: 'Atender Pedidos de Reposición (Pisos)',
+                    title: 'Atender Fichas de Pedido de Pisos (HU-006 a HU-011)',
                     subtitle:
-                        'Preparar coches de paro y botiquines para enfermería.',
+                        'Preparar fichas Generales y de Neonatología, registrar despacho parcial, confirmar entrega FEFO y anular con motivo.',
                     color: AppColors.warning,
-                    onTap: () =>
-                        _showActionSnackbar(context, 'Atención a Botiquines'),
+                    onTap: () => _abrirAtencionFichas(),
                   ),
                   const SizedBox(height: 10),
 
@@ -550,17 +598,6 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  void _showActionSnackbar(BuildContext context, String module) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Accediendo a $module'),
-        backgroundColor: AppColors.farmaciaColor,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 1),
       ),
     );
   }

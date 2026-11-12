@@ -33,6 +33,21 @@ class JefaturaDashboardView extends StatelessWidget {
               children: [
                 SizedBox(
                   width: double.infinity,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.jefaturaColor,
+                      minimumSize: const Size(48, 48),
+                    ),
+                    icon: const Icon(Icons.assignment_turned_in_outlined),
+                    label: const Text(
+                      'Supervisión de fichas, lotes FEFO e historial (HU-006 / HU-007)',
+                    ),
+                    onPressed: () => context.push('/fichas'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFFC62828),

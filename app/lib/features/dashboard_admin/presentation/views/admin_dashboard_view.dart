@@ -38,6 +38,12 @@ class AdminDashboardView extends StatefulWidget {
       '/fichas/nueva',
     ),
     _Module(
+      'Atención y trazabilidad de fichas',
+      'HU-006 a HU-011: Listado con filtros, preparación, despacho parcial, entrega FEFO y anulación.',
+      Icons.fact_check_rounded,
+      '/fichas',
+    ),
+    _Module(
       'Farmacia',
       'Inventario, abastecimiento y recepción de medicamentos.',
       Icons.local_pharmacy_rounded,
