@@ -101,7 +101,7 @@ class _ConfigurarGeminiDialogState extends State<ConfigurarGeminiDialog> {
       context,
       valor.isEmpty
           ? 'Clave de Gemini eliminada. Se usará el catálogo de Supabase y lectura GS1 local.'
-          : 'Clave de Gemini Vision guardada correctamente.',
+          : 'API Key de Gemini Vision guardada y activada para todos los usuarios (Almacén).',
       tipo: valor.isEmpty ? TipoMensaje.advertencia : TipoMensaje.exito,
     );
     Navigator.of(context).pop(valor.isNotEmpty);
@@ -120,7 +120,7 @@ class _ConfigurarGeminiDialogState extends State<ConfigurarGeminiDialog> {
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(
-              Icons.auto_awesome_rounded,
+              Icons.admin_panel_settings_rounded,
               color: AppColors.almacenColor,
               size: 22,
             ),
@@ -128,7 +128,7 @@ class _ConfigurarGeminiDialogState extends State<ConfigurarGeminiDialog> {
           const SizedBox(width: 10),
           const Expanded(
             child: Text(
-              'Configurar Gemini Vision IA',
+              'Administrar API Key (Gemini IA)',
               style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
             ),
           ),
@@ -144,7 +144,7 @@ class _ConfigurarGeminiDialogState extends State<ConfigurarGeminiDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Ingresa tu API Key de Google AI Studio (aistudio.google.com) para habilitar la lectura óptica multimodal de las 3 a 4 fotografías del empaque:',
+                  'Exclusivo para Administrador: ingresa o cambia la API Key de Google AI Studio. Una vez guardada, estará activa automáticamente para todos los usuarios de Almacén al tomar capturas:',
                   style: TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary,

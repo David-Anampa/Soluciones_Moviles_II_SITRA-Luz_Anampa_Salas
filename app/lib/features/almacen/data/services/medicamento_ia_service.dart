@@ -44,6 +44,8 @@ class MedicamentoIaException implements Exception {
 /// en siglas contra la base de datos.
 class MedicamentoIaService {
   static const String _prefsGeminiKey = 'sitra_gemini_api_key_v1';
+  static const String _prefsAdminMostrarBotonKey =
+      'sitra_admin_mostrar_boton_key_v1';
   static const String _envGeminiKey = String.fromEnvironment(
     'GEMINI_API_KEY',
     defaultValue: '',
@@ -63,6 +65,24 @@ class MedicamentoIaService {
 
   SupabaseClient get _supabase => _customSupabase ?? Supabase.instance.client;
   http.Client get _http => _customHttp ?? http.Client();
+
+  /// Indica si el Administrador tiene visible el botón de administración de la API Key.
+  static Future<bool> obtenerVisibilidadBotonApiKeyAdmin() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(_prefsAdminMostrarBotonKey) ?? true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  /// Permite al Administrador mostrar u ocultar el botón de configuración de API Key.
+  static Future<void> guardarVisibilidadBotonApiKeyAdmin(bool visible) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_prefsAdminMostrarBotonKey, visible);
+    } catch (_) {}
+  }
 
   /// Guarda una fotografía capturada en la galería del dispositivo Android (`Pictures/SITRA_Luz`).
   static Future<bool> guardarFotoEnGaleriaDispositivo(
@@ -86,29 +106,104 @@ class MedicamentoIaService {
     }
   }
 
-  /// Obtiene la API Key de Gemini desde `--dart-define=GEMINI_API_KEY` o `SharedPreferences`,
-  /// eliminando espacios o saltos de línea invisibles al copiar/pegar en el celular.
+  /// Obtiene la API Key de Gemini configurada por el Administrador (desde Supabase,
+  /// `SharedPreferences` del dispositivo o `--dart-define=GEMINI_API_KEY`),
+  /// para que cualquier usuario de Almacén pueda usarla sin tener que ingresarla.
   static Future<String> obtenerApiKeyConfigurada() async {
+    String localKey = '';
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      localKey = (prefs.getString(_prefsGeminiKey) ?? '').replaceAll(
+        RegExp(r'\s+'),
+        '',
+      );
+    } catch (_) {}
+
+    // Intentar sincronizar la clave global configurada por el Administrador en Supabase
+    try {
+      final client = Supabase.instance.client;
+      if (client.auth.currentUser != null) {
+        final rows = await client
+            .from('auditoria_trazabilidad')
+            .select('estado_nuevo')
+            .eq('tipo_evento', 'CONFIG_GEMINI_IA')
+            .eq('area_destino', 'ALMACEN')
+            .order('fecha', ascending: false)
+            .limit(1)
+            .timeout(const Duration(seconds: 4));
+
+        if (rows.isNotEmpty) {
+          final first = rows.first;
+          if (first['estado_nuevo'] is Map) {
+            final estadoNuevo = Map<String, dynamic>.from(
+              first['estado_nuevo'] as Map,
+            );
+            if (estadoNuevo.containsKey('gemini_api_key')) {
+              final remoteKey = (estadoNuevo['gemini_api_key']?.toString() ?? '')
+                  .replaceAll(RegExp(r'\s+'), '');
+              if (remoteKey != localKey) {
+                try {
+                  final prefs = await SharedPreferences.getInstance();
+                  if (remoteKey.isEmpty) {
+                    await prefs.remove(_prefsGeminiKey);
+                  } else {
+                    await prefs.setString(_prefsGeminiKey, remoteKey);
+                  }
+                } catch (_) {}
+              }
+              if (remoteKey.isNotEmpty) return remoteKey;
+              if (estadoNuevo['limpiada'] == true) return '';
+            }
+          }
+        }
+      }
+    } catch (_) {
+      // Si está offline o Supabase aún no está inicializado, continúa con el respaldo local
+    }
+
+    if (localKey.isNotEmpty) return localKey;
+
     if (_envGeminiKey.trim().isNotEmpty) {
       return _envGeminiKey.replaceAll(RegExp(r'\s+'), '');
     }
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      return (prefs.getString(_prefsGeminiKey) ?? '')
-          .replaceAll(RegExp(r'\s+'), '');
-    } catch (_) {
-      return '';
-    }
+    return '';
   }
 
-  /// Guarda o actualiza la API Key de Gemini en el almacenamiento seguro del dispositivo.
+  /// Guarda o actualiza la API Key de Gemini administrada por el Administrador,
+  /// tanto en el dispositivo como en Supabase para todos los usuarios de Almacén.
   static Future<void> guardarApiKey(String apiKey) async {
-    final prefs = await SharedPreferences.getInstance();
     final clean = apiKey.replaceAll(RegExp(r'\s+'), '');
-    if (clean.isEmpty) {
-      await prefs.remove(_prefsGeminiKey);
-    } else {
-      await prefs.setString(_prefsGeminiKey, clean);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (clean.isEmpty) {
+        await prefs.remove(_prefsGeminiKey);
+      } else {
+        await prefs.setString(_prefsGeminiKey, clean);
+      }
+    } catch (_) {}
+
+    try {
+      final client = Supabase.instance.client;
+      final uid = client.auth.currentUser?.id;
+      if (uid != null) {
+        await client.from('auditoria_trazabilidad').insert({
+          'tipo_evento': 'CONFIG_GEMINI_IA',
+          'tabla_referencia': 'configuracion_ia',
+          'usuario_id': uid,
+          'area_origen': 'ALMACEN',
+          'area_destino': 'ALMACEN',
+          'descripcion': clean.isEmpty
+              ? 'Administrador limpió la API Key global de Gemini Vision IA'
+              : 'Administrador configuró la API Key global de Gemini Vision IA para todos los usuarios',
+          'estado_nuevo': {
+            'gemini_api_key': clean,
+            'limpiada': clean.isEmpty,
+            'updated_at': DateTime.now().toIso8601String(),
+          },
+        });
+      }
+    } catch (e) {
+      debugPrint('Aviso sincronizando clave Gemini en Supabase: $e');
     }
   }
 
@@ -207,13 +302,22 @@ class MedicamentoIaService {
   /// Verifica conectividad activa antes de iniciar la validación cruzada online (RNF-011).
   Future<bool> verificarConectividadActiva() async {
     if (kIsWeb) return true;
-    try {
-      final result = await InternetAddress.lookup('google.com')
-          .timeout(const Duration(seconds: 4));
-      return result.isNotEmpty && result.first.rawAddress.isNotEmpty;
-    } catch (_) {
-      return false;
+    const hosts = [
+      'supabase.co',
+      'generativelanguage.googleapis.com',
+      'google.com',
+    ];
+    for (final host in hosts) {
+      try {
+        final result = await InternetAddress.lookup(
+          host,
+        ).timeout(const Duration(seconds: 3));
+        if (result.isNotEmpty && result.first.rawAddress.isNotEmpty) {
+          return true;
+        }
+      } catch (_) {}
     }
+    return false;
   }
 
   /// Construye un borrador limpio solo con la lectura local GS1/GTIN cuando no hay red
@@ -328,10 +432,15 @@ class MedicamentoIaService {
   Future<Map<String, dynamic>?> buscarPorGtinEnSupabase(
     Gs1ParseResult gs1,
   ) async {
+    final gtinBase = gs1.gtin.trim();
+    final rawBase = gs1.rawCode.trim();
     final candidatos = <String>{
-      gs1.gtin.trim(),
+      gtinBase,
+      rawBase,
       if (gs1.ean13Equivalente != null) gs1.ean13Equivalente!.trim(),
-      if (gs1.gtin.length == 13) '0${gs1.gtin}',
+      if (gtinBase.length == 13) '0$gtinBase',
+      if (gtinBase.length == 14 && gtinBase.startsWith('0'))
+        gtinBase.substring(1),
     }..removeWhere((e) => e.isEmpty);
 
     if (candidatos.isEmpty) return null;
@@ -354,7 +463,9 @@ class MedicamentoIaService {
     String? fotoCajaPath,
     List<String> fotosCajaPaths = const [],
   }) async {
-    final gs1 = Gs1BarcodeParser.parsear(gtinEscaneado);
+    final limpioInput = gtinEscaneado.trim();
+    final gs1 = Gs1BarcodeParser.parsear(limpioInput);
+    final codigoEfectivo = gs1.gtin.isNotEmpty ? gs1.gtin : limpioInput;
 
     final fotosValidas = <String>[
       ...fotosCajaPaths,
@@ -364,18 +475,27 @@ class MedicamentoIaService {
         fotoCajaPath,
     ].where((p) => p.trim().isNotEmpty && !kIsWeb && File(p).existsSync()).toList();
 
-    if (gs1.gtin.isEmpty && fotosValidas.isEmpty) {
+    if (codigoEfectivo.isEmpty && fotosValidas.isEmpty) {
       throw const MedicamentoIaException(
-        'Escanea el código de barras o captura las fotografías del empaque para continuar.',
+        'Escanea o escribe el código de barras o captura las fotografías del empaque para continuar.',
       );
     }
 
     // RNF-011: Detectar ausencia de conectividad antes de iniciar validación cruzada online.
     final conectado = await verificarConectividadActiva();
     if (!conectado) {
+      // Si el usuario ingresó solo el código de barras (sin fotos para IA),
+      // permitimos avanzar al formulario directamente sin bloquearlo con error.
+      if (fotosValidas.isEmpty) {
+        return construirBorradorLocal(
+          codigoBruto: codigoEfectivo,
+          avisoAdicional:
+              'Modo sin conexión (RNF-011): código GS1/GTIN procesado localmente. Complete los datos del medicamento en el formulario.',
+        );
+      }
       throw SinConexionIaException(
         message:
-            'No hay conexión a internet en este momento (RNF-011). Tu lectura de código (${gs1.gtin}) y fotografías (${fotosValidas.length}) están seguras; puedes reintentar al recuperar señal o continuar al formulario manualmente.',
+            'No hay conexión a internet en este momento (RNF-011). Tu lectura de código ($codigoEfectivo) y fotografías (${fotosValidas.length}) están seguras; puedes reintentar al recuperar señal o continuar al formulario manualmente.',
         gs1Local: gs1,
         fotoPath: fotosValidas.isNotEmpty ? fotosValidas.first : fotoCajaPath,
         fotosPaths: fotosValidas,
@@ -383,7 +503,7 @@ class MedicamentoIaService {
     }
 
     Map<String, dynamic>? catalogoExistente;
-    if (gs1.gtin.isNotEmpty) {
+    if (codigoEfectivo.isNotEmpty) {
       try {
         catalogoExistente = await buscarPorGtinEnSupabase(gs1);
       } catch (e) {
@@ -413,7 +533,7 @@ class MedicamentoIaService {
           final gtinDetectadoIa =
               jsonIa['gtin_detectado']?.toString().trim() ?? '';
           if (catalogoExistente == null &&
-              gs1.gtin.isEmpty &&
+              codigoEfectivo.isEmpty &&
               gtinDetectadoIa.isNotEmpty) {
             try {
               catalogoExistente = await buscarPorGtinEnSupabase(
@@ -426,7 +546,7 @@ class MedicamentoIaService {
             jsonIa,
             gtinEscaneado:
                 catalogoExistente?['gtin']?.toString() ??
-                (gs1.gtin.isNotEmpty ? gs1.gtin : gtinDetectadoIa),
+                (codigoEfectivo.isNotEmpty ? codigoEfectivo : gtinDetectadoIa),
             fotoPath: fotosValidas.first,
             fotosPaths: fotosValidas,
             gs1: gs1,
@@ -451,7 +571,7 @@ class MedicamentoIaService {
             return MedicamentoExtraccionIA.fromStructuredJson(
               jsonEdge,
               gtinEscaneado:
-                  catalogoExistente?['gtin']?.toString() ?? gs1.gtin,
+                  catalogoExistente?['gtin']?.toString() ?? codigoEfectivo,
               fotoPath: fotosValidas.first,
               fotosPaths: fotosValidas,
               gs1: gs1,
@@ -461,7 +581,7 @@ class MedicamentoIaService {
           }
         } catch (_) {}
         avisoIaNoEjecutada =
-            'Para extraer texto de las fotografías con Gemini Vision, configura tu clave de API Gemini en el ícono de llave (🔑) superior.';
+            'Falta configurar la API Key de Gemini Vision IA en el módulo de Administración.';
       }
     }
 
