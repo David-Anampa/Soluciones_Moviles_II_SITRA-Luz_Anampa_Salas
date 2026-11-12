@@ -388,48 +388,282 @@ class ContextoRegistroFicha {
   }
 }
 
+/// Desglose de lote despachado aplicando FEFO en la entrega de una ficha (HU-007 / HU-010 / HU-011).
+class FichaItemLoteDespachado {
+  final String id;
+  final String loteId;
+  final String numeroLote;
+  final DateTime? fechaVencimiento;
+  final int cantidad;
+  final int cantidadReingresada;
+  final double? costoCompraLote;
+  final double? precioVentaLote;
+  final DateTime? createdAt;
+  final DateTime? reingresadoAt;
+
+  const FichaItemLoteDespachado({
+    required this.id,
+    required this.loteId,
+    required this.numeroLote,
+    this.fechaVencimiento,
+    required this.cantidad,
+    this.cantidadReingresada = 0,
+    this.costoCompraLote,
+    this.precioVentaLote,
+    this.createdAt,
+    this.reingresadoAt,
+  });
+
+  bool get fueReingresado => cantidadReingresada > 0;
+
+  factory FichaItemLoteDespachado.fromMap(Map<String, dynamic> map) {
+    return FichaItemLoteDespachado(
+      id: (map['id'] ?? '').toString(),
+      loteId: (map['lote_id'] ?? '').toString(),
+      numeroLote: (map['numero_lote'] ?? '-').toString(),
+      fechaVencimiento: DateTime.tryParse(
+        (map['fecha_vencimiento'] ?? '').toString(),
+      ),
+      cantidad: (map['cantidad'] as num?)?.toInt() ?? 0,
+      cantidadReingresada: (map['cantidad_reingresada'] as num?)?.toInt() ?? 0,
+      costoCompraLote: (map['costo_compra_lote'] as num?)?.toDouble(),
+      precioVentaLote: (map['precio_venta_lote'] as num?)?.toDouble(),
+      createdAt: DateTime.tryParse((map['created_at'] ?? '').toString())
+          ?.toLocal(),
+      reingresadoAt: DateTime.tryParse(
+        (map['reingresado_at'] ?? '').toString(),
+      )?.toLocal(),
+    );
+  }
+}
+
+/// Evento cronológico del historial de auditoría de una ficha (HU-007).
+class EventoHistorialFicha {
+  final String id;
+  final String tipoEvento;
+  final DateTime? fechaEvento;
+  final String? usuarioId;
+  final String usuarioNombre;
+  final String? usuarioRol;
+  final String? areaOrigen;
+  final String? areaDestino;
+  final String? medicamentoId;
+  final String? medicamentoNombre;
+  final String? loteId;
+  final String? numeroLote;
+  final int? cantidad;
+  final String descripcion;
+  final Map<String, dynamic> detallesExtra;
+
+  const EventoHistorialFicha({
+    required this.id,
+    required this.tipoEvento,
+    this.fechaEvento,
+    this.usuarioId,
+    required this.usuarioNombre,
+    this.usuarioRol,
+    this.areaOrigen,
+    this.areaDestino,
+    this.medicamentoId,
+    this.medicamentoNombre,
+    this.loteId,
+    this.numeroLote,
+    this.cantidad,
+    required this.descripcion,
+    this.detallesExtra = const {},
+  });
+
+  String get etiquetaEvento {
+    switch (tipoEvento) {
+      case 'FICHA_CREADA':
+        return 'Ficha registrada';
+      case 'FICHA_ACTUALIZADA':
+        return 'Ficha editada';
+      case 'FICHA_EN_PREPARACION':
+        return 'En preparación en Farmacia';
+      case 'FICHA_DESPACHO_ACTUALIZADO':
+        return 'Cantidades de despacho actualizadas';
+      case 'FICHA_LISTA_PARA_RECOJO':
+        return 'Lista para recojo';
+      case 'CONSUMO_FICHA_AREA':
+        return 'Descuento por lote (FEFO)';
+      case 'FICHA_ENTREGADA':
+        return 'Entrega confirmada';
+      case 'REINGRESO_ANULACION_FICHA':
+        return 'Contra-asiento de reingreso a Farmacia';
+      case 'FICHA_ANULADA':
+        return 'Ficha anulada';
+      case 'FICHA_ANULADA_CON_CONTRAASIENTO':
+        return 'Ficha anulada con contra-asiento';
+      default:
+        return tipoEvento.replaceAll('_', ' ');
+    }
+  }
+
+  factory EventoHistorialFicha.fromMap(Map<String, dynamic> map) {
+    final rawExtra = map['detalles_extra'];
+    return EventoHistorialFicha(
+      id: (map['id'] ?? '').toString(),
+      tipoEvento: (map['tipo_evento'] ?? '').toString(),
+      fechaEvento: DateTime.tryParse(
+        (map['fecha_evento'] ?? '').toString(),
+      )?.toLocal(),
+      usuarioId: map['usuario_id']?.toString(),
+      usuarioNombre: (map['usuario_nombre'] ?? 'Sistema').toString(),
+      usuarioRol: map['usuario_rol']?.toString(),
+      areaOrigen: map['area_origen']?.toString(),
+      areaDestino: map['area_destino']?.toString(),
+      medicamentoId: map['medicamento_id']?.toString(),
+      medicamentoNombre: map['medicamento_nombre']?.toString(),
+      loteId: map['lote_id']?.toString(),
+      numeroLote: map['numero_lote']?.toString(),
+      cantidad: (map['cantidad'] as num?)?.toInt(),
+      descripcion: (map['descripcion'] ?? '').toString(),
+      detallesExtra: rawExtra is Map
+          ? Map<String, dynamic>.from(rawExtra)
+          : const <String, dynamic>{},
+    );
+  }
+}
+
+/// Contrato refinado de movimiento de Kardex por medicamento y lote para Sprint 8 (HU-025).
+class MovimientoKardexContratoHu025 {
+  final String id;
+  final String tipoEvento;
+  final String naturalezaMovimiento; // ENTRADA | SALIDA | TRANSFERENCIA | AJUSTE
+  final DateTime? fechaEvento;
+  final String usuarioNombre;
+  final String? usuarioRol;
+  final String? areaOrigen;
+  final String? areaDestino;
+  final String? loteId;
+  final String? numeroLote;
+  final DateTime? fechaVencimiento;
+  final int cantidad;
+  final String? entidadReferenciaId;
+  final String? numeroFicha;
+  final String descripcion;
+
+  const MovimientoKardexContratoHu025({
+    required this.id,
+    required this.tipoEvento,
+    required this.naturalezaMovimiento,
+    this.fechaEvento,
+    required this.usuarioNombre,
+    this.usuarioRol,
+    this.areaOrigen,
+    this.areaDestino,
+    this.loteId,
+    this.numeroLote,
+    this.fechaVencimiento,
+    required this.cantidad,
+    this.entidadReferenciaId,
+    this.numeroFicha,
+    required this.descripcion,
+  });
+
+  factory MovimientoKardexContratoHu025.fromMap(Map<String, dynamic> map) {
+    return MovimientoKardexContratoHu025(
+      id: (map['id'] ?? '').toString(),
+      tipoEvento: (map['tipo_evento'] ?? '').toString(),
+      naturalezaMovimiento:
+          (map['naturaleza_movimiento'] ?? 'AJUSTE').toString(),
+      fechaEvento: DateTime.tryParse(
+        (map['fecha_evento'] ?? '').toString(),
+      )?.toLocal(),
+      usuarioNombre: (map['usuario_nombre'] ?? 'Sistema').toString(),
+      usuarioRol: map['usuario_rol']?.toString(),
+      areaOrigen: map['area_origen']?.toString(),
+      areaDestino: map['area_destino']?.toString(),
+      loteId: map['lote_id']?.toString(),
+      numeroLote: map['numero_lote']?.toString(),
+      fechaVencimiento: DateTime.tryParse(
+        (map['fecha_vencimiento'] ?? '').toString(),
+      ),
+      cantidad: (map['cantidad'] as num?)?.toInt() ?? 0,
+      entidadReferenciaId: map['entidad_referencia_id']?.toString(),
+      numeroFicha: map['numero_ficha']?.toString(),
+      descripcion: (map['descripcion'] ?? '').toString(),
+    );
+  }
+}
+
 class FichaRegistradaItem {
   final String id;
   final String medicamentoId;
   final String nombreComercial;
+  final String? principioActivo;
   final String? presentacion;
   final String? laboratorio;
   final String unidad;
   final int cantidadSolicitada;
   final int cantidadEntregada;
+  final String? observacionItem;
   final String categoriaItem;
   final bool origenKit;
   final double? precioKairosAplicado;
   final double? porcentajeDescuentoAplicado;
   final double? precioUnitarioAplicado;
+  final double? costoUnitarioAplicado;
+  final int farmaciaDisponible;
+  final List<FichaItemLoteDespachado> lotesDespachados;
 
   const FichaRegistradaItem({
     required this.id,
     required this.medicamentoId,
     required this.nombreComercial,
+    this.principioActivo,
     this.presentacion,
     this.laboratorio,
     required this.unidad,
     required this.cantidadSolicitada,
     required this.cantidadEntregada,
+    this.observacionItem,
     required this.categoriaItem,
     required this.origenKit,
     this.precioKairosAplicado,
     this.porcentajeDescuentoAplicado,
     this.precioUnitarioAplicado,
+    this.costoUnitarioAplicado,
+    this.farmaciaDisponible = 0,
+    this.lotesDespachados = const [],
   });
 
+  bool get esDispositivoMedico => categoriaItem == 'DISPOSITIVO_MEDICO';
+
+  bool get esDespachoParcial => cantidadEntregada < cantidadSolicitada;
+
+  double get subtotalSolicitado =>
+      (precioUnitarioAplicado ?? precioKairosAplicado ?? 0) *
+      cantidadSolicitada;
+
+  double get subtotalEntregado =>
+      (precioUnitarioAplicado ?? precioKairosAplicado ?? 0) * cantidadEntregada;
+
   factory FichaRegistradaItem.fromMap(Map<String, dynamic> map) {
+    final rawLotes = map['lotes_despachados'];
+    final parsedLotes = <FichaItemLoteDespachado>[];
+    if (rawLotes is List) {
+      for (final raw in rawLotes) {
+        if (raw is Map) {
+          parsedLotes.add(
+            FichaItemLoteDespachado.fromMap(Map<String, dynamic>.from(raw)),
+          );
+        }
+      }
+    }
     return FichaRegistradaItem(
       id: map['id']?.toString() ?? '',
       medicamentoId: map['medicamento_id']?.toString() ?? '',
       nombreComercial: (map['nombre_comercial'] as String? ?? '').trim(),
+      principioActivo: map['principio_activo'] as String?,
       presentacion: map['presentacion'] as String?,
       laboratorio: map['laboratorio'] as String?,
       unidad: (map['unidad'] as String? ?? 'UNIDAD').trim(),
       cantidadSolicitada:
           (map['cantidad_solicitada'] as num?)?.toInt() ?? 1,
       cantidadEntregada: (map['cantidad_entregada'] as num?)?.toInt() ?? 0,
+      observacionItem: map['observacion_item'] as String?,
       categoriaItem:
           (map['categoria_item'] as String? ?? 'MEDICAMENTO').toUpperCase(),
       origenKit: map['origen_kit'] as bool? ?? false,
@@ -439,6 +673,11 @@ class FichaRegistradaItem {
           (map['porcentaje_descuento_aplicado'] as num?)?.toDouble(),
       precioUnitarioAplicado:
           (map['precio_unitario_aplicado'] as num?)?.toDouble(),
+      costoUnitarioAplicado:
+          (map['costo_unitario_aplicado'] as num?)?.toDouble(),
+      farmaciaDisponible:
+          (map['farmacia_disponible'] as num?)?.toInt() ?? 0,
+      lotesDespachados: List.unmodifiable(parsedLotes),
     );
   }
 }
@@ -472,8 +711,25 @@ class FichaRegistrada {
   final String? receptorId;
   final String? recibidoPor;
   final String? observaciones;
+  final String? notasFarmacia;
+  final String? observacionEntrega;
+  final String? solicitadoPor;
+  final String? solicitadoPorNombre;
+  final String? preparadoPor;
+  final String? preparadoPorNombre;
+  final String? entregadoPor;
+  final String? entregadoPorNombre;
+  final String? anuladoPor;
+  final String? anuladoPorNombre;
+  final String? motivoAnulacion;
   final DateTime fechaCreacion;
+  final DateTime? fechaPreparacion;
+  final DateTime? fechaListoRecojo;
+  final DateTime? fechaEntrega;
+  final DateTime? fechaAnulacion;
+  final DateTime? updatedAt;
   final List<FichaRegistradaItem> items;
+  final List<EventoHistorialFicha> historial;
 
   const FichaRegistrada({
     required this.id,
@@ -504,11 +760,117 @@ class FichaRegistrada {
     this.receptorId,
     this.recibidoPor,
     this.observaciones,
+    this.notasFarmacia,
+    this.observacionEntrega,
+    this.solicitadoPor,
+    this.solicitadoPorNombre,
+    this.preparadoPor,
+    this.preparadoPorNombre,
+    this.entregadoPor,
+    this.entregadoPorNombre,
+    this.anuladoPor,
+    this.anuladoPorNombre,
+    this.motivoAnulacion,
     required this.fechaCreacion,
+    this.fechaPreparacion,
+    this.fechaListoRecojo,
+    this.fechaEntrega,
+    this.fechaAnulacion,
+    this.updatedAt,
     required this.items,
+    this.historial = const [],
   });
 
   bool get esEditable => estado == 'SOLICITADO';
+
+  bool get esNeonatologia => tipoFicha == 'NEONATOLOGIA';
+
+  bool get esUrgente => prioridad == 'URGENTE';
+
+  List<FichaRegistradaItem> get medicamentos => items
+      .where((i) => !i.esDispositivoMedico)
+      .toList(growable: false);
+
+  List<FichaRegistradaItem> get dispositivosMedicos => items
+      .where((i) => i.esDispositivoMedico)
+      .toList(growable: false);
+
+  int get totalUnidadesSolicitadas =>
+      items.fold<int>(0, (acc, i) => acc + i.cantidadSolicitada);
+
+  int get totalUnidadesEntregadas =>
+      items.fold<int>(0, (acc, i) => acc + i.cantidadEntregada);
+
+  double get montoTotalSolicitado =>
+      items.fold<double>(0, (acc, i) => acc + i.subtotalSolicitado);
+
+  double get montoTotalEntregado =>
+      items.fold<double>(0, (acc, i) => acc + i.subtotalEntregado);
+
+  bool get tieneDespachoParcial =>
+      estado != 'SOLICITADO' &&
+      items.any((i) => i.cantidadEntregada < i.cantidadSolicitada);
+
+  String get etiquetaEstado {
+    switch (estado) {
+      case 'SOLICITADO':
+        return 'Solicitado';
+      case 'EN_PREPARACION':
+        return 'En preparación';
+      case 'LISTO_PARA_RECOJO':
+        return 'Listo para recojo';
+      case 'ENTREGADO':
+        return 'Entregado';
+      case 'CANCELADO':
+        return 'Anulado';
+      default:
+        return estado;
+    }
+  }
+
+  /// Permisos de operación según rol y estado actual (HU-008 a HU-011).
+  bool puedeIniciarPreparacion(String rol) =>
+      estado == 'SOLICITADO' &&
+      (rol == 'FARMACIA' || rol == 'ADMINISTRADOR');
+
+  bool puedeEditarDespacho(String rol) =>
+      (estado == 'SOLICITADO' ||
+          estado == 'EN_PREPARACION' ||
+          estado == 'LISTO_PARA_RECOJO') &&
+      (rol == 'FARMACIA' || rol == 'ADMINISTRADOR');
+
+  bool puedeMarcarListoRecojo(String rol) =>
+      (estado == 'SOLICITADO' || estado == 'EN_PREPARACION') &&
+      (rol == 'FARMACIA' || rol == 'ADMINISTRADOR');
+
+  bool puedeConfirmarEntrega({
+    required String rol,
+    List<String> areasUsuario = const [],
+  }) {
+    if (estado == 'LISTO_PARA_RECOJO') {
+      if (rol == 'FARMACIA' || rol == 'ADMINISTRADOR') return true;
+      if (rol == 'ENFERMERIA') {
+        return areasUsuario.isEmpty || areasUsuario.contains(areaOrigen);
+      }
+    }
+    if (estado == 'EN_PREPARACION' &&
+        (rol == 'FARMACIA' || rol == 'ADMINISTRADOR')) {
+      return true;
+    }
+    return false;
+  }
+
+  bool puedeAnular({
+    required String rol,
+    List<String> areasUsuario = const [],
+  }) {
+    if (estado == 'CANCELADO') return false;
+    if (rol == 'FARMACIA' || rol == 'ADMINISTRADOR') return true;
+    if (rol == 'ENFERMERIA' && estado == 'SOLICITADO') {
+      return areasUsuario.isEmpty || areasUsuario.contains(areaOrigen);
+    }
+    return false;
+  }
 
   factory FichaRegistrada.fromMap(Map<String, dynamic> map) {
     final rawItems = map['items'];
@@ -518,6 +880,17 @@ class FichaRegistrada {
         if (raw is Map) {
           items.add(
             FichaRegistradaItem.fromMap(Map<String, dynamic>.from(raw)),
+          );
+        }
+      }
+    }
+    final rawHistorial = map['historial'];
+    final historial = <EventoHistorialFicha>[];
+    if (rawHistorial is List) {
+      for (final raw in rawHistorial) {
+        if (raw is Map) {
+          historial.add(
+            EventoHistorialFicha.fromMap(Map<String, dynamic>.from(raw)),
           );
         }
       }
@@ -555,11 +928,130 @@ class FichaRegistrada {
       receptorId: map['receptor_id']?.toString(),
       recibidoPor: map['recibido_por'] as String?,
       observaciones: map['observaciones'] as String?,
+      notasFarmacia: map['notas_farmacia'] as String?,
+      observacionEntrega: map['observacion_entrega'] as String?,
+      solicitadoPor: map['solicitado_por']?.toString(),
+      solicitadoPorNombre: map['solicitado_por_nombre'] as String?,
+      preparadoPor: map['preparado_por']?.toString(),
+      preparadoPorNombre: map['preparado_por_nombre'] as String?,
+      entregadoPor: map['entregado_por']?.toString(),
+      entregadoPorNombre: map['entregado_por_nombre'] as String?,
+      anuladoPor: map['anulado_por']?.toString(),
+      anuladoPorNombre: map['anulado_por_nombre'] as String?,
+      motivoAnulacion: map['motivo_anulacion'] as String?,
       fechaCreacion: DateTime.tryParse(map['fecha_creacion']?.toString() ?? '')
               ?.toLocal() ??
           DateTime.now(),
+      fechaPreparacion:
+          DateTime.tryParse(map['fecha_preparacion']?.toString() ?? '')
+              ?.toLocal(),
+      fechaListoRecojo:
+          DateTime.tryParse(map['fecha_listo_recojo']?.toString() ?? '')
+              ?.toLocal(),
+      fechaEntrega:
+          DateTime.tryParse(map['fecha_entrega']?.toString() ?? '')?.toLocal(),
+      fechaAnulacion:
+          DateTime.tryParse(map['fecha_anulacion']?.toString() ?? '')
+              ?.toLocal(),
+      updatedAt:
+          DateTime.tryParse(map['updated_at']?.toString() ?? '')?.toLocal(),
       items: List.unmodifiable(items),
+      historial: List.unmodifiable(historial),
     );
   }
+}
+
+/// Filtros inmutables para el listado de fichas de pedido (HU-006).
+class FiltrosListadoFichas {
+  final String area; // TODAS o código de área
+  final String estado; // TODOS | SOLICITADO | EN_PREPARACION | LISTO_PARA_RECOJO | ENTREGADO | CANCELADO
+  final String tipoFicha; // TODOS | GENERAL | NEONATOLOGIA
+  final String prioridad; // TODAS | NORMAL | URGENTE
+  final String turno; // TODOS | DIA | TARDE | NOCHE
+  final String busqueda;
+
+  const FiltrosListadoFichas({
+    this.area = 'TODAS',
+    this.estado = 'TODOS',
+    this.tipoFicha = 'TODOS',
+    this.prioridad = 'TODAS',
+    this.turno = 'TODOS',
+    this.busqueda = '',
+  });
+
+  bool get tieneFiltrosActivos =>
+      area != 'TODAS' ||
+      estado != 'TODOS' ||
+      tipoFicha != 'TODOS' ||
+      prioridad != 'TODAS' ||
+      turno != 'TODOS' ||
+      busqueda.trim().isNotEmpty;
+
+  FiltrosListadoFichas copyWith({
+    String? area,
+    String? estado,
+    String? tipoFicha,
+    String? prioridad,
+    String? turno,
+    String? busqueda,
+  }) {
+    return FiltrosListadoFichas(
+      area: area ?? this.area,
+      estado: estado ?? this.estado,
+      tipoFicha: tipoFicha ?? this.tipoFicha,
+      prioridad: prioridad ?? this.prioridad,
+      turno: turno ?? this.turno,
+      busqueda: busqueda ?? this.busqueda,
+    );
+  }
+}
+
+/// Línea editable para registrar la cantidad despachada y observación por ítem en Farmacia (HU-009).
+class ItemDespachoEdicion {
+  final String itemId;
+  final String medicamentoId;
+  final String nombreComercial;
+  final int cantidadSolicitada;
+  final int cantidadEntregada;
+  final int farmaciaDisponible;
+  final String observacionItem;
+
+  const ItemDespachoEdicion({
+    required this.itemId,
+    required this.medicamentoId,
+    required this.nombreComercial,
+    required this.cantidadSolicitada,
+    required this.cantidadEntregada,
+    required this.farmaciaDisponible,
+    this.observacionItem = '',
+  });
+
+  bool get esDespachoParcial => cantidadEntregada < cantidadSolicitada;
+
+  bool get superaStockFarmacia => cantidadEntregada > farmaciaDisponible;
+
+  ItemDespachoEdicion copyWith({
+    int? cantidadEntregada,
+    int? farmaciaDisponible,
+    String? observacionItem,
+  }) {
+    return ItemDespachoEdicion(
+      itemId: itemId,
+      medicamentoId: medicamentoId,
+      nombreComercial: nombreComercial,
+      cantidadSolicitada: cantidadSolicitada,
+      cantidadEntregada: cantidadEntregada ?? this.cantidadEntregada,
+      farmaciaDisponible: farmaciaDisponible ?? this.farmaciaDisponible,
+      observacionItem: observacionItem ?? this.observacionItem,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+        'item_id': itemId,
+        'medicamento_id': medicamentoId,
+        'cantidad_entregada': cantidadEntregada,
+        if (observacionItem.trim().isNotEmpty)
+          'observacion_item': observacionItem.trim(),
+      };
 }
 
