@@ -1,6 +1,8 @@
+import 'entities/ficha_catalogo_entities.dart';
 import 'ficha_borrador.dart';
 
-/// Validadores puros de dominio para el registro y edición de fichas (HU-003 / HU-004 / HU-005).
+/// Validadores puros de dominio para el registro, edición, atención, despacho y anulación
+/// de fichas de pedido (HU-003 a HU-011).
 /// No dependen de Flutter ni de red, facilitando pruebas unitarias determinísticas.
 class FichaValidadores {
   static const tiposFicha = ['GENERAL', 'NEONATOLOGIA'];
@@ -10,6 +12,13 @@ class FichaValidadores {
   static const procedencias = ['EMERGENCIA', 'HOSPITALIZACION', 'OTRO'];
   static const tiposParto = ['EUTOCICO', 'DISTOCICO', 'CESAREA', 'OTRO'];
   static const categoriasItem = ['MEDICAMENTO', 'DISPOSITIVO_MEDICO'];
+  static const estadosFicha = [
+    'SOLICITADO',
+    'EN_PREPARACION',
+    'LISTO_PARA_RECOJO',
+    'ENTREGADO',
+    'CANCELADO',
+  ];
 
   static String normalizarEspacios(String valor) =>
       valor.trim().replaceAll(RegExp(r'\s+'), ' ');
@@ -189,6 +198,115 @@ class FichaValidadores {
       borrador.items,
       confirmarFaltanteKit: borrador.confirmarFaltanteKit,
     );
+  }
+
+  /// Valida las cantidades despachadas reales y las observaciones por ítem (HU-009).
+  static String? validarDespachoItems(
+    List<ItemDespachoEdicion> items, {
+    String? notasFarmacia,
+    bool exigirAlMenosUnoEntregado = true,
+  }) {
+    if (items.isEmpty) {
+      return 'La ficha no contiene ítems para despachar.';
+    }
+    final notaGlobalLimpia = normalizarEspacios(notasFarmacia ?? '');
+    var totalEntregado = 0;
+
+    for (final item in items) {
+      if (item.cantidadEntregada < 0 ||
+          item.cantidadEntregada > item.cantidadSolicitada) {
+        return 'La cantidad a despachar de "${item.nombreComercial}" (${item.cantidadEntregada}) debe estar entre 0 y ${item.cantidadSolicitada}.';
+      }
+      if (item.cantidadEntregada > item.farmaciaDisponible) {
+        return 'Stock insuficiente en Farmacia para "${item.nombreComercial}" (a despachar: ${item.cantidadEntregada}, disponible vigente: ${item.farmaciaDisponible}).';
+      }
+      final obsLimpia = normalizarEspacios(item.observacionItem);
+      if (item.cantidadEntregada < item.cantidadSolicitada &&
+          obsLimpia.isEmpty &&
+          notaGlobalLimpia.isEmpty) {
+        return 'El ítem "${item.nombreComercial}" tiene despacho parcial (${item.cantidadEntregada} de ${item.cantidadSolicitada} solicitados). Ingresa una observación justificativa.';
+      }
+      totalEntregado += item.cantidadEntregada;
+    }
+
+    if (exigirAlMenosUnoEntregado && totalEntregado <= 0) {
+      return 'Debes despachar al menos 1 unidad en la ficha para marcarla como lista o entregada. Si no se atenderá ningún ítem, anula la ficha con motivo.';
+    }
+    return null;
+  }
+
+  /// Valida el motivo obligatorio de anulación de una ficha (HU-011).
+  static String? validarMotivoAnulacion(String? motivo) {
+    final limpio = normalizarEspacios(motivo ?? '');
+    if (limpio.length < 5 || limpio.length > 500) {
+      return 'Ingresa el motivo obligatorio de anulación (5 a 500 caracteres).';
+    }
+    return null;
+  }
+
+  /// Valida si un rol y área pueden ejecutar una transición de atención sobre la ficha (HU-008 / HU-010 / HU-011).
+  static String? validarTransicionAtencion({
+    required FichaRegistrada ficha,
+    required String accion,
+    required String rol,
+    List<String> areasUsuario = const [],
+  }) {
+    final accionUpper = accion.trim().toUpperCase();
+    final rolUpper = rol.trim().toUpperCase();
+
+    switch (accionUpper) {
+      case 'INICIAR_PREPARACION':
+        if (rolUpper != 'FARMACIA' && rolUpper != 'ADMINISTRADOR') {
+          return 'Solo Farmacia o Administración pueden iniciar la preparación de una ficha.';
+        }
+        if (ficha.estado != 'SOLICITADO' &&
+            ficha.estado != 'EN_PREPARACION') {
+          return 'Solo se puede iniciar la preparación desde el estado SOLICITADO.';
+        }
+        return null;
+
+      case 'GUARDAR_PREPARACION':
+      case 'MARCAR_LISTO_RECOJO':
+        if (rolUpper != 'FARMACIA' && rolUpper != 'ADMINISTRADOR') {
+          return 'Solo Farmacia o Administración pueden registrar cantidades despachadas.';
+        }
+        if (ficha.estado != 'SOLICITADO' &&
+            ficha.estado != 'EN_PREPARACION' &&
+            ficha.estado != 'LISTO_PARA_RECOJO') {
+          return 'No se puede modificar la preparación de una ficha en estado ${ficha.etiquetaEstado}.';
+        }
+        return null;
+
+      case 'CONFIRMAR_ENTREGA':
+        if (ficha.estado == 'ENTREGADO') {
+          return 'Esta ficha ya fue entregada y su stock ya fue descontado.';
+        }
+        if (!ficha.puedeConfirmarEntrega(
+          rol: rolUpper,
+          areasUsuario: areasUsuario,
+        )) {
+          return 'No tienes permiso o la ficha no está en un estado válido para confirmar la entrega.';
+        }
+        return null;
+
+      case 'ANULAR_FICHA':
+        if (ficha.estado == 'CANCELADO') {
+          return 'Esta ficha ya se encuentra anulada.';
+        }
+        if (!ficha.puedeAnular(
+          rol: rolUpper,
+          areasUsuario: areasUsuario,
+        )) {
+          if (rolUpper == 'ENFERMERIA' && ficha.estado != 'SOLICITADO') {
+            return 'La ficha ya está en atención por Farmacia (${ficha.etiquetaEstado}). Solicita su anulación a Farmacia.';
+          }
+          return 'No tienes permiso para anular esta ficha.';
+        }
+        return null;
+
+      default:
+        return 'Acción de ficha no reconocida ($accionUpper).';
+    }
   }
 }
 
