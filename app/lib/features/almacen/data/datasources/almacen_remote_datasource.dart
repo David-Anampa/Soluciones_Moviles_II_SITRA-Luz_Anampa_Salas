@@ -29,12 +29,55 @@ class AlmacenRemoteDataSource {
     required Map<String, dynamic> medicamento,
     required Map<String, dynamic> ingreso,
   }) async {
-    final loteResult = await _ingresos.registrar(
-      ingreso,
-      medicamento: medicamento,
-    );
-    final rawCategoria = medicamento['categoria']?.toString().trim().toUpperCase();
-    final medId = loteResult['medicamento_id']?.toString();
+    final gtinLimpio = medicamento['gtin']?.toString().trim() ?? '';
+    String? idExistente;
+    if (gtinLimpio.isNotEmpty) {
+      try {
+        final candidatos = <String>{
+          gtinLimpio,
+          if (gtinLimpio.length == 13) '0$gtinLimpio',
+          if (gtinLimpio.length == 14 && gtinLimpio.startsWith('0'))
+            gtinLimpio.substring(1),
+        };
+        final rows = await _supabase
+            .from('medicamentos')
+            .select('id')
+            .inFilter('gtin', candidatos.toList())
+            .limit(1);
+        if (rows.isNotEmpty) {
+          idExistente = rows.first['id']?.toString();
+        }
+      } catch (_) {}
+    }
+
+    Map<String, dynamic> loteResult;
+    if (idExistente != null && idExistente.isNotEmpty) {
+      final datosUpdate = Map<String, dynamic>.from(medicamento)
+        ..remove('categoria')
+        ..['activo'] = true;
+      try {
+        await _supabase
+            .from('medicamentos')
+            .update(datosUpdate)
+            .eq('id', idExistente);
+      } catch (_) {}
+      loteResult = await _ingresos.registrar({
+        ...ingreso,
+        'medicamento_id': idExistente,
+        'activo': true,
+      });
+    } else {
+      loteResult = await _ingresos.registrar(
+        ingreso,
+        medicamento: medicamento,
+      );
+    }
+
+    final rawCategoria = medicamento['categoria']
+        ?.toString()
+        .trim()
+        .toUpperCase();
+    final medId = idExistente ?? loteResult['medicamento_id']?.toString();
     if (rawCategoria == 'DISPOSITIVO_MEDICO' &&
         medId != null &&
         medId.isNotEmpty) {
@@ -148,11 +191,25 @@ class AlmacenRemoteDataSource {
   /// Registra un nuevo medicamento maestro en el catálogo
   Future<MedicamentoModel> registrarMedicamento(MedicamentoModel nuevo) async {
     try {
-      final response = await _supabase
-          .from('medicamentos')
-          .insert(nuevo.toMap())
-          .select()
-          .single();
+      Map<String, dynamic> response;
+      try {
+        response = await _supabase
+            .from('medicamentos')
+            .insert(nuevo.toMap())
+            .select()
+            .single();
+      } on PostgrestException catch (e) {
+        if (e.message.toLowerCase().contains('categoria')) {
+          final mapSinCategoria = nuevo.toMap()..remove('categoria');
+          response = await _supabase
+              .from('medicamentos')
+              .insert(mapSinCategoria)
+              .select()
+              .single();
+        } else {
+          rethrow;
+        }
+      }
 
       debugPrint(
         '✅ Medicamento registrado exitosamente en Supabase: ${response['nombre_comercial']}',
@@ -178,12 +235,27 @@ class AlmacenRemoteDataSource {
     MedicamentoModel medicamento,
   ) async {
     try {
-      final response = await _supabase
-          .from('medicamentos')
-          .update(medicamento.toMap())
-          .eq('id', medicamento.id)
-          .select()
-          .single();
+      Map<String, dynamic> response;
+      try {
+        response = await _supabase
+            .from('medicamentos')
+            .update(medicamento.toMap())
+            .eq('id', medicamento.id)
+            .select()
+            .single();
+      } on PostgrestException catch (e) {
+        if (e.message.toLowerCase().contains('categoria')) {
+          final mapSinCategoria = medicamento.toMap()..remove('categoria');
+          response = await _supabase
+              .from('medicamentos')
+              .update(mapSinCategoria)
+              .eq('id', medicamento.id)
+              .select()
+              .single();
+        } else {
+          rethrow;
+        }
+      }
 
       debugPrint(
         '✅ Medicamento actualizado exitosamente en Supabase: ${response['nombre_comercial']}',

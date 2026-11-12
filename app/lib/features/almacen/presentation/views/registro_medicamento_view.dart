@@ -9,7 +9,10 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/widgets/mensajes_app.dart';
+import '../../../auth/domain/entities/user_entity.dart';
+import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../data/services/medicamento_ia_service.dart';
+import '../../domain/entities/medicamento_entity.dart';
 import '../../domain/entities/medicamento_extraccion_ia.dart';
 import '../states/almacen_state.dart';
 import '../viewmodels/almacen_viewmodel.dart';
@@ -45,6 +48,7 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
   bool _existeEnCatalogo = false;
   bool _analizandoFotoIa = false;
   bool _actualizandoPreciosInternamente = false;
+  bool _mostrarBotonApiKeyAdmin = true;
 
   // Controladores de Medicamento
   final _gtinController = TextEditingController();
@@ -145,6 +149,16 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
     }
 
     _cargarLaboratoriosDeBaseDatos();
+    _cargarPreferenciaBotonApiKeyAdmin();
+  }
+
+  Future<void> _cargarPreferenciaBotonApiKeyAdmin() async {
+    try {
+      final mostrar =
+          await MedicamentoIaService.obtenerVisibilidadBotonApiKeyAdmin();
+      if (!mounted) return;
+      setState(() => _mostrarBotonApiKeyAdmin = mostrar);
+    } catch (_) {}
   }
 
   Future<void> _cargarLaboratoriosDeBaseDatos() async {
@@ -708,8 +722,34 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
     }
   }
 
+  /// Busca un medicamento en el catálogo ya cargado en memoria por AlmacenViewModel
+  /// considerando variantes GTIN-13 y GTIN-14.
+  MedicamentoEntity? _buscarEnCatalogoLocalMemoria(Gs1ParseResult gs1) {
+    try {
+      final vm = Provider.of<AlmacenViewModel>(context, listen: false);
+      final st = vm.state;
+      if (st is! AlmacenLoaded) return null;
+      final candidatos = <String>{
+        gs1.gtin.trim(),
+        gs1.rawCode.trim(),
+      };
+      if (gs1.gtin.length == 14 && gs1.gtin.startsWith('0')) {
+        candidatos.add(gs1.gtin.substring(1));
+      } else if (gs1.gtin.length == 13) {
+        candidatos.add('0${gs1.gtin}');
+      }
+      for (final med in st.catalogo) {
+        final g = med.gtin.trim();
+        if (g.isNotEmpty && candidatos.contains(g)) {
+          return med;
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
   /// Ejecuta la extracción con Gemini Vision usando todas las fotos adjuntadas (1 a 4)
-  /// y muestra el modal obligatorio de advertencia al terminar.
+  /// o analiza/busca el código de barras ingresado manualmente sin arrojar error.
   Future<void> _ejecutarExtraccionIaEnFormulario() async {
     final rawCode = _gtinController.text.trim();
     final fotos = _fotosValidas;
@@ -722,13 +762,57 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
       return;
     }
 
+    // Si hay código ingresado manualmente, parsear de inmediato GS1/GTIN local
+    final gs1Local = Gs1BarcodeParser.parsear(rawCode);
+    if (rawCode.isNotEmpty && gs1Local.gtin.isEmpty && fotos.isEmpty) {
+      MensajesApp.mostrar(
+        context,
+        'El código ingresado no tiene un formato GTIN / GS1 válido.',
+        tipo: TipoMensaje.advertencia,
+      );
+      return;
+    }
+
     setState(() => _analizandoFotoIa = true);
     try {
-      final resultado = await _iaService.procesarEscaneoYFoto(
+      var resultado = await _iaService.procesarEscaneoYFoto(
         gtinEscaneado: rawCode,
         fotoCajaPath: fotos.isNotEmpty ? fotos.first : null,
         fotosCajaPaths: fotos,
       );
+
+      // Si no se encontró en Supabase pero está en el catálogo en memoria de AlmacenViewModel
+      if (resultado.nombreComercial.isEmpty && gs1Local.gtin.isNotEmpty) {
+        final localMed = _buscarEnCatalogoLocalMemoria(gs1Local);
+        if (localMed != null) {
+          resultado = MedicamentoExtraccionIA(
+            medicamentoExistenteId: localMed.id,
+            existeEnCatalogo: true,
+            gtin: gs1Local.gtin.isNotEmpty ? gs1Local.gtin : localMed.gtin,
+            nombreComercial: localMed.nombreComercial,
+            principioActivo: localMed.principioActivo,
+            presentacion: localMed.presentacion,
+            categoria: localMed.categoria,
+            unidadPresentacion: localMed.unidadPresentacion,
+            cantidadPorPresentacion: localMed.cantidadPorPresentacion,
+            laboratorio: localMed.laboratorio,
+            codArt: localMed.codArt,
+            precioKairos: localMed.precioKairos,
+            numeroLote: gs1Local.numeroLote ?? _loteController.text.trim(),
+            fechaVencimiento: gs1Local.fechaVencimiento ?? _fechaVencimiento,
+            registroSanitario: localMed.registroSanitario,
+            requiereCadenaFrio: localMed.requiereCadenaFrio,
+            temperaturaMin: localMed.temperaturaMin,
+            temperaturaMax: localMed.temperaturaMax,
+            fotoPath: fotos.isNotEmpty ? fotos.first : null,
+            fotosPaths: fotos,
+            extraidoPorIaReal: false,
+            confianza: 'ALTA',
+            origenDatos: 'Catálogo Almacén (${localMed.gtin})',
+          );
+        }
+      }
+
       if (!mounted) return;
       _aplicarExtraccionIA(resultado);
       if (resultado.extraidoPorIaReal) {
@@ -736,22 +820,42 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
       } else {
         MensajesApp.mostrar(
           context,
-          resultado.existeEnCatalogo
-              ? 'Producto encontrado en el catálogo de Supabase y precargado.'
-              : 'Código GS1/GTIN verificado. Completa o captura las fotos del producto.',
+          resultado.existeEnCatalogo || resultado.nombreComercial.isNotEmpty
+              ? 'Producto encontrado en el catálogo y datos precargados automáticamente.'
+              : 'Código GTIN (${resultado.gtin}) verificado y listo para registrar.',
           tipo: TipoMensaje.exito,
         );
       }
     } on SinConexionIaException catch (e) {
       if (!mounted) return;
+      if (gs1Local.gtin.isNotEmpty) {
+        final borrador = _iaService.construirBorradorLocal(
+          codigoBruto: rawCode,
+          fotoCajaPath: fotos.isNotEmpty ? fotos.first : null,
+          fotosCajaPaths: fotos,
+        );
+        _aplicarExtraccionIA(borrador);
+      }
       MensajesApp.mostrar(context, e.message, tipo: TipoMensaje.advertencia);
     } catch (e) {
       if (!mounted) return;
-      MensajesApp.mostrar(
-        context,
-        'No se pudo ejecutar la validación IA: $e',
-        tipo: TipoMensaje.error,
-      );
+      if (gs1Local.gtin.isNotEmpty && fotos.isEmpty) {
+        final borrador = _iaService.construirBorradorLocal(
+          codigoBruto: rawCode,
+        );
+        _aplicarExtraccionIA(borrador);
+        MensajesApp.mostrar(
+          context,
+          'Código GTIN (${borrador.gtin}) analizado localmente. Completa los datos del producto.',
+          tipo: TipoMensaje.exito,
+        );
+      } else {
+        MensajesApp.mostrar(
+          context,
+          'No se pudo ejecutar la validación IA: $e',
+          tipo: TipoMensaje.error,
+        );
+      }
     } finally {
       if (mounted) setState(() => _analizandoFotoIa = false);
     }
@@ -889,6 +993,14 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
     final vm = context.watch<AlmacenViewModel>();
     final isSaving = vm.isSaving;
 
+    AuthViewModel? authVm;
+    try {
+      authVm = Provider.of<AuthViewModel>(context);
+    } catch (_) {
+      authVm = null;
+    }
+    final esAdmin = authVm?.currentUser?.rol == UserRole.administrador;
+
     final laboratoriosSugeridos = <String>{
       ..._laboratoriosBd,
       ...(vm.state is AlmacenLoaded ? (vm.state as AlmacenLoaded).catalogo : [])
@@ -916,11 +1028,12 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
         actionsIconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
         actions: [
-          IconButton(
-            tooltip: 'Configurar clave de Gemini Vision IA',
-            icon: const Icon(Icons.key_rounded),
-            onPressed: () => ConfigurarGeminiDialog.mostrar(context),
-          ),
+          if (esAdmin && _mostrarBotonApiKeyAdmin)
+            IconButton(
+              tooltip: 'Configurar clave de Gemini Vision IA',
+              icon: const Icon(Icons.key_rounded),
+              onPressed: () => ConfigurarGeminiDialog.mostrar(context),
+            ),
           IconButton(
             tooltip: 'Escanear con Cámara (ML Kit + 3-4 Fotos IA)',
             icon: const Icon(Icons.qr_code_scanner_rounded),
@@ -1003,6 +1116,9 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                               child: TextFormField(
                                 controller: _gtinController,
                                 keyboardType: TextInputType.text,
+                                textInputAction: TextInputAction.search,
+                                onFieldSubmitted: (_) =>
+                                    _ejecutarExtraccionIaEnFormulario(),
                                 decoration: const InputDecoration(
                                   labelText: 'Código GTIN / Código de Barras *',
                                   hintText: 'Ej: 7750215001234',
@@ -1029,7 +1145,7 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                             const SizedBox(width: 4),
                             IconButton.filledTonal(
                               tooltip:
-                                  'Validar GTIN en Supabase / Extraer de Fotos con IA',
+                                  'Validar GTIN en Catálogo / Extraer de Fotos con IA',
                               onPressed: _analizandoFotoIa
                                   ? null
                                   : _ejecutarExtraccionIaEnFormulario,
