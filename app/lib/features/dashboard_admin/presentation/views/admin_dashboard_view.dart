@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/sitra_app_bar.dart';
+import '../../../almacen/data/services/medicamento_ia_service.dart';
+import '../../../almacen/presentation/widgets/configurar_gemini_dialog.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 
-class AdminDashboardView extends StatelessWidget {
+class AdminDashboardView extends StatefulWidget {
   const AdminDashboardView({super.key});
 
   static const _red = Color(0xFFC62828);
@@ -62,6 +64,43 @@ class AdminDashboardView extends StatelessWidget {
   ];
 
   @override
+  State<AdminDashboardView> createState() => _AdminDashboardViewState();
+}
+
+class _AdminDashboardViewState extends State<AdminDashboardView> {
+  bool _mostrarBotonApiKey = true;
+  bool _tieneApiKey = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarEstadoApiKey();
+  }
+
+  Future<void> _cargarEstadoApiKey() async {
+    final visible =
+        await MedicamentoIaService.obtenerVisibilidadBotonApiKeyAdmin();
+    final tiene = await MedicamentoIaService.tieneApiKeyConfigurada();
+    if (!mounted) return;
+    setState(() {
+      _mostrarBotonApiKey = visible;
+      _tieneApiKey = tiene;
+    });
+  }
+
+  Future<void> _alternarVisibilidadBotonApiKey() async {
+    final nuevo = !_mostrarBotonApiKey;
+    await MedicamentoIaService.guardarVisibilidadBotonApiKeyAdmin(nuevo);
+    if (!mounted) return;
+    setState(() => _mostrarBotonApiKey = nuevo);
+  }
+
+  Future<void> _abrirConfiguracionApiKey() async {
+    await ConfigurarGeminiDialog.mostrar(context);
+    await _cargarEstadoApiKey();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthViewModel>().currentUser;
     return Scaffold(
@@ -70,6 +109,51 @@ class AdminDashboardView extends StatelessWidget {
         alto: DisenoAdaptable.altoCabecera(context),
         title: 'Menú de administración',
         subtitle: 'Acceso a los módulos de SITRA-Luz',
+        actions: [
+          if (_mostrarBotonApiKey)
+            IconButton(
+              tooltip: _tieneApiKey
+                  ? 'API Key Gemini IA activa (Clic para cambiar)'
+                  : 'Configurar API Key Gemini IA para Almacén',
+              onPressed: _abrirConfiguracionApiKey,
+              icon: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    Icons.key_rounded,
+                    color: _tieneApiKey
+                        ? AppColors.success
+                        : AppColors.almacenColor,
+                  ),
+                  if (_tieneApiKey)
+                    Positioned(
+                      right: -2,
+                      top: -2,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppColors.success,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          IconButton(
+            tooltip: _mostrarBotonApiKey
+                ? 'Ocultar botón de API Key IA'
+                : 'Mostrar botón de API Key IA',
+            onPressed: _alternarVisibilidadBotonApiKey,
+            icon: Icon(
+              _mostrarBotonApiKey
+                  ? Icons.visibility_rounded
+                  : Icons.visibility_off_rounded,
+              color: AdminDashboardView._red,
+            ),
+          ),
+        ],
       ),
       body: ContenidoAdaptable(
         anchoMaximo: 1100,
@@ -88,7 +172,7 @@ class AdminDashboardView extends StatelessWidget {
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [_red, Color(0xFFE05252)],
+                          colors: [AdminDashboardView._red, Color(0xFFE05252)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -97,10 +181,46 @@ class AdminDashboardView extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
-                            Icons.admin_panel_settings_rounded,
-                            color: Colors.white,
-                            size: 32,
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.admin_panel_settings_rounded,
+                                color: Colors.white,
+                                size: 32,
+                              ),
+                              const Spacer(),
+                              TextButton.icon(
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: Colors.white.withValues(
+                                    alpha: 0.16,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                                onPressed: _alternarVisibilidadBotonApiKey,
+                                icon: Icon(
+                                  _mostrarBotonApiKey
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.key_rounded,
+                                  size: 16,
+                                ),
+                                label: Text(
+                                  _mostrarBotonApiKey
+                                      ? 'Ocultar botón API Key'
+                                      : 'Mostrar botón API Key',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 12),
                           Text(
@@ -120,6 +240,96 @@ class AdminDashboardView extends StatelessWidget {
                               color: Colors.white,
                             ),
                           ),
+                          if (_mostrarBotonApiKey) ...[
+                            const SizedBox(height: 14),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Wrap(
+                                spacing: 12,
+                                runSpacing: 10,
+                                alignment: WrapAlignment.spaceBetween,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: (_tieneApiKey
+                                                  ? AppColors.success
+                                                  : AppColors.warning)
+                                              .withValues(alpha: 0.14),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.key_rounded,
+                                          color: _tieneApiKey
+                                              ? AppColors.success
+                                              : AppColors.warning,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          maxWidth: 460,
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              _tieneApiKey
+                                                  ? 'API Key Gemini Vision Activa (Global para Almacén)'
+                                                  : 'API Key Gemini Vision Pendiente de Configurar',
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.textPrimary,
+                                              ),
+                                            ),
+                                            const Text(
+                                              'Solo el Administrador gestiona esta clave; todos los usuarios de Almacén la usarán automáticamente al capturar fotos.',
+                                              style: TextStyle(
+                                                fontSize: 11.5,
+                                                color: AppColors.textSecondary,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  FilledButton.icon(
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: AdminDashboardView._red,
+                                    ),
+                                    onPressed: _abrirConfiguracionApiKey,
+                                    icon: const Icon(
+                                      Icons.key_rounded,
+                                      size: 16,
+                                    ),
+                                    label: Text(
+                                      _tieneApiKey
+                                          ? 'Cambiar API Key'
+                                          : 'Añadir API Key',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12.5,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -150,7 +360,7 @@ class AdminDashboardView extends StatelessWidget {
                         return Wrap(
                           spacing: 16,
                           runSpacing: 16,
-                          children: _modules
+                          children: AdminDashboardView._modules
                               .map(
                                 (module) => SizedBox(
                                   width: width,
@@ -172,7 +382,11 @@ class AdminDashboardView extends StatelessWidget {
                       child: const Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.grid_view_rounded, size: 20, color: _red),
+                          Icon(
+                            Icons.grid_view_rounded,
+                            size: 20,
+                            color: AdminDashboardView._red,
+                          ),
                           SizedBox(width: 12),
                           Expanded(
                             child: Text(
