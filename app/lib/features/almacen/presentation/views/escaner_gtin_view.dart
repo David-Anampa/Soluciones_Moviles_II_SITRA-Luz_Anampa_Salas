@@ -4,12 +4,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/widgets/mensajes_app.dart';
+import '../../../auth/domain/entities/user_entity.dart';
+import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../data/services/medicamento_ia_service.dart';
+import '../../domain/entities/medicamento_entity.dart';
 import '../../domain/entities/medicamento_extraccion_ia.dart';
+import '../states/almacen_state.dart';
+import '../viewmodels/almacen_viewmodel.dart';
 import '../widgets/configurar_gemini_dialog.dart';
 import 'registro_medicamento_view.dart';
 
@@ -59,6 +65,7 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
   bool _isProcessingIA = false;
   bool _torchOn = false;
   bool _tieneGeminiKey = false;
+  bool _mostrarBotonApiKeyAdmin = true;
   String? _errorSinRedMensaje;
 
   bool get _esPlataformaEscritorio =>
@@ -77,8 +84,13 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
 
   Future<void> _verificarEstadoGeminiKey() async {
     final tiene = await MedicamentoIaService.tieneApiKeyConfigurada();
+    final mostrarBoton =
+        await MedicamentoIaService.obtenerVisibilidadBotonApiKeyAdmin();
     if (!mounted) return;
-    setState(() => _tieneGeminiKey = tiene);
+    setState(() {
+      _tieneGeminiKey = tiene;
+      _mostrarBotonApiKeyAdmin = mostrarBoton;
+    });
   }
 
   @override
@@ -101,17 +113,58 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
   }
 
   void _seleccionarCodigoLocal(String rawCode) {
-    final parsed = Gs1BarcodeParser.parsear(rawCode);
-    if (parsed.gtin.isEmpty) return;
+    final limpio = rawCode.trim();
+    if (limpio.isEmpty) return;
 
+    final parsed = Gs1BarcodeParser.parsear(limpio);
+    if (parsed.gtin.isEmpty) {
+      if (mounted) {
+        MensajesApp.mostrar(
+          context,
+          'El código ingresado no es válido. Ingresa dígitos numéricos o una cadena GS1.',
+          tipo: TipoMensaje.advertencia,
+        );
+      }
+      return;
+    }
+
+    if (!_esPlataformaEscritorio) {
+      try {
+        _scannerController.stop();
+      } catch (_) {}
+    }
+
+    if (!mounted) return;
     setState(() {
-      _codigoBrutoEscaneado = rawCode;
+      _codigoBrutoEscaneado = limpio;
       _gs1Local = parsed;
       _errorSinRedMensaje = null;
     });
-    if (!_esPlataformaEscritorio) {
-      _scannerController.stop();
-    }
+  }
+
+  /// Busca coincidencias del GTIN en la lista ya cargada en memoria por AlmacenViewModel.
+  MedicamentoEntity? _buscarEnCatalogoLocalMemoria(Gs1ParseResult gs1) {
+    try {
+      final vm = Provider.of<AlmacenViewModel>(context, listen: false);
+      final st = vm.state;
+      if (st is! AlmacenLoaded) return null;
+      final candidatos = <String>{
+        gs1.gtin.trim(),
+        gs1.rawCode.trim(),
+      };
+      if (gs1.gtin.length == 14 && gs1.gtin.startsWith('0')) {
+        candidatos.add(gs1.gtin.substring(1));
+      } else if (gs1.gtin.length == 13) {
+        candidatos.add('0${gs1.gtin}');
+      }
+      for (final med in st.catalogo) {
+        final g = med.gtin.trim();
+        if (g.isNotEmpty && candidatos.contains(g)) {
+          return med;
+        }
+      }
+    } catch (_) {}
+    return null;
   }
 
   /// Captura una fotografía para una de las 4 ranuras y, si proviene de cámara,
@@ -168,6 +221,11 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
     if (_codigoBrutoEscaneado == null) return;
 
     final fotos = _fotosCapturadasValidas;
+    if (fotos.isEmpty) {
+      await _continuarSoloConCodigoGtin();
+      return;
+    }
+
     setState(() {
       _isProcessingIA = true;
       _errorSinRedMensaje = null;
@@ -176,7 +234,7 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
     try {
       final resultadoIA = await _iaService.procesarEscaneoYFoto(
         gtinEscaneado: _codigoBrutoEscaneado!,
-        fotoCajaPath: fotos.isNotEmpty ? fotos.first : null,
+        fotoCajaPath: fotos.first,
         fotosCajaPaths: fotos,
       );
 
@@ -210,12 +268,82 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
     }
   }
 
+  /// Continúa únicamente con el código GTIN/GS1 manual o escaneado (sin requerir fotos),
+  /// consultando el catálogo en memoria y en Supabase sin arrojar error si es un código nuevo.
+  Future<void> _continuarSoloConCodigoGtin([String? codigoOpcional]) async {
+    final codigo = (codigoOpcional ?? _codigoBrutoEscaneado ?? '').trim();
+    if (codigo.isEmpty) return;
+
+    final gs1 = Gs1BarcodeParser.parsear(codigo);
+    final fotos = _fotosCapturadasValidas;
+
+    setState(() {
+      _isProcessingIA = true;
+      _errorSinRedMensaje = null;
+    });
+
+    try {
+      // 1. Intentar consultar Supabase o generar borrador desde el servicio
+      var resultado = await _iaService.procesarEscaneoYFoto(
+        gtinEscaneado: codigo,
+        fotoCajaPath: fotos.isNotEmpty ? fotos.first : null,
+        fotosCajaPaths: fotos,
+      );
+
+      // 2. Si no se encontró en Supabase pero existe en la memoria de AlmacenViewModel, autocompletar
+      if (resultado.nombreComercial.isEmpty) {
+        final localMed = _buscarEnCatalogoLocalMemoria(gs1);
+        if (localMed != null) {
+          resultado = MedicamentoExtraccionIA(
+            medicamentoExistenteId: localMed.id,
+            existeEnCatalogo: true,
+            gtin: gs1.gtin.isNotEmpty ? gs1.gtin : localMed.gtin,
+            nombreComercial: localMed.nombreComercial,
+            principioActivo: localMed.principioActivo,
+            presentacion: localMed.presentacion,
+            categoria: localMed.categoria,
+            unidadPresentacion: localMed.unidadPresentacion,
+            cantidadPorPresentacion: localMed.cantidadPorPresentacion,
+            laboratorio: localMed.laboratorio,
+            codArt: localMed.codArt,
+            precioKairos: localMed.precioKairos,
+            numeroLote: gs1.numeroLote ?? '',
+            fechaVencimiento: gs1.fechaVencimiento,
+            registroSanitario: localMed.registroSanitario,
+            requiereCadenaFrio: localMed.requiereCadenaFrio,
+            temperaturaMin: localMed.temperaturaMin,
+            temperaturaMax: localMed.temperaturaMax,
+            fotoPath: fotos.isNotEmpty ? fotos.first : null,
+            fotosPaths: fotos,
+            extraidoPorIaReal: false,
+            confianza: 'ALTA',
+            origenDatos: 'Catálogo Almacén (${localMed.gtin})',
+          );
+        }
+      }
+
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => RegistroMedicamentoView(
+            datosIniciales: resultado,
+            mostrarAdvertenciaIaInicial: false,
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      _continuarConDatosLocales(codigo);
+    }
+  }
+
   /// Permite continuar al formulario conservando el GTIN/GS1 y las fotografías capturadas localmente (RNF-011).
-  void _continuarConDatosLocales() {
-    if (_codigoBrutoEscaneado == null) return;
+  void _continuarConDatosLocales([String? codigoOpcional]) {
+    final codigo = (codigoOpcional ?? _codigoBrutoEscaneado ?? '').trim();
+    if (codigo.isEmpty) return;
     final fotos = _fotosCapturadasValidas;
     final borradorLocal = _iaService.construirBorradorLocal(
-      codigoBruto: _codigoBrutoEscaneado!,
+      codigoBruto: codigo,
       fotoCajaPath: fotos.isNotEmpty ? fotos.first : null,
       fotosCajaPaths: fotos,
       avisoAdicional: _errorSinRedMensaje != null
@@ -240,64 +368,29 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
       _errorSinRedMensaje = null;
     });
     if (!_esPlataformaEscritorio) {
-      _scannerController.start();
+      try {
+        _scannerController.start();
+      } catch (_) {}
     }
   }
 
-  /// Permite ingresar manualmente un código GTIN o cadena GS1-128.
+  /// Permite ingresar manualmente un código GTIN o cadena GS1-128 sin errores de ciclo de vida del controlador.
   Future<void> _mostrarDialogoIngresoManualGtin() async {
-    final controller = TextEditingController();
-    final ingresado = await showDialog<String>(
+    final resultado = await showDialog<_ResultadoDialogoGtinManual>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Ingresar Código GTIN / GS1',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        content: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Escribe un código EAN-13 (13 dígitos), GTIN-14 o cadena GS1 como (01)07750215001234(17)281231(10)L2026A:',
-                style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Código GTIN / GS1 *',
-                  hintText: 'Ej: 7750215001234',
-                  prefixIcon: Icon(Icons.qr_code_rounded),
-                ),
-                onSubmitted: (val) => Navigator.pop(ctx, val.trim()),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.almacenColor,
-            ),
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Confirmar código'),
-          ),
-        ],
-      ),
+      builder: (ctx) => const _DialogoIngresoManualGtin(),
     );
-    controller.dispose();
 
-    if (ingresado != null && ingresado.isNotEmpty) {
-      _seleccionarCodigoLocal(ingresado);
+    if (!mounted || resultado == null || resultado.codigo.trim().isEmpty) {
+      return;
+    }
+
+    final codigoLimpio = resultado.codigo.trim();
+    if (resultado.irDirectoAlFormulario) {
+      _seleccionarCodigoLocal(codigoLimpio);
+      await _continuarSoloConCodigoGtin(codigoLimpio);
+    } else {
+      _seleccionarCodigoLocal(codigoLimpio);
     }
   }
 
@@ -462,6 +555,14 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
 
   @override
   Widget build(BuildContext context) {
+    AuthViewModel? authVm;
+    try {
+      authVm = Provider.of<AuthViewModel>(context);
+    } catch (_) {
+      authVm = null;
+    }
+    final esAdmin = authVm?.currentUser?.rol == UserRole.administrador;
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -474,37 +575,39 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         actions: [
-          IconButton(
-            tooltip: _tieneGeminiKey
-                ? 'Gemini Vision IA Configurado (Clic para editar)'
-                : 'Configurar API Key de Gemini Vision IA',
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(
-                  Icons.key_rounded,
-                  color: _tieneGeminiKey ? Colors.greenAccent : Colors.white70,
-                ),
-                if (_tieneGeminiKey)
-                  Positioned(
-                    right: -2,
-                    top: -2,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Colors.greenAccent,
-                        shape: BoxShape.circle,
+          if (esAdmin && _mostrarBotonApiKeyAdmin)
+            IconButton(
+              tooltip: _tieneGeminiKey
+                  ? 'Gemini Vision IA Configurado (Clic para editar)'
+                  : 'Configurar API Key de Gemini Vision IA',
+              icon: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    Icons.key_rounded,
+                    color:
+                        _tieneGeminiKey ? Colors.greenAccent : Colors.white70,
+                  ),
+                  if (_tieneGeminiKey)
+                    Positioned(
+                      right: -2,
+                      top: -2,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.greenAccent,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
+              onPressed: () async {
+                await ConfigurarGeminiDialog.mostrar(context);
+                await _verificarEstadoGeminiKey();
+              },
             ),
-            onPressed: () async {
-              await ConfigurarGeminiDialog.mostrar(context);
-              await _verificarEstadoGeminiKey();
-            },
-          ),
           if (_codigoBrutoEscaneado == null && !_esPlataformaEscritorio)
             IconButton(
               icon: Icon(
@@ -813,7 +916,7 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
 
               const SizedBox(height: 14),
 
-              // Explicación de las 3 a 4 fotos y guardado en galería
+              // Explicación de las 3 a 4 fotos y guardado en galería / Estado de carga IA mejorado
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
@@ -822,36 +925,7 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
                   border: Border.all(color: Colors.grey.shade300),
                 ),
                 child: _isProcessingIA
-                    ? Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 24),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const CircularProgressIndicator(
-                              color: AppColors.almacenColor,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Analizando $cantidadFotos fotografía(s) con Gemini Vision IA...',
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 6),
-                            const Text(
-                              'Estandarizando nombre (ej. DEXAFAR 8M/2ML INY X 1), extrayendo Lote, Fecha de Caducidad, Registro Sanitario y homologando siglas de Laboratorio con la BD.',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textSecondary,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      )
+                    ? _buildEstadoCargaIA(cantidadFotos, fotosValidas)
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -948,13 +1022,13 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
                 ),
                 const SizedBox(height: 8),
                 TextButton.icon(
-                  onPressed: _ejecutarValidacionCruzadaIA,
-                  icon: const Icon(Icons.search_rounded, size: 18),
+                  onPressed: () => _continuarSoloConCodigoGtin(),
+                  icon: const Icon(Icons.arrow_forward_rounded, size: 18),
                   label: const Text(
                     'Continuar solo con código GTIN / llenado manual',
                     style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w600,
+                      color: AppColors.almacenColor,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -966,132 +1040,324 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
     );
   }
 
-  Widget _buildTarjetaRanuraFoto(int index) {
-    final path = _fotosCaras[index];
-    final tieneFoto =
-        path != null && !kIsWeb && File(path).existsSync();
-    final esOpcional = index == 3;
-
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: tieneFoto
-            ? AppColors.success.withValues(alpha: 0.06)
-            : AppColors.surfaceVariant.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: tieneFoto
-              ? AppColors.success.withValues(alpha: 0.45)
-              : Colors.grey.shade300,
-        ),
-      ),
-      child: Row(
+  /// Interfaz de carga compacta y moderna mientras Gemini Vision IA o el catálogo procesan la captura.
+  Widget _buildEstadoCargaIA(int cantidadFotos, List<String> fotosValidas) {
+    final analizandoFotos = cantidadFotos > 0;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          if (tieneFoto)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.file(
-                File(path),
-                width: 58,
-                height: 58,
-                fit: BoxFit.cover,
-              ),
-            )
-          else
-            Container(
-              width: 58,
-              height: 58,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: Icon(
-                esOpcional
-                    ? Icons.add_photo_alternate_outlined
-                    : Icons.camera_alt_outlined,
-                color: esOpcional
-                    ? AppColors.textSecondary
-                    : AppColors.almacenColor,
-              ),
+          Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
+              color: AppColors.almacenColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Stack(
+              alignment: Alignment.center,
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        _titulosCaras[index],
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12.5,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    if (tieneFoto) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withValues(alpha: 0.16),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          'LISTA',
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.success,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _subtitulosCaras[index],
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
+                const SizedBox(
+                  width: 56,
+                  height: 56,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3.2,
+                    color: AppColors.almacenColor,
                   ),
+                ),
+                Icon(
+                  analizandoFotos
+                      ? Icons.auto_awesome_rounded
+                      : Icons.qr_code_scanner_rounded,
+                  color: AppColors.almacenColor,
+                  size: 26,
                 ),
               ],
             ),
           ),
-          IconButton(
-            tooltip: 'Tomar con Cámara (Guarda en Galería)',
-            onPressed: () => _capturarFotoEnRanura(index, ImageSource.camera),
-            icon: const Icon(
-              Icons.camera_alt_rounded,
-              color: AppColors.almacenColor,
+          const SizedBox(height: 14),
+          Text(
+            analizandoFotos
+                ? 'Procesando $cantidadFotos foto(s) con Gemini IA'
+                : 'Verificando código GTIN en catálogo',
+            style: const TextStyle(
+              fontSize: 15.5,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
             ),
+            textAlign: TextAlign.center,
           ),
-          IconButton(
-            tooltip: 'Elegir de Galería',
-            onPressed: () => _capturarFotoEnRanura(index, ImageSource.gallery),
-            icon: const Icon(
-              Icons.photo_library_outlined,
+          const SizedBox(height: 4),
+          Text(
+            analizandoFotos
+                ? 'Extrayendo datos del empaque automáticamente...'
+                : 'Buscando coincidencias del producto para autocompletar...',
+            style: const TextStyle(
+              fontSize: 12.5,
               color: AppColors.textSecondary,
             ),
+            textAlign: TextAlign.center,
           ),
-          if (tieneFoto)
-            IconButton(
-              tooltip: 'Quitar foto',
-              onPressed: () => setState(() => _fotosCaras[index] = null),
-              icon: const Icon(
-                Icons.close_rounded,
-                size: 18,
-                color: AppColors.error,
-              ),
+          if (fotosValidas.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: fotosValidas
+                  .map(
+                    (f) => ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        File(f),
+                        width: 46,
+                        height: 46,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  )
+                  .toList(),
             ),
+          ],
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            alignment: WrapAlignment.center,
+            children: const [
+              _PildoraPasoIA(
+                icono: Icons.medication_outlined,
+                texto: 'Nombre y Conc.',
+              ),
+              _PildoraPasoIA(
+                icono: Icons.event_available_outlined,
+                texto: 'Lote y Venc.',
+              ),
+              _PildoraPasoIA(
+                icono: Icons.verified_outlined,
+                texto: 'R.S. y Lab.',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Tarjeta de captura rediseñada en 2 niveles para que el título y subtítulo
+  /// ocupen todo el ancho disponible y nunca se corten verticalmente letra por letra.
+  Widget _buildTarjetaRanuraFoto(int index) {
+    final path = _fotosCaras[index];
+    final tieneFoto = path != null && !kIsWeb && File(path).existsSync();
+    final esOpcional = index == 3;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: tieneFoto
+            ? AppColors.success.withValues(alpha: 0.06)
+            : AppColors.surfaceVariant.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: tieneFoto
+              ? AppColors.success.withValues(alpha: 0.45)
+              : Colors.grey.shade300,
+          width: tieneFoto ? 1.3 : 1.0,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (tieneFoto)
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.file(
+                        File(path),
+                        width: 62,
+                        height: 62,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      right: -4,
+                      bottom: -4,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check_circle_rounded,
+                          color: AppColors.success,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              else
+                Container(
+                  width: 62,
+                  height: 62,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Icon(
+                    esOpcional
+                        ? Icons.add_photo_alternate_outlined
+                        : Icons.camera_alt_outlined,
+                    size: 26,
+                    color: esOpcional
+                        ? AppColors.textSecondary
+                        : AppColors.almacenColor,
+                  ),
+                ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: tieneFoto
+                                ? AppColors.success.withValues(alpha: 0.16)
+                                : (esOpcional
+                                      ? Colors.grey.shade200
+                                      : AppColors.almacenColor.withValues(
+                                          alpha: 0.12,
+                                        )),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            tieneFoto
+                                ? 'LISTA ✓'
+                                : (esOpcional ? 'OPCIONAL' : 'RECOMENDADA'),
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.bold,
+                              color: tieneFoto
+                                  ? AppColors.success
+                                  : (esOpcional
+                                        ? AppColors.textSecondary
+                                        : AppColors.almacenColor),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _titulosCaras[index],
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13.5,
+                        color: AppColors.textPrimary,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      _subtitulosCaras[index],
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.textSecondary,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.tonalIcon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.almacenColor.withValues(
+                      alpha: 0.12,
+                    ),
+                    foregroundColor: AppColors.almacenColor,
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () =>
+                      _capturarFotoEnRanura(index, ImageSource.camera),
+                  icon: const Icon(Icons.camera_alt_rounded, size: 16),
+                  label: Text(
+                    tieneFoto ? 'Repetir' : 'Cámara',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
+                    side: BorderSide(color: Colors.grey.shade300),
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () =>
+                      _capturarFotoEnRanura(index, ImageSource.gallery),
+                  icon: const Icon(Icons.photo_library_outlined, size: 16),
+                  label: const Text(
+                    'Galería',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              if (tieneFoto) ...[
+                const SizedBox(width: 6),
+                IconButton(
+                  tooltip: 'Quitar foto',
+                  visualDensity: VisualDensity.compact,
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.error.withValues(alpha: 0.1),
+                    foregroundColor: AppColors.error,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () => setState(() => _fotosCaras[index] = null),
+                  icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                ),
+              ],
+            ],
+          ),
         ],
       ),
     );
@@ -1168,6 +1434,229 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _PildoraPasoIA extends StatelessWidget {
+  final IconData icono;
+  final String texto;
+
+  const _PildoraPasoIA({required this.icono, required this.texto});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icono, size: 14, color: AppColors.almacenColor),
+          const SizedBox(width: 5),
+          Text(
+            texto,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ResultadoDialogoGtinManual {
+  final String codigo;
+  final bool irDirectoAlFormulario;
+
+  const _ResultadoDialogoGtinManual({
+    required this.codigo,
+    required this.irDirectoAlFormulario,
+  });
+}
+
+/// Diálogo con estado propio para ingresar el código de barras manualmente,
+/// mostrando vista previa del análisis GS1/GTIN en tiempo real y evitando errores
+/// de dispose prematuro del TextEditingController al cerrar el teclado.
+class _DialogoIngresoManualGtin extends StatefulWidget {
+  const _DialogoIngresoManualGtin();
+
+  @override
+  State<_DialogoIngresoManualGtin> createState() =>
+      _DialogoIngresoManualGtinState();
+}
+
+class _DialogoIngresoManualGtinState extends State<_DialogoIngresoManualGtin> {
+  final TextEditingController _controller = TextEditingController();
+  String? _mensajeError;
+  Gs1ParseResult? _previewGs1;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _actualizarPreview(String value) {
+    final limpio = value.trim();
+    setState(() {
+      _mensajeError = null;
+      _previewGs1 = limpio.isEmpty ? null : Gs1BarcodeParser.parsear(limpio);
+    });
+  }
+
+  void _confirmar({required bool irDirectoAlFormulario}) {
+    final texto = _controller.text.trim();
+    if (texto.isEmpty) {
+      setState(() {
+        _mensajeError = 'Ingresa un código de barras GTIN o GS1.';
+      });
+      return;
+    }
+    final parsed = Gs1BarcodeParser.parsear(texto);
+    if (parsed.gtin.isEmpty) {
+      setState(() {
+        _mensajeError = 'El código no contiene un GTIN válido.';
+      });
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    Navigator.of(context).pop(
+      _ResultadoDialogoGtinManual(
+        codigo: texto,
+        irDirectoAlFormulario: irDirectoAlFormulario,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final preview = _previewGs1;
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      title: const Row(
+        children: [
+          Icon(Icons.qr_code_rounded, color: AppColors.almacenColor),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Ingresar Código GTIN / GS1',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Escribe un código EAN-13 (13 dígitos), GTIN-14 o cadena GS1 como (01)07750215001234(17)281231(10)L2026A:',
+                style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _controller,
+                autofocus: true,
+                textInputAction: TextInputAction.done,
+                onChanged: _actualizarPreview,
+                onSubmitted: (_) => _confirmar(irDirectoAlFormulario: false),
+                decoration: InputDecoration(
+                  labelText: 'Código GTIN / GS1 *',
+                  hintText: 'Ej: 7750215001234',
+                  prefixIcon: const Icon(Icons.qr_code_scanner_rounded),
+                  errorText: _mensajeError,
+                  suffixIcon: _controller.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear_rounded, size: 18),
+                          onPressed: () {
+                            _controller.clear();
+                            _actualizarPreview('');
+                          },
+                        )
+                      : null,
+                ),
+              ),
+              if (preview != null && preview.gtin.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.almacenColor.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.almacenColor.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'GTIN detectado: ${preview.gtin}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.almacenColor,
+                        ),
+                      ),
+                      if (preview.numeroLote != null)
+                        Text(
+                          'Lote GS1: ${preview.numeroLote}',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      if (preview.fechaVencimiento != null)
+                        Text(
+                          'Vencimiento GS1: ${preview.fechaVencimiento!.day.toString().padLeft(2, '0')}/${preview.fechaVencimiento!.month.toString().padLeft(2, '0')}/${preview.fechaVencimiento!.year}',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            FocusScope.of(context).unfocus();
+            Navigator.of(context).pop();
+          },
+          child: const Text('Cancelar'),
+        ),
+        OutlinedButton.icon(
+          onPressed: () => _confirmar(irDirectoAlFormulario: true),
+          icon: const Icon(Icons.edit_note_rounded, size: 17),
+          label: const Text('Ir al formulario'),
+        ),
+        FilledButton.icon(
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.almacenColor,
+          ),
+          onPressed: () => _confirmar(irDirectoAlFormulario: false),
+          icon: const Icon(Icons.camera_alt_outlined, size: 17),
+          label: const Text('Siguiente (Fotos)'),
+        ),
+      ],
     );
   }
 }
