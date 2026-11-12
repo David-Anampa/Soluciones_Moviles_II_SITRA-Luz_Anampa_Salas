@@ -10,6 +10,7 @@ import '../../domain/ficha_borrador.dart';
 import '../../domain/ficha_validadores.dart';
 import '../widgets/selector_item_ficha_dialog.dart';
 import '../widgets/selector_kit_ficha_dialog.dart';
+import 'ficha_detalle_atencion_view.dart';
 
 /// Vista dinámica única para registrar y editar fichas de pedido (General y Neonatología),
 /// seleccionar productos con stock real en Farmacia y aplicar kits como copia editable
@@ -1525,12 +1526,38 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                   ],
                 ),
               ),
-              if (f.esEditable)
-                OutlinedButton.icon(
-                  onPressed: () => _cargarFichaParaEdicion(f),
-                  icon: const Icon(Icons.edit_note_rounded, size: 18),
-                  label: const Text('Editar ficha'),
-                ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final huboCambios =
+                          await Navigator.of(context).push<bool>(
+                        MaterialPageRoute(
+                          builder: (_) => FichaDetalleAtencionView(
+                            fichaId: f.id,
+                            fichaInicial: f,
+                          ),
+                        ),
+                      );
+                      if (huboCambios == true && mounted) {
+                        await _cargarDatosIniciales(
+                          areaPreferida: _borrador.areaOrigen,
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.visibility_outlined, size: 18),
+                    label: const Text('Ver detalle'),
+                  ),
+                  if (f.esEditable)
+                    OutlinedButton.icon(
+                      onPressed: () => _cargarFichaParaEdicion(f),
+                      icon: const Icon(Icons.edit_note_rounded, size: 18),
+                      label: const Text('Editar ficha'),
+                    ),
+                ],
+              ),
             ],
           );
         },

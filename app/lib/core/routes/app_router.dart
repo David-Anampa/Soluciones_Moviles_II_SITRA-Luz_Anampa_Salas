@@ -12,6 +12,8 @@ import '../../features/dashboard_almacen/presentation/views/almacen_dashboard_vi
 import '../../features/dashboard_enfermeria/presentation/views/enfermeria_dashboard_view.dart';
 import '../../features/dashboard_farmacia/presentation/views/farmacia_dashboard_view.dart';
 import '../../features/dashboard_jefatura/presentation/views/jefatura_dashboard_view.dart';
+import '../../features/fichas/presentation/views/ficha_detalle_atencion_view.dart';
+import '../../features/fichas/presentation/views/fichas_listado_view.dart';
 import '../../features/fichas/presentation/views/registro_ficha_view.dart';
 
 class AppRoutes {
@@ -23,7 +25,9 @@ class AppRoutes {
   static const String usuarios = '/admin/usuarios';
   static const String kits = '/admin/kits';
   static const String kitsArea = '/kits';
+  static const String fichas = '/fichas';
   static const String nuevaFicha = '/fichas/nueva';
+  static const String detalleFicha = '/fichas/detalle';
   static const String jefatura = '/jefatura';
   static const String farmacia = '/farmacia';
   static const String almacen = '/almacen';
@@ -96,9 +100,22 @@ GoRouter createRouter(AuthViewModel authViewModel) {
         builder: (context, state) => const KitsAdminView(),
       ),
       GoRoute(
+        path: AppRoutes.fichas,
+        builder: (context, state) => FichasListadoView(
+          areaInicial: state.uri.queryParameters['area'],
+          estadoInicial: state.uri.queryParameters['estado'],
+        ),
+      ),
+      GoRoute(
         path: AppRoutes.nuevaFicha,
         builder: (context, state) => RegistroFichaView(
           areaInicial: state.uri.queryParameters['area'],
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.detalleFicha,
+        builder: (context, state) => FichaDetalleAtencionView(
+          fichaId: state.uri.queryParameters['id'] ?? '',
         ),
       ),
       GoRoute(
@@ -135,8 +152,10 @@ GoRouter createRouter(AuthViewModel authViewModel) {
       }
 
       final requiredRole = AppRoutes.roleForPath(state.uri.path);
-      // Acceso compartido de consulta; las RPC comprueban área y permiso de gestión.
-      if (state.uri.path == AppRoutes.kitsArea) {
+      // Acceso compartido de consulta y operación; las RPC comprueban área y permiso.
+      if (state.uri.path == AppRoutes.kitsArea ||
+          state.uri.path == AppRoutes.fichas ||
+          state.uri.path == AppRoutes.detalleFicha) {
         return const {
               UserRole.administrador,
               UserRole.jefaturaFarmacia,
@@ -149,6 +168,7 @@ GoRouter createRouter(AuthViewModel authViewModel) {
       if (state.uri.path == AppRoutes.nuevaFicha) {
         return const {
               UserRole.administrador,
+              UserRole.farmacia,
               UserRole.enfermeria,
             }.contains(currentUser.rol)
             ? null
