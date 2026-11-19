@@ -2,7 +2,10 @@
 
 Documento de preparación. No se ha modificado todavía ningún issue, campo,
 asignación, fecha, sprint ni estado en GitHub Projects durante esta preparación.
-Faltan identificar el tablero y verificar acceso de escritura a Projects.
+Project identificado: https://github.com/users/David-Anampa/projects/1.
+Falta completar la autorización de GitHub CLI con permiso `project` y verificar
+acceso de escritura al tablero. El usuario proporcionó ocho dailys el 19/11;
+la cronología consolidada está en `CRONOLOGIA_DAILYS_Y_TABLERO_2026-11-19.md`.
 
 ## Fuentes y prioridad
 
@@ -121,18 +124,23 @@ No inventar puntos, horas invertidas, fechas de aceptación o reuniones.
 - El plan detallado por persona en Estado de HU cubre Sprint 4–8. El contenido
   y responsables efectivos de Sprint 3 siguen requiriendo confirmación.
 
-## Información pendiente de solicitar al usuario
+## Información recibida y bloqueo de acceso
 
-1. Enlace exacto al GitHub Project, no solo al repositorio.
-2. Calendario efectivo de los sprints: inicio/fin, posibles extensiones y si
-   «Taller 03» es distinto de «Sprint 3» en la entrega académica.
-3. Qué se hizo y quién lo hizo en Sprint 1, 2 y 3; si esos dos primeros sprints
-   deben reconstruirse con evidencia o quedar como antecedentes pendientes.
-4. Dailys/seguimientos realmente realizados: fecha, asistentes, avance de cada
-   persona, siguiente trabajo y bloqueos; formato requerido por el docente.
-5. Qué historias se probaron/aceptaron y cuándo; quién dio esa aceptación.
-6. Material adicional: capturas, actas, documentos, issues/PR existentes o notas
-   del usuario. Puede proporcionarse por partes, empezando por Sprint 3.
+1. El usuario entregó el enlace exacto al Project y los Daily 01–08.
+2. Confirmó que la entrega del daily acredita el trabajo realizado. Se conserva
+   esa declaración diferenciada de verificaciones técnicas y observaciones nuevas.
+3. La cronología usa las fechas de esos informes, incluidos sus solapamientos y
+   el seguimiento posterior del Sprint 7. No se inventa un daily de Sprint 3.
+4. Se registrará un seguimiento por cada informe recibido; no generar dos por
+   semana de forma automática.
+5. El usuario delegó redacción, prioridades y metadatos sustentados en el proyecto.
+6. Las asignaciones actuales se limitan a David/Walter, conservando la autoría
+   histórica de Bruno en la descripción cuando el daily la documenta.
+
+El bloqueo restante es de acceso: la credencial Git de Wsalas651 carece del
+alcance `project`. Se inició autorización de GitHub CLI mediante navegador; no
+considerar actualizado el tablero mientras no se complete y se verifiquen sus
+ítems/campos reales. No crear issues a ciegas que dupliquen borradores del Project.
 
 Mientras faltan datos se puede completar descripciones, criterios, dependencias
 y reparto sustentados; mantener explícitos los campos históricos desconocidos.
