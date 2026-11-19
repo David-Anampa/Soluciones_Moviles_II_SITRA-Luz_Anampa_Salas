@@ -1,5 +1,15 @@
 # Actualización de GitHub Project — 19/11/2026
 
+**Actualización final del 19/11:** se añadieron ocho tareas de los Daily 01/02
+(issues #31–#38), con milestone Sprint 01, rama vinculada y relaciones nativas.
+El Project contiene ahora 38 ítems: 34 Done, 3 Backlog y HU-028 en Ready, preservando
+su asignación actual a Walter. El Roadmap quedó configurado con Inicio sprint y
+Fin sprint, agrupación por Sprint y orden Sprint/Title ascendente. Por autorización
+posterior del usuario se estimaron las fechas faltantes de Sprint 3 y Sprint 8,
+identificándolas expresamente como estimadas. Ver
+`TAREAS_DAILY01_02_Y_ROADMAP_2026-11-19.md`; los apartados siguientes conservan
+el registro de las etapas anteriores.
+
 Repositorio: https://github.com/David-Anampa/Soluciones_Moviles_II_SITRA-Luz_Anampa_Salas
 
 Project: https://github.com/users/David-Anampa/projects/1
