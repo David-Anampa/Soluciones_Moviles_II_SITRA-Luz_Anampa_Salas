@@ -52,10 +52,7 @@ class FichasRepository {
   }) async {
     final respuesta = await _supabase.rpc(
       'listar_fichas_recientes_hu003',
-      params: {
-        'p_area': area,
-        'p_limite': limite,
-      },
+      params: {'p_area': area, 'p_limite': limite},
     );
     if (respuesta is! List) return const [];
     return respuesta
@@ -75,13 +72,16 @@ class FichasRepository {
         params: {
           'p_area': filtros.area == 'TODAS' ? null : filtros.area,
           'p_estado': filtros.estado == 'TODOS' ? null : filtros.estado,
-          'p_tipo_ficha':
-              filtros.tipoFicha == 'TODOS' ? null : filtros.tipoFicha,
-          'p_prioridad':
-              filtros.prioridad == 'TODAS' ? null : filtros.prioridad,
+          'p_tipo_ficha': filtros.tipoFicha == 'TODOS'
+              ? null
+              : filtros.tipoFicha,
+          'p_prioridad': filtros.prioridad == 'TODAS'
+              ? null
+              : filtros.prioridad,
           'p_turno': filtros.turno == 'TODOS' ? null : filtros.turno,
-          'p_busqueda':
-              filtros.busqueda.trim().isEmpty ? null : filtros.busqueda.trim(),
+          'p_busqueda': filtros.busqueda.trim().isEmpty
+              ? null
+              : filtros.busqueda.trim(),
           'p_limite': limite,
         },
       );
@@ -109,37 +109,41 @@ class FichasRepository {
     FiltrosListadoFichas filtros,
   ) {
     final q = filtros.busqueda.trim().toLowerCase();
-    return lista.where((f) {
-      if (filtros.area != 'TODAS' && f.areaOrigen != filtros.area) {
-        return false;
-      }
-      if (filtros.estado != 'TODOS' && f.estado != filtros.estado) {
-        return false;
-      }
-      if (filtros.tipoFicha != 'TODOS' && f.tipoFicha != filtros.tipoFicha) {
-        return false;
-      }
-      if (filtros.prioridad != 'TODAS' && f.prioridad != filtros.prioridad) {
-        return false;
-      }
-      if (filtros.turno != 'TODOS' && f.turno != filtros.turno) {
-        return false;
-      }
-      if (q.isNotEmpty) {
-        final texto = [
-          f.numeroFicha,
-          f.pacienteNombre,
-          f.madreNombre ?? '',
-          f.recienNacidoApellidos ?? '',
-          f.doctorNombre ?? '',
-          f.recibidoPor ?? '',
-          f.diagnosticoMotivo ?? '',
-          f.kitNombre ?? '',
-        ].join(' ').toLowerCase();
-        if (!texto.contains(q)) return false;
-      }
-      return true;
-    }).toList(growable: false);
+    return lista
+        .where((f) {
+          if (filtros.area != 'TODAS' && f.areaOrigen != filtros.area) {
+            return false;
+          }
+          if (filtros.estado != 'TODOS' && f.estado != filtros.estado) {
+            return false;
+          }
+          if (filtros.tipoFicha != 'TODOS' &&
+              f.tipoFicha != filtros.tipoFicha) {
+            return false;
+          }
+          if (filtros.prioridad != 'TODAS' &&
+              f.prioridad != filtros.prioridad) {
+            return false;
+          }
+          if (filtros.turno != 'TODOS' && f.turno != filtros.turno) {
+            return false;
+          }
+          if (q.isNotEmpty) {
+            final texto = [
+              f.numeroFicha,
+              f.pacienteNombre,
+              f.madreNombre ?? '',
+              f.recienNacidoApellidos ?? '',
+              f.doctorNombre ?? '',
+              f.recibidoPor ?? '',
+              f.diagnosticoMotivo ?? '',
+              f.kitNombre ?? '',
+            ].join(' ').toLowerCase();
+            if (!texto.contains(q)) return false;
+          }
+          return true;
+        })
+        .toList(growable: false);
   }
 
   /// Obtiene el detalle completo de una ficha con sus ítems, lotes FEFO despachados e historial (HU-007).
@@ -155,10 +159,10 @@ class FichasRepository {
       return FichaRegistrada.fromMap(Map<String, dynamic>.from(respuesta));
     } on PostgrestException catch (e) {
       final texto = '${e.code} ${e.message} ${e.details}'.toLowerCase();
-      if (e.code == 'PGRST202' || texto.contains('obtener_detalle_ficha_hu007')) {
+      if (e.code == 'PGRST202' ||
+          texto.contains('obtener_detalle_ficha_hu007')) {
         final recientes = await listarFichasRecientes(limite: 100);
-        final encontrada =
-            recientes.where((f) => f.id == fichaId).firstOrNull;
+        final encontrada = recientes.where((f) => f.id == fichaId).firstOrNull;
         if (encontrada != null) return encontrada;
       }
       rethrow;
@@ -185,10 +189,12 @@ class FichasRepository {
         'p_ficha_id': fichaId,
         'p_accion': accion,
         'p_items': items.map((i) => i.toMap()).toList(growable: false),
-        'p_notas':
-            (notas != null && notas.trim().isNotEmpty) ? notas.trim() : null,
-        'p_motivo':
-            (motivo != null && motivo.trim().isNotEmpty) ? motivo.trim() : null,
+        'p_notas': (notas != null && notas.trim().isNotEmpty)
+            ? notas.trim()
+            : null,
+        'p_motivo': (motivo != null && motivo.trim().isNotEmpty)
+            ? motivo.trim()
+            : null,
         'p_receptor_id': (receptorId != null && receptorId.trim().isNotEmpty)
             ? receptorId.trim()
             : null,
@@ -210,12 +216,13 @@ class FichasRepository {
   }) async {
     final respuesta = await _supabase.rpc(
       'consultar_kardex_medicamento_hu025',
-      params: {
-        'p_medicamento_id': medicamentoId,
-        'p_limite': limite,
-      },
+      params: {'p_medicamento_id': medicamentoId, 'p_limite': limite},
     );
-    if (respuesta is! List) return const [];
+    if (respuesta is! List) {
+      throw const FormatException(
+        'Respuesta inesperada al consultar el Kardex.',
+      );
+    }
     return respuesta
         .whereType<Map>()
         .map(
@@ -274,4 +281,3 @@ class FichasRepository {
     return limpio.isEmpty ? respaldo : limpio;
   }
 }
-

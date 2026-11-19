@@ -4,6 +4,7 @@ import '../../data/repositories/stock_ubicaciones_repository.dart';
 import '../../domain/entities/stock_ubicacion_entity.dart';
 import '../widgets/stock_presentacion.dart';
 import 'crear_solicitud_abastecimiento_view.dart';
+import 'kardex_producto_view.dart';
 
 /// HU-023: cantidades separadas; el tránsito no es disponibilidad en Farmacia.
 class StockUbicacionesView extends StatefulWidget {
@@ -184,6 +185,16 @@ class _StockUbicacionesViewState extends State<StockUbicacionesView> {
                                   ),
                                 ),
                                 StockContadores(item: p),
+                                OutlinedButton.icon(
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          KardexProductoView(producto: p),
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.timeline_rounded),
+                                  label: const Text('Ver Kardex y movimientos'),
+                                ),
                                 if (p.farmacia == 0 && p.almacen > 0)
                                   const Text(
                                     'Disponible en Almacén. Requiere traslado y recepción para utilizarse en Farmacia.',

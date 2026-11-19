@@ -3,6 +3,7 @@ import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:go_router/go_router.dart';
 import '../../../almacen/presentation/views/diferencias_abastecimiento_view.dart';
 import '../../../almacen/presentation/views/ingresos_correcciones_view.dart';
+import '../../../almacen/presentation/views/stock_ubicaciones_view.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/sitra_app_bar.dart';
@@ -43,6 +44,19 @@ class JefaturaDashboardView extends StatelessWidget {
                       'Supervisión de fichas, lotes FEFO e historial (HU-006 / HU-007)',
                     ),
                     onPressed: () => context.push('/fichas'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.timeline_rounded),
+                    label: const Text('Stock y Kardex por producto'),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const StockUbicacionesView(),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
