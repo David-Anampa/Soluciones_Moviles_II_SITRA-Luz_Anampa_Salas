@@ -1,10 +1,15 @@
 # Preparación de GitHub Project — 19/11/2026
 
-Documento de preparación. No se ha modificado todavía ningún issue, campo,
-asignación, fecha, sprint ni estado en GitHub Projects durante esta preparación.
+**Actualización posterior:** las 30 historias ya se publicaron como issues y se
+verificaron dentro del Project mediante su automatización. Ver el resultado y
+las limitaciones de personalización en `ACTUALIZACION_GITHUB_PROJECT_2026-11-19.md`.
+Los párrafos de preparación siguientes conservan el antecedente previo al acceso.
+
+Documento de preparación y antecedentes. La publicación posterior creó y verificó
+las 30 issues con sus asignaciones, hitos y estados; ver el informe de resultado.
 Project identificado: https://github.com/users/David-Anampa/projects/1.
-Falta completar la autorización de GitHub CLI con permiso `project` y verificar
-acceso de escritura al tablero. El usuario proporcionó ocho dailys el 19/11;
+GitHub CLI ya tiene permiso `project`; falta escritura directa del colaborador en
+el Project para personalizar sus campos/vistas. El usuario proporcionó ocho dailys el 19/11;
 la cronología consolidada está en `CRONOLOGIA_DAILYS_Y_TABLERO_2026-11-19.md`.
 
 ## Fuentes y prioridad
@@ -137,10 +142,12 @@ No inventar puntos, horas invertidas, fechas de aceptación o reuniones.
 6. Las asignaciones actuales se limitan a David/Walter, conservando la autoría
    histórica de Bruno en la descripción cuando el daily la documenta.
 
-El bloqueo restante es de acceso: la credencial Git de Wsalas651 carece del
-alcance `project`. Se inició autorización de GitHub CLI mediante navegador; no
-considerar actualizado el tablero mientras no se complete y se verifiquen sus
-ítems/campos reales. No crear issues a ciegas que dupliquen borradores del Project.
+La autorización de GitHub CLI se completó con `project`. Se publicaron las 30
+historias y la automatización existente las añadió al Project: 26 Done y 4 Backlog,
+verificadas individualmente. El acceso directo al Project de Wsalas651 sigue en
+lectura; únicamente personalizar sus campos/vistas queda condicionado a que
+David conceda Write. Los sprints están en Milestone y prioridades en etiquetas;
+no se afirma que estén asignados en los campos personalizados Iteration/Priority.
 
 Mientras faltan datos se puede completar descripciones, criterios, dependencias
 y reparto sustentados; mantener explícitos los campos históricos desconocidos.
