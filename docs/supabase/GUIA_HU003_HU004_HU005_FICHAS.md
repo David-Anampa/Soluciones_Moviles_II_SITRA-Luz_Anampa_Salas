@@ -2,7 +2,11 @@
 
 **Fecha:** 2026-11-06  
 **Sprint:** Semana 3 · Sprint 6 · IA y creación de fichas  
-**Responsables:** Walter Salas (HU-014, HU-015) y David Anampa (HU-003, HU-004, HU-005)
+**Responsables corregidos por confirmación del usuario del 19/11/2026:**
+David Anampa (`@David-Anampa`), reconocimiento OCR/IA y revisión de datos
+(HU-014/HU-015); Walter Salas (`@Wsalas651`), funcionalidades ajenas a IA del
+sprint, incluidas fichas (HU-003/HU-004/HU-005) e integración.
+Esta corrección de responsabilidad no cambia las fechas ni autores de commits.
 
 ---
 

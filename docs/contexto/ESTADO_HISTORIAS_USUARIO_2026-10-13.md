@@ -2,6 +2,15 @@
 
 Fecha: 13 de octubre de 2026.
 
+**Corrección de responsables confirmada por Walter el 19/11/2026:** en Sprint 6,
+David Anampa (`@David-Anampa`) desarrolló reconocimiento OCR/IA y revisión de
+datos extraídos (HU-014/HU-015). Walter Salas (`@Wsalas651`) desarrolló el trabajo
+de ese sprint ajeno a IA, incluidas HU-003/HU-004/HU-005 e integración de fichas.
+Esta confirmación sustituye las atribuciones inversas de las notas anteriores.
+Los dailys/tableros marcados como proyección no acreditan reuniones, fechas reales
+de ejecución ni aceptación. Para ordenar GitHub Projects consultar también
+`PREPARACION_GITHUB_PROJECT_2026-11-19.md`.
+
 Revisé el código contra las historias documentadas. **Hay 11 HU con desarrollo real y 19 pendientes**, pero varias de las desarrolladas todavía tienen partes incompletas o problemas por corregir.
 
 Esta fue una revisión estática: **no ejecuté pruebas ni modifiqué archivos**. “Implementada” significa que existe el flujo principal; todavía requiere tu validación funcional para pasar a **Listo** en Scrum.
@@ -208,7 +217,7 @@ Walter asume principalmente integridad de datos, permisos, IA y stock; David asu
 |---|---|---|---|
 | 1 · Sprint 4 · 12–18 oct. | Administrar usuarios, financiamientos, seguros y áreas desde la aplicación. | HU-012 completa: estructura, interfaces y gestión de financiamientos, seguros y áreas. Ajustar estructura y columnas de la tabla de usuarios HU-020 y acordar su contrato con David. Revisar permisos e integración. | Funcionalidad restante de HU-020: listado y activación/desactivación de usuarios. HU-021 y HU-022: crear y editar usuarios con roles y áreas. Integrar la estructura de HU-020 entregada por Walter. |
 | 2 · Sprint 5 · 19–25 oct. | Contar con stock coherente y plantillas de kits administrables. | HU-023 y HU-024: stock consolidado y entradas atómicas. Ajuste pendiente de HU-029: creación atómica de cabecera, ítems y auditoría, reutilizando las reglas existentes. | HU-017, HU-018 y HU-019: listado, creación y edición de kits. |
-| 3 · Sprint 6 · 26 oct.–1 nov. | Registrar fichas con productos/kits y completar registro asistido por IA. | HU-014 y HU-015 sincronizadas: extracción real, revisión humana y guardado. Preparar con David el contrato de persistencia de HU-003/HU-004/HU-005. | HU-003, HU-004 y HU-005: creación de ficha General/Neonatología, selección con stock y aplicación de kit. |
+| 3 · Sprint 6 · 26 oct.–1 nov. | Registrar fichas con productos/kits y completar registro asistido por IA. | HU-003, HU-004 y HU-005: creación de ficha General/Neonatología, selección con stock, aplicación de kit e integración ajena a IA. | HU-014 y HU-015 sincronizadas: reconocimiento OCR/IA, extracción real, revisión y corrección de los datos extraídos. |
 | 4 · Sprint 7 · 2–8 nov. | Completar el recorrido de la ficha hasta la entrega física y anulación permitida. | HU-008, HU-009, HU-010 y HU-011: estados, despacho por ítem, confirmación con descuento atómico y anulación auditada. | HU-006 y HU-007: lista con filtros, detalle e historial. Preparar navegación y contrato del Kardex HU-025 cuando estas dos HU estén aceptadas. |
 | 5 · Sprint 8 · 9–15 nov. | Consultar trazabilidad real y entregar documentos y supervisión. | HU-025: completar Kardex con movimientos reales. HU-028: dashboard de Jefatura con stock, fichas, movimientos y consumo/valor por área. | HU-026: PDF fiel al formato de ficha. HU-027: subida del PDF a Google Drive con autenticación y control de errores. |
 
@@ -306,8 +315,8 @@ Meta: capturar productos con asistencia real de IA y crear fichas a partir del c
 
 | Integrante | ¿Qué realizó? — objetivo previsto de la semana | ¿Algo lo bloquea? |
 |---|---|---|
-| Walter Salas | Completar HU-014/HU-015 sincronizadas: GTIN/foto, extracción real y estructurada, revisión editable, validaciones y guardado; acordar el contrato de persistencia de fichas y revisar el trabajo de David. | Por confirmar: extracción con fotografías reales y comportamiento sin red. |
-| David Anampa | Completar HU-003/HU-004/HU-005: ficha con paciente, área, doctor, financiamiento y receptor, selección de productos con stock y aplicación del kit como copia de sus ítems; revisar el formulario de IA. | Por confirmar: registro completo, cantidades válidas y conservación del contenido del kit. |
+| Walter Salas | HU-003/HU-004/HU-005: ficha con paciente, área, doctor, financiamiento y receptor, selección con stock, aplicación del kit como copia e integración ajena a IA. Responsable corregido por confirmación del usuario del 19/11/2026. | Registro completo, cantidades válidas y conservación del kit: aceptación funcional pendiente de confirmar. |
+| David Anampa | HU-014/HU-015: reconocimiento OCR/IA, GTIN/foto, extracción estructurada y revisión/corrección de resultados. Responsable corregido por confirmación del usuario del 19/11/2026. | Extracción con fotografías reales y comportamiento sin red: aceptación funcional pendiente de confirmar. |
 
 **5. Estado del tablero al cerrar la sesión — proyección**
 
