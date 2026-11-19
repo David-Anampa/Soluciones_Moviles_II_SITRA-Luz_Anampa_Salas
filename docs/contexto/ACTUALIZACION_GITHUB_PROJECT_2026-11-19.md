@@ -91,3 +91,33 @@ el solo hecho de que una vista filtrada no muestre tarjetas históricas.
 Fuentes: `CRONOLOGIA_DAILYS_Y_TABLERO_2026-11-19.md`,
 `PREPARACION_GITHUB_PROJECT_2026-11-19.md`, Estado de HU, guías y código vigente.
 No se modificó código de la app ni datos de Supabase durante esta actualización.
+
+## Vinculaciones nativas de ramas y dependencias
+
+Actualización posterior autorizada por Walter: se vincularon las **30 issues**
+a sus ramas existentes en **Development** y se registraron **68 dependencias**
+en **Relationships → Blocked by / Blocking**, siguiendo la sección Dependencias
+de las descripciones. La comprobación remota confirmó cada rama, cada dependencia
+y la conservación del estado de las 30 issues. El grafo no presenta ciclos.
+
+| Rama vinculada | Historias |
+|---|---|
+| Sprint-01 | HU-001, HU-002 |
+| Sprint-02 | HU-013, HU-016 |
+| Sprint-04 | HU-012, HU-020, HU-021, HU-022 |
+| Sprint-05 | HU-017, HU-018, HU-019, HU-023, HU-024, HU-029, HU-030 |
+| Sprint-06 | HU-003, HU-004, HU-005, HU-014, HU-015 |
+| Sprint-07 | HU-006, HU-007, HU-008, HU-009, HU-010, HU-011 |
+| Sprint-08 | HU-025, HU-026, HU-027, HU-028 |
+
+No se inventaron relaciones de padre/subhistoria entre historias independientes.
+Las dependencias cerradas expresan requisitos ya entregados; no se reabrieron
+historias para representarlas. Sprint-03 sigue sin historias acreditadas.
+
+La vinculación de Sprint-08 representa el destino de trabajo planificado. Al
+verificarla, esa rama apuntaba al mismo commit que Sprint-05; asociarla no acredita
+implementación del Sprint 8. Sus cuatro historias permanecen abiertas en Backlog.
+
+Las dependencias se aplicaron mediante la API pública desde GitHub CLI. Las ramas
+existentes se asociaron desde la interfaz Development y después se verificaron
+por GraphQL (`linkedBranches`). No se crearon ramas, PR ni merges a main.
