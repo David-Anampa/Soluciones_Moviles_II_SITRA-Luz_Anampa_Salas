@@ -64,20 +64,28 @@ pull requests ficticios para poblar la sección Development.
 ## Acceso al Project y alcance de los cambios
 
 GitHub CLI está autorizado como `Wsalas651` con los alcances `repo` y `project`.
-La cuenta tiene WRITE en el repositorio, pero el Project devuelve
-`viewerCanUpdate=false`. La automatización existente permitió incorporar tarjetas
-y sincronizar Done/Backlog desde las issues, y los campos integrados de
-Assignees/Milestone/Labels reflejan los datos del repositorio.
+Tras conceder Admin en el Project, se confirmó `viewerCanUpdate=true`.
+Admin permite editar el tablero y gestionar sus accesos; Write habría sido
+suficiente para organizar las historias. No se cambiaron permisos desde el agente.
 
-No se editaron directamente los campos personalizados del Project como Priority,
-Size, Estimate o Iteration ni sus vistas/configuración. La prioridad está en
-etiquetas/descripción, y el sprint en Milestone; no afirmar que se cargaron en
-Priority/Iteration. Personalizar esos campos requiere que David otorgue a
-`Wsalas651` Write en Project → Settings → Manage access.
+Las 30 tarjetas tienen campos nativos Sprint, Priority, Rama, Seguimiento y Daily.
+Entrega reportada, Inicio sprint y Fin sprint se completan cuando los dailys
+aportan esas fechas. Sprint 8 conserva las fechas vacías al no existir entrega
+ni calendario confirmado. Assignees/Milestone/Labels reflejan el repositorio.
+
+Priority usa P0 para crítica, P1 para alta y P2 para media/baja; las etiquetas
+conservan la distinción entre las cuatro prioridades. Seguimiento diferencia
+entregas con observaciones, pendientes de validación y sin entrega reportada.
+No se inventaron valores para Size ni Estimate.
+
+El campo Sprint contiene Sprint 01…08. Iteration conserva el calendario de
+plantilla: sus periodos de 14 días no coinciden con las ventanas históricas de
+los dailys, que además presentan solapamientos. No se sustituyeron las fechas
+aportadas por periodos ficticios para encajarlas en esa plantilla.
 
 Las vistas Current iteration y Next iteration tienen filtros de Iteration. Si
 aparecen vacías, abrir la vista Prioritized backlog (views/3), cuyo filtro está
-vacío, y consultar/filtrar por Milestone y Assignees. No falta información por
+vacío, y consultar/filtrar por Sprint, Milestone y Assignees. No falta información por
 el solo hecho de que una vista filtrada no muestre tarjetas históricas.
 
 Fuentes: `CRONOLOGIA_DAILYS_Y_TABLERO_2026-11-19.md`,

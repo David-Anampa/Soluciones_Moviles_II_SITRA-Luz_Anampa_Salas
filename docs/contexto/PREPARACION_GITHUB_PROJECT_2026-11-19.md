@@ -2,14 +2,14 @@
 
 **Actualización posterior:** las 30 historias ya se publicaron como issues y se
 verificaron dentro del Project mediante su automatización. Ver el resultado y
-las limitaciones de personalización en `ACTUALIZACION_GITHUB_PROJECT_2026-11-19.md`.
+los campos personalizados en `ACTUALIZACION_GITHUB_PROJECT_2026-11-19.md`.
 Los párrafos de preparación siguientes conservan el antecedente previo al acceso.
 
 Documento de preparación y antecedentes. La publicación posterior creó y verificó
 las 30 issues con sus asignaciones, hitos y estados; ver el informe de resultado.
 Project identificado: https://github.com/users/David-Anampa/projects/1.
-GitHub CLI ya tiene permiso `project`; falta escritura directa del colaborador en
-el Project para personalizar sus campos/vistas. El usuario proporcionó ocho dailys el 19/11;
+GitHub CLI tiene permiso `project` y posteriormente se concedió Admin a
+`Wsalas651` en el Project, habilitando la edición de campos. El usuario proporcionó ocho dailys el 19/11;
 la cronología consolidada está en `CRONOLOGIA_DAILYS_Y_TABLERO_2026-11-19.md`.
 
 ## Fuentes y prioridad
