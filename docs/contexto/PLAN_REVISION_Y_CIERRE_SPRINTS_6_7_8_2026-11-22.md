@@ -2,6 +2,14 @@
 
 Fecha: **22/11/2026**. Estado: **plan preparado; correcciones y pruebas pendientes**.
 
+**Avance HU-003 del 22/11:** los tres defectos de receptor, médico manual y
+guardado/refresco están corregidos en código y la migración incremental está
+aplicada/verificada en Supabase. También se reutiliza el validador del receptor al
+entregar. Ver [guía de corrección y pruebas](../supabase/GUIA_HU003_RECEPTOR_MEDICO_2026_11_22.md).
+Pruebas dirigidas y análisis estático aprobados; comprobación manual con el usuario
+todavía pendiente. Las descripciones originales siguientes son el diagnóstico
+base: no interpretar estos tres defectos como aún presentes en la versión corregida.
+
 ## 1. Alcance y forma de interpretar este documento
 
 Revisión estática del código y SQL de `Sprint-08`, commit base `40d65bb`.
@@ -83,15 +91,16 @@ SOLICITADO y auditoría. [Formulario](../../app/lib/features/fichas/presentation
 
 **Confirmado / por corregir:**
 
-- [ ] SQL de registro valida receptor activo, pero no comprueba su rol ni su
-  pertenencia al área. Añadir validación central de receptor, reutilizable al
-  entregar. [SQL](../supabase/migracion_hu003_hu004_hu005_fichas_2026_11_06.sql#L665).
-- [ ] Médico manual está permitido en formulario y SQL aunque el acuerdo pide
-  seleccionarlo del catálogo. Usar catálogo; si se necesita una excepción manual,
-  debe acordarse y auditarse antes de mantenerla.
-- [ ] Distinguir fallo de guardado de fallo al refrescar la lista/stock después
-  de un guardado exitoso. Actualmente comparten el mismo try/catch y pueden mostrar
-  error aunque la ficha ya exista. Conservar idempotencia al reintentar.
+- [x] Añadida validación central de receptor activo, rol ENFERMERIA y pertenencia
+  real al área, reutilizada al entregar. Corregido el respaldo del formulario que
+  ofrecía personal de otras áreas. Migración aplicada y verificada en Supabase.
+  [Corrección](../supabase/migracion_hu003_receptor_medico_2026_11_22.sql).
+- [x] Médico obligatorio del catálogo activo en formulario y SQL; retirada la
+  entrada manual. No se modifican fichas históricas, pero su edición requiere
+  seleccionar un médico válido si antes tenían un nombre libre.
+- [x] Separado el fallo de guardado del fallo posterior de refresco de lista/stock.
+  Un guardado confirmado conserva su número y muestra advertencia de actualización,
+  sin reenvío. Se mantiene el identificador de reintento ante un fallo de guardado.
 
 **Por probar juntos:**
 
@@ -566,6 +575,7 @@ Usar una fila por prueba Pxxx y actualizar este mismo documento al avanzar:
 | P003-1 | — | — | Pendiente | — | Sin ejecutar |
 | P005-1 | — | — | Usuario confirma CRUD de plantillas; falta copia/historia de ficha | Conversación | Parcial |
 | P014-1 | — | — | Usuario confirma reconocimiento y llenado; faltan casos de error | Conversación | Parcial |
+| HU-003 / regresiones de los tres defectos | 22/11/2026 | Migración receptor/médico 22/11 + código actualizado | 14 pruebas Dart, comprobaciones SQL locales y verificación remota sin cambios de datos | Guía HU-003 del 22/11 | Aprobado en código/contrato; manual pendiente |
 
 Para cerrar cada HU:
 
