@@ -17,15 +17,16 @@ import 'ficha_detalle_atencion_view.dart';
 /// (HU-003, HU-004 y HU-005).
 class RegistroFichaView extends StatefulWidget {
   final String? areaInicial;
+  final FichasRepository? repositorio;
 
-  const RegistroFichaView({super.key, this.areaInicial});
+  const RegistroFichaView({super.key, this.areaInicial, this.repositorio});
 
   @override
   State<RegistroFichaView> createState() => _RegistroFichaViewState();
 }
 
 class _RegistroFichaViewState extends State<RegistroFichaView> {
-  final FichasRepository _repository = FichasRepository();
+  late final FichasRepository _repository;
 
   final TextEditingController _pacienteCtrl = TextEditingController();
   final TextEditingController _procedenciaDetalleCtrl = TextEditingController();
@@ -48,6 +49,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
   @override
   void initState() {
     super.initState();
+    _repository = widget.repositorio ?? FichasRepository();
     _cargarDatosIniciales();
   }
 
@@ -437,13 +439,10 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
     return Theme(
       data: CatalogoEstilo.tema(context, area: tema),
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
           toolbarHeight: DisenoAdaptable.altoCabecera(context),
-          title: Text(
-            _borrador.id == null
-                ? 'Registro de Ficha de Pedido'
-                : 'Editando Ficha en Estado Solicitado',
-          ),
+          title: Text(_borrador.id == null ? 'Nueva ficha' : 'Editar ficha'),
           actions: [
             IconButton(
               tooltip: 'Actualizar catálogo y stock en tiempo real',
@@ -456,36 +455,40 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
             ),
           ],
         ),
-        body: _cargando
-            ? const Center(child: CircularProgressIndicator())
-            : _errorCarga != null
-            ? _buildErrorEstado()
-            : ContenidoAdaptable(
-                anchoMaximo: 1080,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 32),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildCabeceraContexto(tema),
-                      const SizedBox(height: 16),
-                      _buildSeccionAreaYModalidad(tema),
-                      const SizedBox(height: 16),
-                      _buildSeccionDatosClinicos(tema),
-                      const SizedBox(height: 16),
-                      _buildSeccionResponsablesYFinanciamiento(tema),
-                      const SizedBox(height: 16),
-                      _buildSeccionKitEItems(tema),
-                      const SizedBox(height: 20),
-                      _buildBarraEnvio(),
-                      if (_fichasRecientes.isNotEmpty) ...[
-                        const SizedBox(height: 28),
-                        _buildSeccionFichasRecientes(tema),
+        body: SafeArea(
+          child: _cargando
+              ? const Center(child: CircularProgressIndicator())
+              : _errorCarga != null
+              ? _buildErrorEstado()
+              : ContenidoAdaptable(
+                  anchoMaximo: 1080,
+                  child: SingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: const EdgeInsets.only(bottom: 32),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildCabeceraContexto(tema),
+                        const SizedBox(height: 16),
+                        _buildSeccionAreaYModalidad(tema),
+                        const SizedBox(height: 16),
+                        _buildSeccionDatosClinicos(tema),
+                        const SizedBox(height: 16),
+                        _buildSeccionResponsablesYFinanciamiento(tema),
+                        const SizedBox(height: 16),
+                        _buildSeccionKitEItems(tema),
+                        const SizedBox(height: 20),
+                        _buildBarraEnvio(),
+                        if (_fichasRecientes.isNotEmpty) ...[
+                          const SizedBox(height: 28),
+                          _buildSeccionFichasRecientes(tema),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
-              ),
+        ),
       ),
     );
   }
@@ -523,7 +526,9 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
   Widget _buildCabeceraContexto(TemaArea tema) {
     final area = _areaSeleccionada;
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(
+        DisenoAdaptable.margen(MediaQuery.sizeOf(context).width),
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -532,57 +537,58 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            spacing: 12,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            alignment: WrapAlignment.spaceBetween,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: tema.suave,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      _borrador.esNeonatologia
-                          ? Icons.child_care_rounded
-                          : Icons.assignment_add,
-                      color: tema.principal,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _borrador.esNeonatologia
-                              ? 'Ficha de Pedido · Neonatología'
-                              : 'Ficha de Pedido · General',
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Text(
-                          area == null
-                              ? 'Selecciona un área clínica activa'
-                              : 'Área activa: ${area.nombre} (${area.codigoInterno}) · Tema ${tema.nombre}',
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            color: Color(0xFF64646D),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: tema.suave,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  _borrador.esNeonatologia
+                      ? Icons.child_care_rounded
+                      : Icons.assignment_add,
+                  color: tema.principal,
+                ),
               ),
-              SegmentedButton<String>(
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _borrador.esNeonatologia
+                          ? 'Ficha de Pedido · Neonatología'
+                          : 'Ficha de Pedido · General',
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      area == null
+                          ? 'Selecciona un área clínica activa'
+                          : 'Área activa: ${area.nombre} (${area.codigoInterno}) · Tema ${tema.nombre}',
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: Color(0xFF64646D),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          LayoutBuilder(
+            builder: (context, limites) {
+              final escala = MediaQuery.textScalerOf(context).scale(14) / 14;
+              final vertical = limites.maxWidth < 400 * escala;
+              return SegmentedButton<String>(
+                direction: vertical ? Axis.vertical : Axis.horizontal,
+                expandedInsets: vertical ? null : EdgeInsets.zero,
                 segments: const [
                   ButtonSegment(
                     value: 'GENERAL',
@@ -596,14 +602,12 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                   ),
                 ],
                 selected: {_borrador.tipoFicha},
-                onSelectionChanged: (seleccion) {
-                  setState(() {
-                    _solicitudIdPendiente = null;
-                    _borrador = _borrador.copyWith(tipoFicha: seleccion.first);
-                  });
-                },
-              ),
-            ],
+                onSelectionChanged: (seleccion) => setState(() {
+                  _solicitudIdPendiente = null;
+                  _borrador = _borrador.copyWith(tipoFicha: seleccion.first);
+                }),
+              );
+            },
           ),
           if (_borrador.id != null) ...[
             const SizedBox(height: 12),
@@ -626,7 +630,12 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
       tema: tema,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final anchoCol = constraints.maxWidth >= 680
+          final columnas = DisenoAdaptable.columnasFormulario(
+            context,
+            constraints.maxWidth,
+            maxColumnas: 3,
+          );
+          final anchoCol = columnas == 3
               ? (constraints.maxWidth - 24) / 3
               : constraints.maxWidth;
           return Wrap(
@@ -636,10 +645,12 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
               SizedBox(
                 width: anchoCol,
                 child: DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  itemHeight: null,
                   value: areas.any((a) => a.codigo == _borrador.areaOrigen)
                       ? _borrador.areaOrigen
                       : null,
-                  isExpanded: true,
+
                   decoration: const InputDecoration(
                     labelText: 'Área clínica solicitante',
                     prefixIcon: Icon(Icons.apartment_rounded),
@@ -650,7 +661,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                           value: a.codigo,
                           child: Text(
                             '${a.nombre} (${a.codigoInterno})',
-                            overflow: TextOverflow.ellipsis,
+                            softWrap: true,
                           ),
                         ),
                       )
@@ -663,6 +674,8 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
               SizedBox(
                 width: anchoCol,
                 child: DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  itemHeight: null,
                   value: _borrador.turno,
                   decoration: const InputDecoration(
                     labelText: 'Turno asistencial',
@@ -692,6 +705,8 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
               SizedBox(
                 width: anchoCol,
                 child: DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  itemHeight: null,
                   value: _borrador.prioridad,
                   decoration: const InputDecoration(
                     labelText: 'Prioridad del pedido',
@@ -731,7 +746,12 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
           children: [
             LayoutBuilder(
               builder: (context, constraints) {
-                final dosCol = constraints.maxWidth >= 640;
+                final dosCol =
+                    DisenoAdaptable.columnasFormulario(
+                      context,
+                      constraints.maxWidth,
+                    ) >
+                    1;
                 final ancho = dosCol
                     ? (constraints.maxWidth - 12) / 2
                     : constraints.maxWidth;
@@ -762,6 +782,8 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                     SizedBox(
                       width: ancho,
                       child: DropdownButtonFormField<String>(
+                        isExpanded: true,
+                        itemHeight: null,
                         value: _borrador.tipoParto,
                         decoration: const InputDecoration(
                           labelText: 'Tipo de parto *',
@@ -827,7 +849,12 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
         children: [
           LayoutBuilder(
             builder: (context, constraints) {
-              final dosCol = constraints.maxWidth >= 640;
+              final dosCol =
+                  DisenoAdaptable.columnasFormulario(
+                    context,
+                    constraints.maxWidth,
+                  ) >
+                  1;
               final ancho = dosCol
                   ? (constraints.maxWidth - 12) / 2
                   : constraints.maxWidth;
@@ -848,6 +875,8 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                   SizedBox(
                     width: ancho,
                     child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      itemHeight: null,
                       value: _borrador.procedencia,
                       decoration: const InputDecoration(
                         labelText: 'Procedencia del paciente *',
@@ -924,7 +953,12 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
         children: [
           LayoutBuilder(
             builder: (context, constraints) {
-              final dosCol = constraints.maxWidth >= 640;
+              final dosCol =
+                  DisenoAdaptable.columnasFormulario(
+                    context,
+                    constraints.maxWidth,
+                  ) >
+                  1;
               final ancho = dosCol
                   ? (constraints.maxWidth - 12) / 2
                   : constraints.maxWidth;
@@ -935,6 +969,8 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                   SizedBox(
                     width: ancho,
                     child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      itemHeight: null,
                       value: _borrador.tipoAtencion,
                       decoration: const InputDecoration(
                         labelText: 'Modalidad de financiamiento *',
@@ -963,13 +999,15 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                     SizedBox(
                       width: ancho,
                       child: DropdownButtonFormField<String>(
+                        isExpanded: true,
+                        itemHeight: null,
                         value:
                             financiamientosTipo.any(
                               (f) => f.id == _borrador.financiamientoId,
                             )
                             ? _borrador.financiamientoId
                             : null,
-                        isExpanded: true,
+
                         decoration: InputDecoration(
                           labelText: _borrador.tipoAtencion == 'SEGURO'
                               ? 'Seguro seleccionado *'
@@ -984,7 +1022,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                                 value: f.id,
                                 child: Text(
                                   '${f.nombre} (Desc. ${f.porcentajeDescuento.toStringAsFixed(0)}%)',
-                                  overflow: TextOverflow.ellipsis,
+                                  softWrap: true,
                                 ),
                               ),
                             )
@@ -1011,7 +1049,12 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
           const SizedBox(height: 12),
           LayoutBuilder(
             builder: (context, constraints) {
-              final dosCol = constraints.maxWidth >= 640;
+              final dosCol =
+                  DisenoAdaptable.columnasFormulario(
+                    context,
+                    constraints.maxWidth,
+                  ) >
+                  1;
               final ancho = dosCol
                   ? (constraints.maxWidth - 12) / 2
                   : constraints.maxWidth;
@@ -1025,13 +1068,15 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         DropdownButtonFormField<String>(
+                          isExpanded: true,
+                          itemHeight: null,
                           key: ValueKey(
                             'doctor-${_borrador.id}-${_borrador.doctorId}',
                           ),
                           value: doctores.any((d) => d.id == _borrador.doctorId)
                               ? _borrador.doctorId
                               : null,
-                          isExpanded: true,
+
                           decoration: const InputDecoration(
                             labelText: 'Médico a cargo *',
                             prefixIcon: Icon(Icons.medical_services_rounded),
@@ -1042,7 +1087,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                                   value: d.id,
                                   child: Text(
                                     d.etiquetaCompleta,
-                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: true,
                                   ),
                                 ),
                               )
@@ -1076,13 +1121,15 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                   SizedBox(
                     width: ancho,
                     child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      itemHeight: null,
                       key: ValueKey(
                         'receptor-${_borrador.areaOrigen}-${_borrador.receptorId}',
                       ),
                       value: receptores.any((r) => r.id == _borrador.receptorId)
                           ? _borrador.receptorId
                           : null,
-                      isExpanded: true,
+
                       decoration: const InputDecoration(
                         labelText: 'Personal receptor del área *',
                         prefixIcon: Icon(Icons.badge_rounded),
@@ -1093,7 +1140,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                               value: r.id,
                               child: Text(
                                 '${r.nombre} (${r.cargo})',
-                                overflow: TextOverflow.ellipsis,
+                                softWrap: true,
                               ),
                             ),
                           )
@@ -1344,8 +1391,9 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                         ],
                       ),
                     ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      runSpacing: 8,
                       children: [
                         IconButton(
                           tooltip:
@@ -1569,7 +1617,9 @@ class _SeccionTarjeta extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(
+        DisenoAdaptable.margen(MediaQuery.sizeOf(context).width),
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),

@@ -2,6 +2,22 @@ import 'package:flutter/material.dart';
 
 /// Reglas de espacio compartidas; no altera ni bloquea la escala de texto del usuario.
 class DisenoAdaptable {
+  /// Los campos conservan espacio de lectura también con texto ampliado.
+  static int columnasFormulario(
+    BuildContext context,
+    double ancho, {
+    int maxColumnas = 2,
+    double anchoMinimo = 300,
+    double separacion = 12,
+  }) {
+    final escala = MediaQuery.textScalerOf(context).scale(14) / 14;
+    final minimo = anchoMinimo * (escala > 1 ? escala : 1);
+    return ((ancho + separacion) / (minimo + separacion)).floor().clamp(
+      1,
+      maxColumnas,
+    );
+  }
+
   /// Reserva alto para título/subtítulo ampliados sin bloquear la escala del sistema.
   static double altoCabecera(BuildContext context, {double base = 72}) {
     final escala = MediaQuery.textScalerOf(context);

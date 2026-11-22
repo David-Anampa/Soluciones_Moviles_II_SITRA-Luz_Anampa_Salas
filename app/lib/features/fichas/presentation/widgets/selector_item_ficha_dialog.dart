@@ -53,14 +53,16 @@ class _SelectorItemFichaDialogState extends State<SelectorItemFichaDialog> {
 
   List<MedicamentoStockFicha> get _filtrados {
     final q = _busqueda.trim().toLowerCase();
-    return widget.catalogo.where((m) {
-      if (_soloConStock && !m.seleccionableIndividualmente) return false;
-      if (q.isEmpty) return true;
-      final texto =
-          '${m.nombre} ${m.principioActivo ?? ''} ${m.presentacion ?? ''} ${m.laboratorio ?? ''}'
-              .toLowerCase();
-      return texto.contains(q);
-    }).toList(growable: false);
+    return widget.catalogo
+        .where((m) {
+          if (_soloConStock && !m.seleccionableIndividualmente) return false;
+          if (q.isEmpty) return true;
+          final texto =
+              '${m.nombre} ${m.principioActivo ?? ''} ${m.presentacion ?? ''} ${m.laboratorio ?? ''}'
+                  .toLowerCase();
+          return texto.contains(q);
+        })
+        .toList(growable: false);
   }
 
   void _elegirProducto(MedicamentoStockFicha item) {
@@ -138,7 +140,8 @@ class _SelectorItemFichaDialogState extends State<SelectorItemFichaDialog> {
               controller: _busquedaCtrl,
               onChanged: (v) => setState(() => _busqueda = v),
               decoration: InputDecoration(
-                labelText: 'Buscar por nombre comercial, principio activo o presentación',
+                labelText:
+                    'Buscar por nombre comercial, principio activo o presentación',
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _busqueda.isEmpty
                     ? null
@@ -200,8 +203,9 @@ class _SelectorItemFichaDialogState extends State<SelectorItemFichaDialog> {
                           final item = lista[index];
                           final habilitado = item.seleccionableIndividualmente;
                           final elegido = _seleccionado?.id == item.id;
-                          final yaEnFicha =
-                              widget.idsYaSeleccionados.contains(item.id);
+                          final yaEnFicha = widget.idsYaSeleccionados.contains(
+                            item.id,
+                          );
                           return ListTile(
                             enabled: habilitado,
                             selected: elegido,
@@ -303,51 +307,45 @@ class _SelectorItemFichaDialogState extends State<SelectorItemFichaDialog> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 170,
-                          child: TextField(
-                            controller: _cantidadCtrl,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            decoration: InputDecoration(
-                              labelText: 'Cantidad a solicitar',
-                              helperText:
-                                  'Máximo ${_seleccionado!.farmaciaDisponible}',
-                            ),
+                    AccionesAdaptables(
+                      anchoMinimo: 230,
+                      acciones: [
+                        TextField(
+                          controller: _cantidadCtrl,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          decoration: InputDecoration(
+                            labelText: 'Cantidad a solicitar',
+                            helperText:
+                                'Máximo ${_seleccionado!.farmaciaDisponible}',
                           ),
                         ),
-                        SizedBox(
-                          width: 280,
-                          child: DropdownButtonFormField<String>(
-                            value: _categoriaSeccion,
-                            decoration: const InputDecoration(
-                              labelText: 'Sección en la ficha (RF-003)',
-                            ),
-                            items: const [
-                              DropdownMenuItem(
-                                value: 'MEDICAMENTO',
-                                child: Text('Sección Medicamentos'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'DISPOSITIVO_MEDICO',
-                                child: Text(
-                                  'Sección Dispositivos Médicos / Insumos',
-                                ),
-                              ),
-                            ],
-                            onChanged: (v) {
-                              if (v != null) {
-                                setState(() => _categoriaSeccion = v);
-                              }
-                            },
+                        DropdownButtonFormField<String>(
+                          isExpanded: true,
+                          itemHeight: null,
+                          value: _categoriaSeccion,
+                          decoration: const InputDecoration(
+                            labelText: 'Sección en la ficha (RF-003)',
                           ),
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'MEDICAMENTO',
+                              child: Text('Sección Medicamentos'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'DISPOSITIVO_MEDICO',
+                              child: Text(
+                                'Sección Dispositivos Médicos / Insumos',
+                              ),
+                            ),
+                          ],
+                          onChanged: (v) {
+                            if (v != null) {
+                              setState(() => _categoriaSeccion = v);
+                            }
+                          },
                         ),
                       ],
                     ),
