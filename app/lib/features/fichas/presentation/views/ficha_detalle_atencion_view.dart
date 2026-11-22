@@ -61,8 +61,9 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
 
   String get _rolUsuario => (_contexto?.rol ?? '').toUpperCase();
 
-  List<String> get _areasUsuario =>
-      (_contexto?.areas ?? const []).map((a) => a.codigo).toList(growable: false);
+  List<String> get _areasUsuario => (_contexto?.areas ?? const [])
+      .map((a) => a.codigo)
+      .toList(growable: false);
 
   TemaArea get _temaFicha {
     final color = _ficha?.areaTemaColor ?? 'AZUL';
@@ -75,13 +76,14 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
 
     final nuevosItems = <ItemDespachoEdicion>[];
     for (final item in ficha.items) {
-      final cantSugerida = (ficha.estado == 'SOLICITADO' &&
-              item.cantidadEntregada == 0)
+      final cantSugerida =
+          (ficha.estado == 'SOLICITADO' && item.cantidadEntregada == 0)
           ? (item.farmaciaDisponible < item.cantidadSolicitada
-              ? item.farmaciaDisponible
-              : item.cantidadSolicitada)
+                ? item.farmaciaDisponible
+                : item.cantidadSolicitada)
           : item.cantidadEntregada;
-      final obsInicial = item.observacionItem ??
+      final obsInicial =
+          item.observacionItem ??
           ((ficha.estado == 'SOLICITADO' &&
                   cantSugerida < item.cantidadSolicitada)
               ? 'Stock disponible parcial en Farmacia ($cantSugerida de ${item.cantidadSolicitada})'
@@ -145,22 +147,26 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
     if (ficha == null || !ficha.puedeEditarDespacho(_rolUsuario)) return;
     setState(() {
       _operacionIdPendiente = null;
-      _edicionItems = _edicionItems.map((item) {
-        if (item.itemId != itemId) return item;
-        final tope = item.cantidadSolicitada;
-        final ajustada = nuevaCantidad.clamp(0, tope);
-        return item.copyWith(cantidadEntregada: ajustada);
-      }).toList(growable: false);
+      _edicionItems = _edicionItems
+          .map((item) {
+            if (item.itemId != itemId) return item;
+            final tope = item.cantidadSolicitada;
+            final ajustada = nuevaCantidad.clamp(0, tope);
+            return item.copyWith(cantidadEntregada: ajustada);
+          })
+          .toList(growable: false);
     });
   }
 
   void _cambiarObservacionItem(String itemId, String texto) {
     setState(() {
       _operacionIdPendiente = null;
-      _edicionItems = _edicionItems.map((item) {
-        if (item.itemId != itemId) return item;
-        return item.copyWith(observacionItem: texto);
-      }).toList(growable: false);
+      _edicionItems = _edicionItems
+          .map((item) {
+            if (item.itemId != itemId) return item;
+            return item.copyWith(observacionItem: texto);
+          })
+          .toList(growable: false);
     });
   }
 
@@ -229,7 +235,8 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
         operacionId: _operacionIdPendiente!,
         fichaId: ficha.id,
         accion: accion,
-        items: (accion == 'GUARDAR_PREPARACION' ||
+        items:
+            (accion == 'GUARDAR_PREPARACION' ||
                 accion == 'MARCAR_LISTO_RECOJO' ||
                 (accion == 'CONFIRMAR_ENTREGA' &&
                     ficha.puedeEditarDespacho(_rolUsuario)))
@@ -283,11 +290,6 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
         !receptoresArea.any((r) => r.id == receptorIdSel)) {
       receptorIdSel = null;
     }
-    var usarManual = receptorIdSel == null &&
-        (ficha.recibidoPor != null && ficha.recibidoPor!.trim().isNotEmpty);
-    final receptorManualCtrl = TextEditingController(
-      text: ficha.recibidoPor ?? '',
-    );
     final obsEntregaCtrl = TextEditingController(
       text: ficha.observacionEntrega ?? '',
     );
@@ -332,60 +334,32 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                         tipo: TipoMensaje.informacion,
                       ),
                       const SizedBox(height: 14),
-                      if (receptoresArea.isNotEmpty && !usarManual) ...[
-                        DropdownButtonFormField<String>(
-                          initialValue: receptorIdSel,
-                          isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Personal receptor del área *',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: receptoresArea
-                              .map(
-                                (r) => DropdownMenuItem(
-                                  value: r.id,
-                                  child: Text(
-                                    '${r.nombre} (${r.cargo})',
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                      DropdownButtonFormField<String>(
+                        initialValue: receptorIdSel,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Personal receptor del área *',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: receptoresArea
+                            .map(
+                              (r) => DropdownMenuItem(
+                                value: r.id,
+                                child: Text(
+                                  '${r.nombre} (${r.cargo})',
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              )
-                              .toList(),
-                          onChanged: (val) =>
-                              setModalState(() => receptorIdSel = val),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (val) =>
+                            setModalState(() => receptorIdSel = val),
+                      ),
+                      if (receptoresArea.isEmpty)
+                        MensajesApp.nota(
+                          'No hay personal receptor activo asignado a esta área. Actualiza la ficha después de corregir la asignación.',
+                          tipo: TipoMensaje.advertencia,
                         ),
-                        const SizedBox(height: 6),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: TextButton.icon(
-                            onPressed: () =>
-                                setModalState(() => usarManual = true),
-                            icon: const Icon(Icons.edit_rounded, size: 16),
-                            label: const Text(
-                              'Escribir nombre del receptor manualmente',
-                            ),
-                          ),
-                        ),
-                      ] else ...[
-                        TextField(
-                          controller: receptorManualCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Nombre y apellidos de quien recibe *',
-                            hintText: 'Ej. Lic. María Quispe',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        if (receptoresArea.isNotEmpty)
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: TextButton.icon(
-                              onPressed: () =>
-                                  setModalState(() => usarManual = false),
-                              icon: const Icon(Icons.list_rounded, size: 16),
-                              label: const Text('Seleccionar del catálogo'),
-                            ),
-                          ),
-                      ],
                       const SizedBox(height: 12),
                       TextField(
                         controller: obsEntregaCtrl,
@@ -411,18 +385,12 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                     backgroundColor: const Color(0xFF1B5E20),
                   ),
                   onPressed: () {
-                    String? nombreReceptor =
-                        receptorManualCtrl.text.trim().isNotEmpty
-                            ? receptorManualCtrl.text.trim()
-                            : null;
-                    if (!usarManual && receptorIdSel != null) {
-                      final rec = receptoresArea
-                          .where((r) => r.id == receptorIdSel)
-                          .firstOrNull;
-                      nombreReceptor = rec?.nombre;
-                    }
+                    final nombreReceptor = receptoresArea
+                        .where((r) => r.id == receptorIdSel)
+                        .firstOrNull
+                        ?.nombre;
                     final errRec = FichaValidadores.validarReceptor(
-                      receptorId: usarManual ? null : receptorIdSel,
+                      receptorId: receptorIdSel,
                       recibidoPor: nombreReceptor,
                     );
                     if (errRec != null) {
@@ -434,7 +402,7 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                       return;
                     }
                     Navigator.of(ctx).pop({
-                      'receptor_id': usarManual ? null : receptorIdSel,
+                      'receptor_id': receptorIdSel,
                       'recibido_por': nombreReceptor,
                       'notas': obsEntregaCtrl.text.trim(),
                     });
@@ -449,7 +417,6 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
       },
     );
 
-    receptorManualCtrl.dispose();
     obsEntregaCtrl.dispose();
 
     if (resultado == null || !mounted) return;
@@ -532,14 +499,11 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                 backgroundColor: const Color(0xFFB3261E),
               ),
               onPressed: () {
-                final err =
-                    FichaValidadores.validarMotivoAnulacion(motivoCtrl.text);
+                final err = FichaValidadores.validarMotivoAnulacion(
+                  motivoCtrl.text,
+                );
                 if (err != null) {
-                  MensajesApp.mostrar(
-                    ctx,
-                    err,
-                    tipo: TipoMensaje.advertencia,
-                  );
+                  MensajesApp.mostrar(ctx, err, tipo: TipoMensaje.advertencia);
                   return;
                 }
                 Navigator.of(ctx).pop(motivoCtrl.text.trim());
@@ -624,66 +588,62 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
         body: _cargando && ficha == null
             ? const Center(child: CircularProgressIndicator())
             : _errorCarga != null && ficha == null
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          MensajesApp.nota(
-                            _errorCarga!,
-                            tipo: TipoMensaje.error,
-                          ),
-                          const SizedBox(height: 16),
-                          FilledButton.icon(
-                            onPressed: _cargarDetalle,
-                            icon: const Icon(Icons.refresh_rounded),
-                            label: const Text('Reintentar'),
-                          ),
-                        ],
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      MensajesApp.nota(_errorCarga!, tipo: TipoMensaje.error),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: _cargarDetalle,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('Reintentar'),
                       ),
+                    ],
+                  ),
+                ),
+              )
+            : ficha == null
+            ? const SizedBox.shrink()
+            : ContenidoAdaptable(
+                anchoMaximo: 1080,
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildBannerEstadoYFlujo(ficha, tema),
+                    const SizedBox(height: 14),
+                    _buildDatosClinicosYFinanciamiento(ficha, tema),
+                    const SizedBox(height: 14),
+                    if (ficha.puedeEditarDespacho(_rolUsuario)) ...[
+                      _buildNotaModoPreparacion(ficha),
+                      const SizedBox(height: 14),
+                    ],
+                    _buildSeccionItemsCategoria(
+                      ficha: ficha,
+                      tema: tema,
+                      titulo: 'Medicamentos (${ficha.medicamentos.length})',
+                      icono: Icons.medication_rounded,
+                      items: ficha.medicamentos,
                     ),
-                  )
-                : ficha == null
-                    ? const SizedBox.shrink()
-                    : ContenidoAdaptable(
-                        anchoMaximo: 1080,
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _buildBannerEstadoYFlujo(ficha, tema),
-                            const SizedBox(height: 14),
-                            _buildDatosClinicosYFinanciamiento(ficha, tema),
-                            const SizedBox(height: 14),
-                            if (ficha.puedeEditarDespacho(_rolUsuario)) ...[
-                              _buildNotaModoPreparacion(ficha),
-                              const SizedBox(height: 14),
-                            ],
-                            _buildSeccionItemsCategoria(
-                              ficha: ficha,
-                              tema: tema,
-                              titulo:
-                                  'Medicamentos (${ficha.medicamentos.length})',
-                              icono: Icons.medication_rounded,
-                              items: ficha.medicamentos,
-                            ),
-                            const SizedBox(height: 14),
-                            _buildSeccionItemsCategoria(
-                              ficha: ficha,
-                              tema: tema,
-                              titulo:
-                                  'Dispositivos Médicos e Insumos (${ficha.dispositivosMedicos.length})',
-                              icono: Icons.medical_services_rounded,
-                              items: ficha.dispositivosMedicos,
-                            ),
-                            const SizedBox(height: 14),
-                            _buildPanelOperacionAtencion(ficha, tema),
-                            const SizedBox(height: 14),
-                            _buildSeccionHistorialAuditoria(ficha, tema),
-                          ],
-                        ),
-                      ),
+                    const SizedBox(height: 14),
+                    _buildSeccionItemsCategoria(
+                      ficha: ficha,
+                      tema: tema,
+                      titulo:
+                          'Dispositivos Médicos e Insumos (${ficha.dispositivosMedicos.length})',
+                      icono: Icons.medical_services_rounded,
+                      items: ficha.dispositivosMedicos,
+                    ),
+                    const SizedBox(height: 14),
+                    _buildPanelOperacionAtencion(ficha, tema),
+                    const SizedBox(height: 14),
+                    _buildSeccionHistorialAuditoria(ficha, tema),
+                  ],
+                ),
+              ),
       ),
     );
   }
@@ -801,8 +761,9 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                         '${i + 1}. ${paso.$2}',
                         style: TextStyle(
                           fontSize: 12.5,
-                          fontWeight:
-                              actual ? FontWeight.w800 : FontWeight.w600,
+                          fontWeight: actual
+                              ? FontWeight.w800
+                              : FontWeight.w600,
                           color: color,
                         ),
                       ),
@@ -819,30 +780,30 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
   Widget _buildBadgeEstado(String estado) {
     final (color, fondo, etiqueta) = switch (estado) {
       'SOLICITADO' => (
-          const Color(0xFF0D47A1),
-          const Color(0xFFE3F2FD),
-          'SOLICITADO'
-        ),
+        const Color(0xFF0D47A1),
+        const Color(0xFFE3F2FD),
+        'SOLICITADO',
+      ),
       'EN_PREPARACION' => (
-          const Color(0xFFE65100),
-          const Color(0xFFFFF3E0),
-          'EN PREPARACIÓN'
-        ),
+        const Color(0xFFE65100),
+        const Color(0xFFFFF3E0),
+        'EN PREPARACIÓN',
+      ),
       'LISTO_PARA_RECOJO' => (
-          const Color(0xFF4A148C),
-          const Color(0xFFF3E5F5),
-          'LISTO PARA RECOJO'
-        ),
+        const Color(0xFF4A148C),
+        const Color(0xFFF3E5F5),
+        'LISTO PARA RECOJO',
+      ),
       'ENTREGADO' => (
-          const Color(0xFF1B5E20),
-          const Color(0xFFE8F5E9),
-          'ENTREGADO'
-        ),
+        const Color(0xFF1B5E20),
+        const Color(0xFFE8F5E9),
+        'ENTREGADO',
+      ),
       'CANCELADO' => (
-          const Color(0xFFB71C1C),
-          const Color(0xFFFFEBEE),
-          'ANULADO'
-        ),
+        const Color(0xFFB71C1C),
+        const Color(0xFFFFEBEE),
+        'ANULADO',
+      ),
       _ => (const Color(0xFF37474F), const Color(0xFFECEFF1), estado),
     };
     return Container(
@@ -902,7 +863,8 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                 ),
                 _DatoDetalle(
                   etiqueta: 'Procedencia',
-                  valor: ficha.procedencia == 'OTRO' &&
+                  valor:
+                      ficha.procedencia == 'OTRO' &&
                           (ficha.procedenciaDetalle ?? '').isNotEmpty
                       ? 'OTRO (${ficha.procedenciaDetalle})'
                       : (ficha.procedencia ?? '-'),
@@ -997,7 +959,10 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
               ),
               child: Text(
                 'Observación clínica de solicitud: ${ficha.observaciones}',
-                style: const TextStyle(fontSize: 12.5, color: Color(0xFF334155)),
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: Color(0xFF334155),
+                ),
               ),
             ),
           ],
@@ -1013,7 +978,10 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
               ),
               child: Text(
                 'Nota de Farmacia: ${ficha.notasFarmacia}',
-                style: const TextStyle(fontSize: 12.5, color: Color(0xFF4E342E)),
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: Color(0xFF4E342E),
+                ),
               ),
             ),
           ],
@@ -1028,7 +996,10 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
               ),
               child: Text(
                 'Conformidad de entrega: ${ficha.observacionEntrega}',
-                style: const TextStyle(fontSize: 12.5, color: Color(0xFF1B5E20)),
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: Color(0xFF1B5E20),
+                ),
               ),
             ),
           ],
@@ -1104,8 +1075,8 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                 final esParcial = cantDespachada < item.cantidadSolicitada;
                 final sinStockSuficiente =
                     cantDespachada > item.farmaciaDisponible &&
-                        ficha.estado != 'ENTREGADO' &&
-                        ficha.estado != 'CANCELADO';
+                    ficha.estado != 'ENTREGADO' &&
+                    ficha.estado != 'CANCELADO';
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1227,9 +1198,9 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                             onPressed: cantDespachada <= 0
                                 ? null
                                 : () => _cambiarCantidadItem(
-                                      item.id,
-                                      cantDespachada - 1,
-                                    ),
+                                    item.id,
+                                    cantDespachada - 1,
+                                  ),
                             icon: const Icon(Icons.remove_rounded, size: 18),
                           ),
                           Container(
@@ -1239,8 +1210,9 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                             ),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8),
-                              border:
-                                  Border.all(color: const Color(0xFFCBD5E1)),
+                              border: Border.all(
+                                color: const Color(0xFFCBD5E1),
+                              ),
                             ),
                             child: Text(
                               '$cantDespachada / ${item.cantidadSolicitada}',
@@ -1255,9 +1227,9 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                             onPressed: cantDespachada >= item.cantidadSolicitada
                                 ? null
                                 : () => _cambiarCantidadItem(
-                                      item.id,
-                                      cantDespachada + 1,
-                                    ),
+                                    item.id,
+                                    cantDespachada + 1,
+                                  ),
                             icon: const Icon(Icons.add_rounded, size: 18),
                           ),
                           TextButton(
@@ -1445,8 +1417,11 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
         children: [
           Row(
             children: [
-              Icon(Icons.published_with_changes_rounded,
-                  color: tema.principal, size: 20),
+              Icon(
+                Icons.published_with_changes_rounded,
+                color: tema.principal,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
@@ -1481,10 +1456,10 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                   onPressed: _procesandoAccion
                       ? null
                       : () => _ejecutarAccionAtencion(
-                            accion: 'INICIAR_PREPARACION',
-                            mensajeExito:
-                                'Ficha ${ficha.numeroFicha} marcada EN PREPARACIÓN.',
-                          ),
+                          accion: 'INICIAR_PREPARACION',
+                          mensajeExito:
+                              'Ficha ${ficha.numeroFicha} marcada EN PREPARACIÓN.',
+                        ),
                   icon: const Icon(Icons.play_arrow_rounded),
                   label: const Text('1. Iniciar preparación (HU-008)'),
                 ),
@@ -1493,10 +1468,10 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                   onPressed: _procesandoAccion
                       ? null
                       : () => _ejecutarAccionAtencion(
-                            accion: 'GUARDAR_PREPARACION',
-                            mensajeExito:
-                                'Cantidades y observaciones de despacho guardadas.',
-                          ),
+                          accion: 'GUARDAR_PREPARACION',
+                          mensajeExito:
+                              'Cantidades y observaciones de despacho guardadas.',
+                        ),
                   icon: const Icon(Icons.save_outlined),
                   label: const Text('Guardar avance de despacho (HU-009)'),
                 ),
@@ -1508,10 +1483,10 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                   onPressed: _procesandoAccion
                       ? null
                       : () => _ejecutarAccionAtencion(
-                            accion: 'MARCAR_LISTO_RECOJO',
-                            mensajeExito:
-                                'Ficha ${ficha.numeroFicha} marcada como LISTA PARA RECOJO.',
-                          ),
+                          accion: 'MARCAR_LISTO_RECOJO',
+                          mensajeExito:
+                              'Ficha ${ficha.numeroFicha} marcada como LISTA PARA RECOJO.',
+                        ),
                   icon: const Icon(Icons.fact_check_rounded),
                   label: const Text('2. Marcar listo para recojo (HU-008)'),
                 ),
@@ -1520,8 +1495,9 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF1B5E20),
                   ),
-                  onPressed:
-                      _procesandoAccion ? null : _abrirDialogoConfirmarEntrega,
+                  onPressed: _procesandoAccion
+                      ? null
+                      : _abrirDialogoConfirmarEntrega,
                   icon: const Icon(Icons.verified_rounded),
                   label: const Text(
                     '3. Confirmar entrega y descontar FEFO (HU-010)',
@@ -1533,8 +1509,9 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                     foregroundColor: const Color(0xFFB3261E),
                     side: const BorderSide(color: Color(0xFFB3261E)),
                   ),
-                  onPressed:
-                      _procesandoAccion ? null : _abrirDialogoAnularFicha,
+                  onPressed: _procesandoAccion
+                      ? null
+                      : _abrirDialogoAnularFicha,
                   icon: const Icon(Icons.cancel_outlined),
                   label: Text(
                     ficha.estado == 'ENTREGADO'
@@ -1549,10 +1526,7 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
     );
   }
 
-  Widget _buildSeccionHistorialAuditoria(
-    FichaRegistrada ficha,
-    TemaArea tema,
-  ) {
+  Widget _buildSeccionHistorialAuditoria(FichaRegistrada ficha, TemaArea tema) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1595,14 +1569,15 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                 final ev = ficha.historial[index];
                 final esReingreso =
                     ev.tipoEvento.contains('ANULA') ||
-                        ev.tipoEvento.contains('REINGRESO');
-                final esConsumo = ev.tipoEvento == 'CONSUMO_FICHA_AREA' ||
+                    ev.tipoEvento.contains('REINGRESO');
+                final esConsumo =
+                    ev.tipoEvento == 'CONSUMO_FICHA_AREA' ||
                     ev.tipoEvento == 'FICHA_ENTREGADA';
                 final colorIcono = esReingreso
                     ? const Color(0xFFB3261E)
                     : esConsumo
-                        ? const Color(0xFF1B5E20)
-                        : tema.principal;
+                    ? const Color(0xFF1B5E20)
+                    : tema.principal;
 
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1618,8 +1593,8 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                         esReingreso
                             ? Icons.replay_circle_filled_rounded
                             : esConsumo
-                                ? Icons.check_circle_rounded
-                                : Icons.history_edu_rounded,
+                            ? Icons.check_circle_rounded
+                            : Icons.history_edu_rounded,
                         size: 16,
                         color: colorIcono,
                       ),

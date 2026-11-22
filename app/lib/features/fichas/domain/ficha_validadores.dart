@@ -69,20 +69,12 @@ class FichaValidadores {
 
   static String? validarDoctor({String? doctorId, String? doctorNombre}) {
     if (doctorId != null && doctorId.trim().isNotEmpty) return null;
-    final limpio = normalizarEspacios(doctorNombre ?? '');
-    if (limpio.length < 3 || limpio.length > 120) {
-      return 'Selecciona o ingresa el nombre del médico a cargo (3 a 120 caracteres).';
-    }
-    return null;
+    return 'Selecciona un médico activo del catálogo.';
   }
 
   static String? validarReceptor({String? receptorId, String? recibidoPor}) {
     if (receptorId != null && receptorId.trim().isNotEmpty) return null;
-    final limpio = normalizarEspacios(recibidoPor ?? '');
-    if (limpio.length < 3 || limpio.length > 120) {
-      return 'Selecciona al personal receptor del área solicitante.';
-    }
-    return null;
+    return 'Selecciona al personal receptor activo del área solicitante.';
   }
 
   static String? validarFinanciamiento({
@@ -186,8 +178,9 @@ class FichaValidadores {
     } else {
       final errorMadre = validarMadreNeonatologia(borrador.madreNombre);
       if (errorMadre != null) return errorMadre;
-      final errorRn =
-          validarApellidosRecienNacido(borrador.recienNacidoApellidos);
+      final errorRn = validarApellidosRecienNacido(
+        borrador.recienNacidoApellidos,
+      );
       if (errorRn != null) return errorRn;
       if (!tiposParto.contains(borrador.tipoParto.toUpperCase())) {
         return 'Selecciona el tipo de parto (Eutócico, Distócico, Cesárea u Otro).';
@@ -259,8 +252,7 @@ class FichaValidadores {
         if (rolUpper != 'FARMACIA' && rolUpper != 'ADMINISTRADOR') {
           return 'Solo Farmacia o Administración pueden iniciar la preparación de una ficha.';
         }
-        if (ficha.estado != 'SOLICITADO' &&
-            ficha.estado != 'EN_PREPARACION') {
+        if (ficha.estado != 'SOLICITADO' && ficha.estado != 'EN_PREPARACION') {
           return 'Solo se puede iniciar la preparación desde el estado SOLICITADO.';
         }
         return null;
@@ -293,10 +285,7 @@ class FichaValidadores {
         if (ficha.estado == 'CANCELADO') {
           return 'Esta ficha ya se encuentra anulada.';
         }
-        if (!ficha.puedeAnular(
-          rol: rolUpper,
-          areasUsuario: areasUsuario,
-        )) {
+        if (!ficha.puedeAnular(rol: rolUpper, areasUsuario: areasUsuario)) {
           if (rolUpper == 'ENFERMERIA' && ficha.estado != 'SOLICITADO') {
             return 'La ficha ya está en atención por Farmacia (${ficha.etiquetaEstado}). Solicita su anulación a Farmacia.';
           }
@@ -309,4 +298,3 @@ class FichaValidadores {
     }
   }
 }
-

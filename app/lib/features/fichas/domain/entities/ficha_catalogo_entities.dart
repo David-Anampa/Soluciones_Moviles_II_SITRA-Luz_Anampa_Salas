@@ -352,7 +352,7 @@ class ContextoRegistroFicha {
     final filtrados = receptores
         .where((r) => r.perteneceAArea(codigoArea))
         .toList(growable: false);
-    return filtrados.isNotEmpty ? filtrados : receptores;
+    return filtrados;
   }
 
   List<KitDisponibleFicha> kitsParaArea(String codigoArea) => kits

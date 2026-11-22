@@ -8,7 +8,34 @@ import '../../domain/ficha_borrador.dart';
 /// - HU-008, HU-009, HU-010 y HU-011 (Estados de preparación, despacho parcial, entrega FEFO y anulación con contra-asiento)
 /// - Refinamiento de contrato HU-025 (Kardex por medicamento y lote)
 class FichasRepository {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase;
+
+  FichasRepository({SupabaseClient? cliente})
+    : _supabase = cliente ?? Supabase.instance.client;
+
+  /// Un fallo al refrescar nunca convierte un guardado confirmado en un error.
+  Future<ResultadoGuardadoFicha> guardarFichaConActualizacion({
+    required String solicitudId,
+    required FichaBorrador borrador,
+  }) async {
+    final ficha = await guardarFicha(
+      solicitudId: solicitudId,
+      borrador: borrador,
+    );
+    try {
+      final datos = await Future.wait([
+        listarFichasRecientes(area: borrador.areaOrigen),
+        buscarCatalogoConStock(limite: 300),
+      ]);
+      return ResultadoGuardadoFicha(
+        ficha: ficha,
+        recientes: datos[0] as List<FichaRegistrada>,
+        catalogo: datos[1] as List<MedicamentoStockFicha>,
+      );
+    } catch (_) {
+      return ResultadoGuardadoFicha(ficha: ficha);
+    }
+  }
 
   /// Obtiene áreas autorizadas, financiamientos, doctores, receptores y kits activos.
   Future<ContextoRegistroFicha> obtenerContexto({String? area}) async {
@@ -280,4 +307,18 @@ class FichasRepository {
     final limpio = error.toString().replaceFirst('Exception: ', '').trim();
     return limpio.isEmpty ? respaldo : limpio;
   }
+}
+
+class ResultadoGuardadoFicha {
+  final FichaRegistrada ficha;
+  final List<FichaRegistrada>? recientes;
+  final List<MedicamentoStockFicha>? catalogo;
+
+  const ResultadoGuardadoFicha({
+    required this.ficha,
+    this.recientes,
+    this.catalogo,
+  });
+
+  bool get actualizacionPendiente => recientes == null || catalogo == null;
 }

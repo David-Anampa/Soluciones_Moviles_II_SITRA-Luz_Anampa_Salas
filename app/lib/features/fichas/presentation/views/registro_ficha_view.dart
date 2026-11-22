@@ -33,7 +33,6 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
   final TextEditingController _madreCtrl = TextEditingController();
   final TextEditingController _habitacionCtrl = TextEditingController();
   final TextEditingController _rnApellidosCtrl = TextEditingController();
-  final TextEditingController _doctorManualCtrl = TextEditingController();
   final TextEditingController _observacionesCtrl = TextEditingController();
 
   ContextoRegistroFicha? _contexto;
@@ -41,7 +40,6 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
   List<FichaRegistrada> _fichasRecientes = const [];
 
   FichaBorrador _borrador = FichaBorrador();
-  bool _usarDoctorManual = false;
   bool _cargando = true;
   bool _guardando = false;
   String? _errorCarga;
@@ -61,7 +59,6 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
     _madreCtrl.dispose();
     _habitacionCtrl.dispose();
     _rnApellidosCtrl.dispose();
-    _doctorManualCtrl.dispose();
     _observacionesCtrl.dispose();
     super.dispose();
   }
@@ -93,8 +90,8 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
   }
 
   Map<String, int> get _mapaStockFarmacia => {
-        for (final m in _catalogoStock) m.id: m.farmaciaDisponible,
-      };
+    for (final m in _catalogoStock) m.id: m.farmaciaDisponible,
+  };
 
   Future<void> _cargarDatosIniciales({String? areaPreferida}) async {
     setState(() {
@@ -109,17 +106,20 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
       final ctx = resultados[0] as ContextoRegistroFicha;
       final stock = resultados[1] as List<MedicamentoStockFicha>;
 
-      String areaCodigo = areaPreferida ??
+      String areaCodigo =
+          areaPreferida ??
           widget.areaInicial ??
           (_borrador.areaOrigen.isNotEmpty ? _borrador.areaOrigen : '');
-      if (areaCodigo.isEmpty ||
-          !ctx.areas.any((a) => a.codigo == areaCodigo)) {
+      if (areaCodigo.isEmpty || !ctx.areas.any((a) => a.codigo == areaCodigo)) {
         areaCodigo = ctx.areas.isNotEmpty ? ctx.areas.first.codigo : '';
       }
 
-      final areaObj = ctx.areas.where((a) => a.codigo == areaCodigo).firstOrNull;
-      final tipoFichaInicial =
-          areaObj != null && areaObj.esNeonatologia ? 'NEONATOLOGIA' : 'GENERAL';
+      final areaObj = ctx.areas
+          .where((a) => a.codigo == areaCodigo)
+          .firstOrNull;
+      final tipoFichaInicial = areaObj != null && areaObj.esNeonatologia
+          ? 'NEONATOLOGIA'
+          : 'GENERAL';
 
       final finParticular = ctx
           .financiamientosPorTipo('PARTICULAR')
@@ -146,7 +146,6 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
         _contexto = ctx;
         _catalogoStock = stock;
         _fichasRecientes = recientes;
-        _usarDoctorManual = doctorDefecto == null;
         if (_borrador.id == null && _borrador.items.isEmpty) {
           _borrador = FichaBorrador(
             tipoFicha: tipoFichaInicial,
@@ -158,7 +157,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
             doctorId: doctorDefecto?.id,
             doctorNombre: doctorDefecto?.nombre ?? '',
             receptorId: receptorDefecto?.id,
-            recibidoPor: receptorDefecto?.nombre ?? ctx.usuarioNombre,
+            recibidoPor: receptorDefecto?.nombre ?? '',
           );
         }
         _cargando = false;
@@ -202,14 +201,15 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
             : _borrador.tipoFicha,
         receptorId: nuevoReceptor?.id,
         limpiarReceptorId: nuevoReceptor == null,
-        recibidoPor: nuevoReceptor?.nombre ?? ctx.usuarioNombre,
+        recibidoPor: nuevoReceptor?.nombre ?? '',
         limpiarKit: _borrador.kitId != null,
       );
     });
 
     try {
-      final recientes =
-          await _repository.listarFichasRecientes(area: nuevoCodigo);
+      final recientes = await _repository.listarFichasRecientes(
+        area: nuevoCodigo,
+      );
       if (mounted) {
         setState(() => _fichasRecientes = recientes);
       }
@@ -244,8 +244,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
       builder: (_) => SelectorItemFichaDialog(
         catalogo: _catalogoStock,
         categoriaInicial: categoriaInicial,
-        idsYaSeleccionados:
-            _borrador.items.map((i) => i.medicamentoId).toSet(),
+        idsYaSeleccionados: _borrador.items.map((i) => i.medicamentoId).toSet(),
         tema: _temaActual,
       ),
     );
@@ -303,12 +302,10 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
     _madreCtrl.text = borradorEdicion.madreNombre;
     _habitacionCtrl.text = borradorEdicion.habitacion;
     _rnApellidosCtrl.text = borradorEdicion.recienNacidoApellidos;
-    _doctorManualCtrl.text = borradorEdicion.doctorNombre;
     _observacionesCtrl.text = borradorEdicion.observaciones;
 
     setState(() {
       _solicitudIdPendiente = null;
-      _usarDoctorManual = borradorEdicion.doctorId == null;
       _borrador = borradorEdicion;
     });
     MensajesApp.mostrar(
@@ -333,19 +330,17 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
     final areaObj = ctx.areas.where((a) => a.codigo == areaCodigo).firstOrNull;
     final finParticular = ctx.financiamientosPorTipo('PARTICULAR').firstOrNull;
     final receptoresArea = ctx.receptoresParaArea(areaCodigo);
-    final receptorDefecto = receptoresArea
-            .where((r) => r.id == ctx.usuarioId)
-            .firstOrNull ??
+    final receptorDefecto =
+        receptoresArea.where((r) => r.id == ctx.usuarioId).firstOrNull ??
         receptoresArea.firstOrNull;
     final doctorDefecto = ctx.doctores.firstOrNull;
-    _doctorManualCtrl.text = doctorDefecto?.nombre ?? '';
 
     setState(() {
       _solicitudIdPendiente = null;
-      _usarDoctorManual = doctorDefecto == null;
       _borrador = FichaBorrador(
-        tipoFicha:
-            areaObj != null && areaObj.esNeonatologia ? 'NEONATOLOGIA' : 'GENERAL',
+        tipoFicha: areaObj != null && areaObj.esNeonatologia
+            ? 'NEONATOLOGIA'
+            : 'GENERAL',
         areaOrigen: areaCodigo,
         turno: _turnoSegunHoraActual(),
         prioridad: 'NORMAL',
@@ -354,7 +349,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
         doctorId: doctorDefecto?.id,
         doctorNombre: doctorDefecto?.nombre ?? '',
         receptorId: receptorDefecto?.id,
-        recibidoPor: receptorDefecto?.nombre ?? ctx.usuarioNombre,
+        recibidoPor: receptorDefecto?.nombre ?? '',
       );
     });
   }
@@ -368,17 +363,25 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
       madreNombre: _madreCtrl.text,
       habitacion: _habitacionCtrl.text,
       recienNacidoApellidos: _rnApellidosCtrl.text,
-      doctorNombre: _usarDoctorManual
-          ? _doctorManualCtrl.text
-          : _borrador.doctorNombre,
+      doctorNombre: _borrador.doctorNombre,
       observaciones: _observacionesCtrl.text,
     );
 
     final errorValidacion = FichaValidadores.validarBorrador(sincronizado);
     if (errorValidacion != null) {
+      MensajesApp.mostrar(context, errorValidacion, tipo: TipoMensaje.error);
+      return;
+    }
+
+    final ctx = _contexto;
+    if (ctx == null ||
+        !ctx.doctores.any((d) => d.id == sincronizado.doctorId) ||
+        !ctx
+            .receptoresParaArea(sincronizado.areaOrigen)
+            .any((r) => r.id == sincronizado.receptorId)) {
       MensajesApp.mostrar(
         context,
-        errorValidacion,
+        'Selecciona un médico del catálogo y un receptor activo de esta área. Actualiza los datos si cambiaron las asignaciones.',
         tipo: TipoMensaje.error,
       );
       return;
@@ -392,29 +395,30 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
 
     try {
       final esEdicion = sincronizado.id != null;
-      final guardada = await _repository.guardarFicha(
+      final resultado = await _repository.guardarFichaConActualizacion(
         solicitudId: _solicitudIdPendiente!,
         borrador: sincronizado,
       );
-      final recientes = await _repository.listarFichasRecientes(
-        area: sincronizado.areaOrigen,
-      );
-      final stockActualizado =
-          await _repository.buscarCatalogoConStock(limite: 300);
-
+      final guardada = resultado.ficha;
       if (!mounted) return;
       setState(() {
         _guardando = false;
-        _fichasRecientes = recientes;
-        _catalogoStock = stockActualizado;
+        _fichasRecientes =
+            resultado.recientes ??
+            [guardada, ..._fichasRecientes.where((f) => f.id != guardada.id)];
+        if (resultado.catalogo != null) _catalogoStock = resultado.catalogo!;
       });
       _limpiarFormulario();
       MensajesApp.mostrar(
         context,
-        esEdicion
+        resultado.actualizacionPendiente
+            ? 'Ficha ${guardada.numeroFicha} ${esEdicion ? "actualizada" : "guardada y enviada a Farmacia"}. No se pudo actualizar la lista o el stock. No vuelvas a enviarla; usa Actualizar para consultar los datos.'
+            : esEdicion
             ? 'Ficha ${guardada.numeroFicha} actualizada y auditada correctamente.'
             : 'Ficha ${guardada.numeroFicha} registrada y enviada a Farmacia.',
-        tipo: TipoMensaje.exito,
+        tipo: resultado.actualizacionPendiente
+            ? TipoMensaje.advertencia
+            : TipoMensaje.exito,
       );
     } catch (e) {
       if (!mounted) return;
@@ -446,8 +450,8 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
               onPressed: _cargando || _guardando
                   ? null
                   : () => _cargarDatosIniciales(
-                        areaPreferida: _borrador.areaOrigen,
-                      ),
+                      areaPreferida: _borrador.areaOrigen,
+                    ),
               icon: const Icon(Icons.refresh_rounded),
             ),
           ],
@@ -455,33 +459,33 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
         body: _cargando
             ? const Center(child: CircularProgressIndicator())
             : _errorCarga != null
-                ? _buildErrorEstado()
-                : ContenidoAdaptable(
-                    anchoMaximo: 1080,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.only(bottom: 32),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildCabeceraContexto(tema),
-                          const SizedBox(height: 16),
-                          _buildSeccionAreaYModalidad(tema),
-                          const SizedBox(height: 16),
-                          _buildSeccionDatosClinicos(tema),
-                          const SizedBox(height: 16),
-                          _buildSeccionResponsablesYFinanciamiento(tema),
-                          const SizedBox(height: 16),
-                          _buildSeccionKitEItems(tema),
-                          const SizedBox(height: 20),
-                          _buildBarraEnvio(),
-                          if (_fichasRecientes.isNotEmpty) ...[
-                            const SizedBox(height: 28),
-                            _buildSeccionFichasRecientes(tema),
-                          ],
-                        ],
-                      ),
-                    ),
+            ? _buildErrorEstado()
+            : ContenidoAdaptable(
+                anchoMaximo: 1080,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.only(bottom: 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildCabeceraContexto(tema),
+                      const SizedBox(height: 16),
+                      _buildSeccionAreaYModalidad(tema),
+                      const SizedBox(height: 16),
+                      _buildSeccionDatosClinicos(tema),
+                      const SizedBox(height: 16),
+                      _buildSeccionResponsablesYFinanciamiento(tema),
+                      const SizedBox(height: 16),
+                      _buildSeccionKitEItems(tema),
+                      const SizedBox(height: 20),
+                      _buildBarraEnvio(),
+                      if (_fichasRecientes.isNotEmpty) ...[
+                        const SizedBox(height: 28),
+                        _buildSeccionFichasRecientes(tema),
+                      ],
+                    ],
                   ),
+                ),
+              ),
       ),
     );
   }
@@ -776,10 +780,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                             value: 'CESAREA',
                             child: Text('Cesárea'),
                           ),
-                          DropdownMenuItem(
-                            value: 'OTRO',
-                            child: Text('Otro'),
-                          ),
+                          DropdownMenuItem(value: 'OTRO', child: Text('Otro')),
                         ],
                         onChanged: (v) {
                           if (v != null) {
@@ -850,7 +851,9 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                       value: _borrador.procedencia,
                       decoration: const InputDecoration(
                         labelText: 'Procedencia del paciente *',
-                        prefixIcon: Icon(Icons.transfer_within_a_station_rounded),
+                        prefixIcon: Icon(
+                          Icons.transfer_within_a_station_rounded,
+                        ),
                       ),
                       items: const [
                         DropdownMenuItem(
@@ -960,8 +963,10 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                     SizedBox(
                       width: ancho,
                       child: DropdownButtonFormField<String>(
-                        value: financiamientosTipo.any(
-                                (f) => f.id == _borrador.financiamientoId)
+                        value:
+                            financiamientosTipo.any(
+                              (f) => f.id == _borrador.financiamientoId,
+                            )
                             ? _borrador.financiamientoId
                             : null,
                         isExpanded: true,
@@ -969,7 +974,9 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                           labelText: _borrador.tipoAtencion == 'SEGURO'
                               ? 'Seguro seleccionado *'
                               : 'Convenio seleccionado *',
-                          prefixIcon: const Icon(Icons.health_and_safety_rounded),
+                          prefixIcon: const Icon(
+                            Icons.health_and_safety_rounded,
+                          ),
                         ),
                         items: financiamientosTipo
                             .map(
@@ -985,8 +992,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                         onChanged: (v) {
                           setState(() {
                             _solicitudIdPendiente = null;
-                            _borrador =
-                                _borrador.copyWith(financiamientoId: v);
+                            _borrador = _borrador.copyWith(financiamientoId: v);
                           });
                         },
                       ),
@@ -1018,90 +1024,61 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (!_usarDoctorManual && doctores.isNotEmpty)
-                          DropdownButtonFormField<String>(
-                            value: doctores.any((d) => d.id == _borrador.doctorId)
-                                ? _borrador.doctorId
-                                : null,
-                            isExpanded: true,
-                            decoration: const InputDecoration(
-                              labelText: 'Médico a cargo *',
-                              prefixIcon: Icon(Icons.medical_services_rounded),
-                            ),
-                            items: doctores
-                                .map(
-                                  (d) => DropdownMenuItem(
-                                    value: d.id,
-                                    child: Text(
-                                      d.etiquetaCompleta,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (id) {
-                              if (id == null) return;
-                              final doc =
-                                  doctores.firstWhere((d) => d.id == id);
-                              setState(() {
-                                _solicitudIdPendiente = null;
-                                _borrador = _borrador.copyWith(
-                                  doctorId: doc.id,
-                                  doctorNombre: doc.nombre,
-                                );
-                              });
-                            },
-                          )
-                        else
-                          TextField(
-                            controller: _doctorManualCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Nombre del médico a cargo *',
-                              prefixIcon: Icon(Icons.medical_services_rounded),
-                            ),
+                        DropdownButtonFormField<String>(
+                          key: ValueKey(
+                            'doctor-${_borrador.id}-${_borrador.doctorId}',
                           ),
-                        if (doctores.isNotEmpty)
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton.icon(
-                              onPressed: () {
-                                setState(() {
-                                  _usarDoctorManual = !_usarDoctorManual;
-                                  if (_usarDoctorManual) {
-                                    _doctorManualCtrl.text =
-                                        _borrador.doctorNombre;
-                                    _borrador = _borrador.copyWith(
-                                      limpiarDoctorId: true,
-                                    );
-                                  } else if (doctores.isNotEmpty) {
-                                    final doc = doctores.first;
+                          value: doctores.any((d) => d.id == _borrador.doctorId)
+                              ? _borrador.doctorId
+                              : null,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Médico a cargo *',
+                            prefixIcon: Icon(Icons.medical_services_rounded),
+                          ),
+                          items: doctores
+                              .map(
+                                (d) => DropdownMenuItem(
+                                  value: d.id,
+                                  child: Text(
+                                    d.etiquetaCompleta,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: doctores.isEmpty
+                              ? null
+                              : (id) {
+                                  if (id == null) return;
+                                  final doc = doctores.firstWhere(
+                                    (d) => d.id == id,
+                                  );
+                                  setState(() {
+                                    _solicitudIdPendiente = null;
                                     _borrador = _borrador.copyWith(
                                       doctorId: doc.id,
                                       doctorNombre: doc.nombre,
                                     );
-                                  }
-                                });
-                              },
-                              icon: Icon(
-                                _usarDoctorManual
-                                    ? Icons.list_alt_rounded
-                                    : Icons.edit_rounded,
-                                size: 16,
-                              ),
-                              label: Text(
-                                _usarDoctorManual
-                                    ? 'Elegir médico del catálogo'
-                                    : 'Escribir otro médico manualmente',
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            ),
+                                  });
+                                },
+                        ),
+                        if (doctores.isEmpty) ...[
+                          const SizedBox(height: 8),
+                          MensajesApp.nota(
+                            'No hay médicos activos. Solicita su registro en el catálogo antes de enviar la ficha.',
+                            tipo: TipoMensaje.advertencia,
                           ),
+                        ],
                       ],
                     ),
                   ),
                   SizedBox(
                     width: ancho,
                     child: DropdownButtonFormField<String>(
+                      key: ValueKey(
+                        'receptor-${_borrador.areaOrigen}-${_borrador.receptorId}',
+                      ),
                       value: receptores.any((r) => r.id == _borrador.receptorId)
                           ? _borrador.receptorId
                           : null,
@@ -1139,6 +1116,13 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
             },
           ),
           const SizedBox(height: 8),
+          if (receptores.isEmpty) ...[
+            MensajesApp.nota(
+              'Esta área no tiene personal receptor activo asignado. Solicita la asignación antes de enviar la ficha.',
+              tipo: TipoMensaje.advertencia,
+            ),
+            const SizedBox(height: 12),
+          ],
           TextField(
             controller: _observacionesCtrl,
             maxLines: 2,
@@ -1153,8 +1137,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
   }
 
   Widget _buildSeccionKitEItems(TemaArea tema) {
-    final kitsArea =
-        _contexto?.kitsParaArea(_borrador.areaOrigen) ?? const [];
+    final kitsArea = _contexto?.kitsParaArea(_borrador.areaOrigen) ?? const [];
     final meds = _borrador.medicamentos;
     final dispositivos = _borrador.dispositivosMedicos;
 
@@ -1313,7 +1296,8 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                   const Divider(height: 12, color: Color(0xFFE8E8F0)),
               itemBuilder: (context, index) {
                 final item = items[index];
-                final descuento = fin?.calcularDescuentoPara(item.medicamentoId) ?? 0;
+                final descuento =
+                    fin?.calcularDescuentoPara(item.medicamentoId) ?? 0;
                 final precioFinal = item.precioKairos != null
                     ? item.precioKairos! * (1 - descuento / 100.0)
                     : null;
@@ -1364,7 +1348,8 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          tooltip: 'Cambiar de sección (Medicamento / Dispositivo)',
+                          tooltip:
+                              'Cambiar de sección (Medicamento / Dispositivo)',
                           onPressed: () {
                             final nueva = item.esDispositivoMedico
                                 ? 'MEDICAMENTO'
@@ -1408,7 +1393,8 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                         ),
                         IconButton(
                           tooltip: 'Aumentar cantidad',
-                          onPressed: (!item.origenKit &&
+                          onPressed:
+                              (!item.origenKit &&
                                   item.cantidad >= item.farmaciaDisponible)
                               ? null
                               : () {
@@ -1427,8 +1413,9 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                           onPressed: () {
                             setState(() {
                               _solicitudIdPendiente = null;
-                              _borrador =
-                                  _borrador.quitarItem(item.medicamentoId);
+                              _borrador = _borrador.quitarItem(
+                                item.medicamentoId,
+                              );
                             });
                           },
                           icon: const Icon(
@@ -1532,15 +1519,15 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                 children: [
                   OutlinedButton.icon(
                     onPressed: () async {
-                      final huboCambios =
-                          await Navigator.of(context).push<bool>(
-                        MaterialPageRoute(
-                          builder: (_) => FichaDetalleAtencionView(
-                            fichaId: f.id,
-                            fichaInicial: f,
-                          ),
-                        ),
-                      );
+                      final huboCambios = await Navigator.of(context)
+                          .push<bool>(
+                            MaterialPageRoute(
+                              builder: (_) => FichaDetalleAtencionView(
+                                fichaId: f.id,
+                                fichaInicial: f,
+                              ),
+                            ),
+                          );
                       if (huboCambios == true && mounted) {
                         await _cargarDatosIniciales(
                           areaPreferida: _borrador.areaOrigen,
