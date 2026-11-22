@@ -10,6 +10,10 @@ Pruebas dirigidas y análisis estático aprobados; comprobación manual con el u
 todavía pendiente. Las descripciones originales siguientes son el diagnóstico
 base: no interpretar estos tres defectos como aún presentes en la versión corregida.
 
+**Diseño HU-003 del 22/11:** formulario y selector individual adaptados a ancho,
+texto ampliado y teclado. Se conservan tema y tamaños tipográficos existentes.
+Ver [alcance y emulador de trabajo](HU003_DISENO_ADAPTABLE_Y_EMULADOR_2026-11-22.md).
+
 ## 1. Alcance y forma de interpretar este documento
 
 Revisión estática del código y SQL de `Sprint-08`, commit base `40d65bb`.
@@ -43,7 +47,7 @@ Este plan no reabre issues ni modifica sus responsables automáticamente.
 
 | Sprint | HU | Estado frente al alcance acordado | Principal pendiente |
 |---|---|---|---|
-| 6 | 003 | Parcial | Validar receptor en servidor y alinear médico con catálogo |
+| 6 | 003 | Correcciones implementadas; aceptación manual pendiente | Comprobar registro/edición con receptor y médico válidos y diseño en el dispositivo |
 | 6 | 004 | Parcial | Excepción de kits verificable y consultas de catálogo completas |
 | 6 | 005 | Parcial | Modal final y fotografía histórica de faltantes al enviar |
 | 6 | 014 | Núcleo implementado; usuario confirma reconocimiento | Seguridad transversal de IA y errores/sin red |
