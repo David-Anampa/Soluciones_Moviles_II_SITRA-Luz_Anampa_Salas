@@ -1,5 +1,12 @@
 # Estado de las historias de usuario — SITRA-Luz
 
+**Revisión técnica del 22/11/2026:** para corregir y aceptar los sprints 6–8,
+consultar primero [el plan por historia, evidencias y pruebas](PLAN_REVISION_Y_CIERRE_SPRINTS_6_7_8_2026-11-22.md).
+Distingue implementación de aceptación, recoge las reglas posteriores de kits y
+señala afirmaciones históricas desactualizadas de este archivo (por ejemplo, IA
+simulada). No interpretar sus tablas proyectadas ni Done administrativo como
+pruebas funcionales aprobadas.
+
 Fecha: 13 de octubre de 2026.
 
 **Corrección de responsables confirmada por Walter el 19/11/2026:** en Sprint 6,
