@@ -221,6 +221,7 @@ class JefaturaDashboardView extends StatelessWidget {
 
                 // Tarjetas FEFO y Trazabilidad
                 const CabeceraMenu(
+                  color: AppColors.jefaturaColor,
                   titulo: 'Indicadores de Trazabilidad & FEFO',
                   icono: Icons.analytics_outlined,
                 ),
@@ -328,6 +329,7 @@ class JefaturaDashboardView extends StatelessWidget {
 
                 // Módulos de Jefatura
                 const CabeceraMenu(
+                  color: AppColors.jefaturaColor,
                   titulo: 'Herramientas de Supervisión',
                   icono: Icons.fact_check_outlined,
                 ),

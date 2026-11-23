@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/avisos_pendientes.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -22,6 +23,7 @@ class EnfermeriaDashboardView extends StatefulWidget {
 class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
   final FichasRepository _fichasRepo = FichasRepository();
 
+  int _revisionAvisos = 0;
   int _itemsDisponiblesFarmacia = 0;
   int _fichasEnProceso = 0;
   int _fichasListasRecojo = 0;
@@ -49,6 +51,7 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
       final fichas = resultados[2] as List;
 
       setState(() {
+        _revisionAvisos++;
         if (ctx.areas.isNotEmpty) {
           _nombreAreaReal = ctx.areas.first.nombre as String;
         }
@@ -77,10 +80,16 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
     }
   }
 
-  Future<void> _abrirListadoFichas({String? estadoInicial}) async {
+  Future<void> _abrirListadoFichas({
+    String? estadoInicial,
+    String? areaInicial,
+  }) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => FichasListadoView(estadoInicial: estadoInicial),
+        builder: (_) => FichasListadoView(
+          estadoInicial: estadoInicial,
+          areaInicial: areaInicial,
+        ),
       ),
     );
     if (mounted) {
@@ -220,10 +229,21 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
                     ),
                   ),
 
+                  AvisosPendientes(
+                    ambito: 'ENFERMERIA',
+                    color: AppColors.enfermeriaColor,
+                    revision: _revisionAvisos,
+                    onAbrir: (grupo) => _abrirListadoFichas(
+                      estadoInicial: 'LISTO_PARA_RECOJO',
+                      areaInicial: grupo.areaCodigo,
+                    ),
+                  ),
+
                   const SizedBox(height: 20),
 
                   // Métricas en tiempo real del servicio
                   const CabeceraMenu(
+                    color: AppColors.enfermeriaColor,
                     titulo: 'Estado en Tiempo Real del Servicio',
                     icono: Icons.monitor_heart_outlined,
                   ),
@@ -273,6 +293,7 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
 
                   // Módulos operativos reales
                   const CabeceraMenu(
+                    color: AppColors.enfermeriaColor,
                     titulo: 'Operaciones del área',
                     icono: Icons.medical_services_outlined,
                   ),

@@ -114,21 +114,29 @@ class BotonModulo extends StatelessWidget {
 class CabeceraMenu extends StatelessWidget {
   final String titulo;
   final IconData icono;
-  const CabeceraMenu({super.key, required this.titulo, required this.icono});
-  static const _red = Color(0xFFC62828);
+  final Color color;
+  const CabeceraMenu({
+    super.key,
+    required this.titulo,
+    required this.icono,
+    this.color = const Color(0xFFC62828),
+  });
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [_red, Color(0xFFE05252)],
+      gradient: LinearGradient(
+        colors: [
+          Color.lerp(color, Colors.black, .26)!,
+          Color.lerp(color, Colors.black, .12)!,
+        ],
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
       ),
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
-          color: _red.withValues(alpha: .12),
+          color: color.withValues(alpha: .12),
           blurRadius: 10,
           offset: const Offset(0, 4),
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/avisos_pendientes.dart';
 import 'gestion_inventario_almacen_view.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/widgets/menu_modulos.dart';
@@ -33,8 +34,8 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
     });
   }
 
-  void _abrirSolicitudesAbastecimiento() {
-    Navigator.of(context).push(
+  Future<void> _abrirSolicitudesAbastecimiento() async {
+    await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const SolicitudesAbastecimientoView()),
     );
   }
@@ -184,83 +185,18 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                     ),
                   ),
 
-                  // HU-030: Solicitudes pendientes de Farmacia.
-                  if (state is AlmacenLoaded &&
-                      state.solicitudesPendientes > 0) ...[
-                    const SizedBox(height: 14),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _abrirSolicitudesAbastecimiento,
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.farmaciaColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: AppColors.farmaciaColor.withOpacity(0.4),
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppColors.farmaciaColor,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.notifications_active_rounded,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${state.solicitudesPendientes} ${state.solicitudesPendientes == 1 ? "solicitud pendiente" : "solicitudes pendientes"} de reposición',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 13,
-                                        color: AppColors.farmaciaColor,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    const Text(
-                                      'Farmacia Central requiere abastecimiento de stock. Toca para revisar y despachar.',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(
-                                Icons.arrow_forward_ios_rounded,
-                                size: 14,
-                                color: AppColors.farmaciaColor,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  AvisosPendientes(
+                    ambito: 'ALMACEN',
+                    color: AppColors.almacenColor,
+                    revision: state,
+                    onAbrir: (_) => _abrirSolicitudesAbastecimiento(),
+                  ),
 
                   const SizedBox(height: 20),
 
                   // 2. MÉTRICAS OPERATIVAS REALES DE ALMACÉN
                   const CabeceraMenu(
+                    color: AppColors.almacenColor,
                     titulo: 'Estado del Almacén General',
                     icono: Icons.warehouse_outlined,
                   ),
@@ -325,6 +261,7 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
 
                   // 3. ACCIONES RÁPIDAS
                   const CabeceraMenu(
+                    color: AppColors.almacenColor,
                     titulo: 'Operaciones de Almacén',
                     icono: Icons.inventory_2_outlined,
                   ),

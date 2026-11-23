@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/avisos_pendientes.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/widgets/menu_modulos.dart';
 import 'package:go_router/go_router.dart';
@@ -24,6 +25,7 @@ class FarmaciaDashboardView extends StatefulWidget {
 
 class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
   final FichasRepository _fichasRepo = FichasRepository();
+  int _revisionAvisos = 0;
   int _fichasPendientes = 0;
   int _fichasUrgentes = 0;
 
@@ -47,16 +49,23 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
             f.estado == 'LISTO_PARA_RECOJO',
       );
       setState(() {
+        _revisionAvisos++;
         _fichasPendientes = activas.length;
         _fichasUrgentes = activas.where((f) => f.esUrgente).length;
       });
     } catch (_) {}
   }
 
-  Future<void> _abrirAtencionFichas({String? estadoInicial}) async {
+  Future<void> _abrirAtencionFichas({
+    String? estadoInicial,
+    String? areaInicial,
+  }) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => FichasListadoView(estadoInicial: estadoInicial),
+        builder: (_) => FichasListadoView(
+          estadoInicial: estadoInicial,
+          areaInicial: areaInicial,
+        ),
       ),
     );
     if (!mounted) return;
@@ -72,8 +81,8 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
     );
   }
 
-  void _abrirMisSolicitudes() {
-    Navigator.of(context).push(
+  Future<void> _abrirMisSolicitudes() async {
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) =>
             const SolicitudesAbastecimientoView(esModoFarmacia: true),
@@ -226,81 +235,23 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                     ),
                   ),
 
-                  // Banner interactivo si hay medicamentos listos para recepción física
-                  if (listasParaRecepcion > 0) ...[
-                    const SizedBox(height: 14),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _abrirMisSolicitudes,
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
+                  AvisosPendientes(
+                    ambito: 'FARMACIA',
+                    color: AppColors.farmaciaColor,
+                    revision: _revisionAvisos,
+                    onAbrir: (grupo) => grupo.tipo == 'RECEPCION_ALMACEN'
+                        ? _abrirMisSolicitudes()
+                        : _abrirAtencionFichas(
+                            estadoInicial: 'SOLICITADO',
+                            areaInicial: grupo.areaCodigo,
                           ),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: Colors.blue.shade300,
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.shade700,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.local_shipping_rounded,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '$listasParaRecepcion pedido(s) listos desde Almacén',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 13,
-                                        color: Colors.blue.shade900,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'Toca aquí para verificar y confirmar la recepción física.',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.blue.shade700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Icon(
-                                Icons.arrow_forward_ios_rounded,
-                                size: 14,
-                                color: Colors.blue,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
 
                   const SizedBox(height: 20),
 
                   // Métricas de atención
                   const CabeceraMenu(
+                    color: AppColors.farmaciaColor,
                     titulo: 'Abastecimiento de Farmacia',
                     icono: Icons.inventory_2_outlined,
                   ),
@@ -339,6 +290,7 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
 
                   // Acciones directas
                   const CabeceraMenu(
+                    color: AppColors.farmaciaColor,
                     titulo: 'Operaciones de Farmacia',
                     icono: Icons.local_pharmacy_outlined,
                   ),
