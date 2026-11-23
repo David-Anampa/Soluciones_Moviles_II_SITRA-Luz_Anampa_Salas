@@ -50,8 +50,8 @@ Este plan no reabre issues ni modifica sus responsables automáticamente.
 | 6 | 003 | Correcciones implementadas; aceptación manual pendiente | Comprobar registro/edición con receptor y médico válidos y diseño en el dispositivo |
 | 6 | 004 | Parcial | Excepción de kits verificable y consultas de catálogo completas |
 | 6 | 005 | Parcial | Modal final y fotografía histórica de faltantes al enviar |
-| 6 | 014 | Núcleo implementado; usuario confirma reconocimiento | Seguridad transversal de IA y errores/sin red |
-| 6 | 015 | Núcleo implementado; cierre pendiente | Gestión segura de clave y guardado revisado sin duplicación |
+| 6 | 014 | Reconocimiento implementado; servidor seguro desplegado | Comprobar extracción mediante servidor, errores y sin red |
+| 6 | 015 | Gestión cifrada de claves implementada; aceptación pendiente | Comprobar nueva gestión y guardado de reconocimiento sin duplicación |
 | 7 | 006 | Parcial | Paginación, contadores y permisos de lectura coherentes |
 | 7 | 007 | Implementada con deficiencias de consulta | Evitar detalle incompleto cuando falta la RPC |
 | 7 | 008 | Parcial | Estado real/auditoría, notificación y dos confirmaciones distintas |
@@ -186,10 +186,10 @@ fotografías con Gemini y llenado de campos; catálogo y borrador local ante fal
 
 **Por corregir / completar:**
 
-- [ ] Sustituir la llamada directa desde el móvil por una función autenticada
-  de servidor que use un secreto. La ruta alternativa invoca `extraer-medicamento-ia`,
-  pero **no existe su implementación versionada en `supabase/functions`**. No
-  inferir por eso si está o no desplegada remotamente.
+- [x] Llamada directa sustituida por `gemini-ia`, función autenticada desplegada
+  el 22/11/2026. Solo Administrador y Almacén activos pueden invocarla; utiliza
+  Vault sin devolver la credencial al móvil. Se mantiene el prompt multimodal
+  y la normalización existentes. Retirado el respaldo sin implementación.
 - [ ] Comprobar mensajes de clave inválida, cuota agotada, tiempo de espera y
   sin red; no mezclar éxito de catálogo/GS1 con extracción IA exitosa.
 
@@ -211,16 +211,19 @@ mediante el flujo atómico de HU-024. La IA no debe registrar directamente sin r
 
 **Confirmado / por corregir, compartido con HU-014:**
 
-- [ ] `guardarApiKey` guarda la clave completa en SharedPreferences y en
-  `auditoria_trazabilidad.estado_nuevo`; eliminar ese diseño, no solo ocultar
-  el botón. Auditoría debe guardar quién/cuándo/cambió, nunca el secreto.
-  [Servicio](../../app/lib/features/almacen/data/services/medicamento_ia_service.dart#L174).
-- [ ] El servicio captura el fallo de sincronización y el diálogo puede mostrar
-  éxito global de todos modos. Devolver resultado real, bloquear doble guardado y
-  mostrar estados claros. [Diálogo](../../app/lib/features/almacen/presentation/widgets/configurar_gemini_dialog.dart#L96).
-- [ ] Si se guardó una clave real con este mecanismo, preparar rotación y retirada
-  del valor de los eventos afectados mediante una intervención específica que
-  preserve los demás datos de auditoría; no borrar la auditoría completa.
+- [x] Credenciales múltiples cifradas en Supabase Vault; metadatos y fechas
+  separados. La app no obtiene el secreto. Gestión exclusiva de Administrador
+  por ruta, vista y RPC; Almacén solo utiliza reconocimiento autenticado.
+- [x] Retirados diálogo anterior, mostrar/ocultar y lectura/escritura de claves
+  en preferencias y auditoría. Se limpian preferencias antiguas al iniciar.
+  Guardado con resultado real, controles bloqueados durante la operación y
+  refresco separado del resultado de persistencia.
+- [x] Migración aplicada: no había eventos de claves que importar. Se conserva
+  la auditoría y se retira solo el campo secreto si existiera en otra instalación.
+  Administrador debe añadir la primera clave. No se ha probado Gemini con una
+  clave real en este avance.
+
+Ver [guía del módulo y despliegue](CLAVES_IA_Y_MENU_ADMIN_2026-11-22.md).
 
 **Por probar:**
 
@@ -230,8 +233,10 @@ mediante el flujo atómico de HU-024. La IA no debe registrar directamente sin r
 - [ ] P015-3: otro dispositivo de Almacén usa IA sin leer/ingresar la clave;
   rol no autorizado no configura ni ejecuta extracción; error al guardar no es éxito.
 
-**Definir:** administración/rotación del secreto en servidor y límites de uso por
-rol/usuario. El reconocimiento funcional no necesita rehacerse.
+**Definido:** una clave en uso y varias guardadas; Administrador puede reemplazar,
+activar o eliminar con confirmación y auditoría. No hay rotación automática por cuota.
+**Por definir si se requiere:** límites adicionales por usuario. Actualmente se
+comprueba rol/sesión y se informa el límite del proveedor.
 
 ## 5. Sprint 7 — revisión por historia
 
