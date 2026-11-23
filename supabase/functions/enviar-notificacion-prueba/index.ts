@@ -60,7 +60,9 @@ Deno.serve(async req => {
       body: JSON.stringify({ message: { token: prepared.token,
         notification: { title: prepared.titulo, body: prepared.mensaje },
         data: { notification_id: notificationId, usuario_id: data.user.id, tipo: "PRUEBA" },
-        android: { priority: "HIGH", ttl: "300s", notification: { channel_id: "sitra_avisos", tag: notificationId } },
+        android: { priority: "HIGH", ttl: "300s", notification: {
+          channel_id: "sitra_avisos_mensaje_v2", sound: "sitra_mensaje", vibrate_timings: ["0s", "0.06s"], tag: notificationId,
+        } },
       } }), signal: AbortSignal.timeout(20000),
     });
     if (!response.ok) {

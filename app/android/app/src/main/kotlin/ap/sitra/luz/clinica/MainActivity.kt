@@ -3,6 +3,8 @@ package ap.sitra.luz.clinica
 import android.content.ContentValues
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.media.AudioAttributes
+import android.net.Uri
 import android.os.Bundle
 import android.os.Build
 import android.os.Environment
@@ -17,9 +19,24 @@ class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel("sitra_avisos", "Avisos de SITRA-Luz", NotificationManager.IMPORTANCE_HIGH)
-            channel.description = "Notificaciones de SITRA-Luz"
-            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+            val manager = getSystemService(NotificationManager::class.java)
+            val previous = manager.getNotificationChannel("sitra_avisos")
+            // Android no permite cambiar el sonido de un canal ya creado.
+            // Versionar una vez el canal permite adoptar el tono sin borrar datos.
+            val channel = NotificationChannel("sitra_avisos_mensaje_v2", "Mensajes de SITRA-Luz",
+                previous?.importance ?: NotificationManager.IMPORTANCE_HIGH)
+            channel.description = "Avisos con tono breve de mensaje y vibración corta"
+            val attributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
+            val ownSound = Uri.parse("android.resource://$packageName/raw/sitra_mensaje")
+            // Conservar una selección explícita del usuario en Ajustes de Android.
+            val sound = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && previous?.hasUserSetSound() == true)
+                previous.sound else ownSound
+            channel.setSound(sound, attributes)
+            channel.enableVibration(true)
+            channel.vibrationPattern = longArrayOf(0, 60)
+            manager.createNotificationChannel(channel)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             splashScreen.setOnExitAnimationListener { splash ->

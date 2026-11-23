@@ -82,3 +82,28 @@ No marcar completadas las historias de notificaciones operativas con esta prueba
 
 Referencia: [recepción Flutter](https://firebase.google.com/docs/cloud-messaging/flutter/receive-messages)
 y [envío HTTP v1](https://firebase.google.com/docs/cloud-messaging/send/v1-api).
+
+## Confirmación del usuario y tono propio
+
+El usuario confirmó que el aviso sí llega al emulador. Esta confirmación acredita
+la recepción del push de prueba; no acredita todavía recorridos completos de
+login, separación entre cuentas ni notificaciones automáticas de pedidos.
+
+Se añadió un tono original de dos notas ascendentes, de 0,56 segundos, en
+`app/android/app/src/main/res/raw/sitra_mensaje.wav`. No usa muestras de Twitter
+ni dependencias nuevas. Fuera de la app usa ese sonido y una vibración de 60 ms;
+en primer plano se conserva exclusivamente el aviso interno existente.
+
+El canal actual es `sitra_avisos_mensaje_v2`, tanto en Android como en el remitente
+y el canal predeterminado del manifiesto. Esta versión es necesaria porque
+[Android no permite cambiar el sonido de un canal ya creado](https://developer.android.com/develop/ui/views/notifications/channels).
+Se conserva la importancia anterior (incluido un canal silenciado), una selección
+de sonido hecha expresamente por el usuario cuando Android permite consultarla,
+y los ajustes del canal nuevo en los siguientes arranques. El canal anterior no
+se borra. Los permisos generales, el volumen y No molestar siguen bajo control
+de Android. Para cargar el recurso y canal nuevos hace falta instalar el APK
+actualizado y abrir la aplicación; un hot reload no basta.
+
+La bandeja es una primera entrega para pruebas e historial. El flujo operativo
+de Almacén sigue siendo la fuente del estado de los pedidos de Farmacia: el
+futuro aviso debe dirigir al pedido autorizado, nunca atenderlo al leerlo.
