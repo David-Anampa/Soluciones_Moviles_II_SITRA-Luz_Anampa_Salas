@@ -38,13 +38,17 @@ void main() async {
     debugPrint(' Credenciales de Supabase pendientes en lib/core/config/supabase_config.dart');
   }
 
-  // 2. Inicialización de Notificaciones Push (Firebase FCM diferido para fases posteriores)
+  // 2. SDK Firebase Android configurado; el flujo push se habilita por separado.
   // Toda la persistencia, modelos relacionales y autenticación se gestionan 100% en Supabase.
-  if (NotificationService.enablePushNotifications) {
+  if (NotificationService.enableFirebaseSdk) {
     try {
       await Firebase.initializeApp();
       debugPrint(' Firebase inicializado exitosamente (exclusivo para notificaciones FCM).');
-      await NotificationService.instance.initialize();
+      if (NotificationService.enablePushNotifications) {
+        await NotificationService.instance.initialize();
+      } else {
+        debugPrint('FCM: SDK configurado; bandeja y envío automático pendientes.');
+      }
     } catch (e) {
       debugPrint('ℹ️ Firebase Notifications en pausa o sin archivo de servicios: $e');
     }

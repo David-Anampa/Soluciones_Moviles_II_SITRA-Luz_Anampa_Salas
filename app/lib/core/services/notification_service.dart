@@ -7,9 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  debugPrint('📩 [FCM Background] Mensaje recibido: ${message.messageId}');
-  debugPrint('   Título: ${message.notification?.title}');
-  debugPrint('   Cuerpo: ${message.notification?.body}');
+  debugPrint('[FCM] Mensaje recibido en segundo plano.');
 }
 
 /// Servicio centralizado de Notificaciones Push con Firebase Cloud Messaging (FCM).
@@ -20,9 +18,11 @@ class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
 
-  /// Bandera para habilitar o diferir las notificaciones push de Firebase (FCM).
-  /// Actualmente desactivada (false) ya que la base de datos y autenticación están
-  /// 100% en Supabase, y el módulo de notificaciones push se activará en una fase posterior.
+  /// Configuración Android instalada para sitra-luz; BD y Auth siguen en Supabase.
+  static const bool enableFirebaseSdk = true;
+
+  /// Activar después de completar bandeja, navegación con login y envío seguro.
+  /// Instalar el SDK no implica que el flujo de notificaciones esté terminado.
   static const bool enablePushNotifications = false;
 
   String? _fcmToken;
@@ -54,12 +54,10 @@ class NotificationService {
 
       // 2. Obtener el token de FCM para este dispositivo
       _fcmToken = await messaging.getToken();
-      debugPrint('🔑 [FCM Token]: $_fcmToken');
 
       // 3. Suscribirse a cambios o renovaciones del token
       messaging.onTokenRefresh.listen((newToken) {
         _fcmToken = newToken;
-        debugPrint('🔄 [FCM Token Renovado]: $newToken');
         syncTokenWithSupabase(newToken);
       });
 
@@ -69,14 +67,11 @@ class NotificationService {
       // 5. Escuchar notificaciones en primer plano (foreground)
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         debugPrint('🔔 [FCM Foreground] Notificación recibida:');
-        debugPrint('   Título: ${message.notification?.title}');
-        debugPrint('   Cuerpo: ${message.notification?.body}');
-        debugPrint('   Data: ${message.data}');
       });
 
       // 6. Escuchar cuando el usuario toca una notificación
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-        debugPrint('👆 [FCM Click] Notificación abierta por el usuario: ${message.data}');
+        debugPrint('[FCM] Notificación abierta por el usuario.');
       });
 
       _initialized = true;

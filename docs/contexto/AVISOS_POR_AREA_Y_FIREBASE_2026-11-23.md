@@ -44,9 +44,19 @@ FCM no cobra por la mensajería; otros servicios de infraestructura mantienen su
 propias cuotas. El SMS de Phone Auth sirve para verificar teléfonos y es facturable;
 no es el canal propuesto para pedidos.
 
-En esta versión Firebase sigue desactivado: no existe `google-services.json` en
-Android y el plugin está comentado. El servicio actual solo registra eventos y
-contempla un token por perfil. No afirmar que ya envía o navega correctamente.
+SDK Android configurado el 23/11 con el archivo proporcionado por el usuario
+`C:/Users/ASUS/Downloads/google-services (2).json`, copiado a
+`app/android/app/google-services.json` (ignorado por Git). Se verificaron proyecto
+`sitra-luz` y paquete `ap.sitra.luz.clinica` sin publicar claves del archivo.
+Plugin Google Services habilitado con la versión 4.4.2 ya declarada; se conservan
+las dependencias FlutterFire existentes sin duplicar la BoM. Permiso de Android
+13+ e icono de notificación preparados en el manifiesto.
+
+`enableFirebaseSdk=true` inicializa Firebase Core. `enablePushNotifications=false`
+mantiene pendiente el flujo push hasta terminar bandeja, navegación y envío.
+Retirados los logs de tokens, títulos, cuerpos y payloads. El servicio heredado
+todavía contempla un token por perfil: reemplazarlo por dispositivos con RLS antes
+de activar producción. No afirmar que ya envía o navega correctamente.
 
 Para completarlo, acordar/vincular el proyecto Firebase del usuario y registrar
 Android (`ap.sitra.luz.clinica`), instalar configuración cliente y mantener las
@@ -60,6 +70,47 @@ pacientes en la notificación de bloqueo. Firebase no sustituye Supabase Auth.
 Separar dos conceptos: «sin leer» disminuye al abrir un aviso; «pendiente» solo
 disminuye al cambiar el estado operativo correspondiente. El push no acredita
 lectura, preparación, entrega ni recepción física.
+
+## Flujo solicitado para la siguiente implementación
+
+Preparación acordada, aún no implementada: centro `/notificaciones` con áreas
+destacadas, fechas, avisos sin leer y acceso al documento correspondiente. Las
+cantidades de pendientes siguen siendo independientes del historial de lectura.
+
+1. Al tocar el push, recoger su identificador y conservar una intención de
+   navegación pendiente sin contenido clínico. Cubrir `getInitialMessage()` y
+   `onMessageOpenedApp`; no navegar desde el manejador de segundo plano.
+2. Esperar a que Supabase termine de resolver/restaurar la sesión. Si sigue
+   válida, continuar; si no, mostrar login conservando ese destino.
+3. Tras autenticar, comprobar perfil activo, destinatario y permisos consultando
+   la notificación mediante RLS. No confiar en un rol ni URL enviados en el push.
+4. Abrir el centro de notificaciones con ese aviso seleccionado. Desde él,
+   «Ver solicitud» abre el pedido/ficha autorizado, sin modificar su estado.
+5. Consumir el destino una sola vez. Si el aviso ya no existe o pertenece a otra
+   cuenta, mostrar un mensaje neutro y conservar el acceso a la bandeja propia.
+6. Leer un aviso actualiza únicamente su lectura; cancelar login no debe revelar
+   su contenido. Gestionar cambios de cuenta y desvincular tokens al salir.
+
+La configuración inicial requiere una cuenta de Google administradora del
+proyecto Firebase (personal o institucional con acceso a la consola). Los usuarios
+de SITRA-Luz no necesitan cuentas Google. Plan Spark y FCM; Analytics opcional,
+sin activar bases de datos ni Firebase Authentication. Registrar la app Android
+con `applicationId` **ap.sitra.luz.clinica**, descargar `google-services.json` y
+colocarlo en `app/android/app/google-services.json` (pasos ya completados).
+La bandeja, navegación y envío seguro desde Supabase continúan pendientes.
+
+Para el envío, se solicitó al usuario generar la credencial de cuenta de servicio
+desde Configuración del proyecto → Cuentas de servicio → SDK Admin de Firebase,
+descargarla fuera del repositorio e indicar solo su ruta. No pedir que publique su
+contenido. Verificar su project_id y guardar la credencial únicamente como secreto
+de Supabase para el remitente FCM HTTP v1. El JSON Android no sustituye esa clave.
+
+El usuario eligió continuar con la credencial de servidor después: no volver a
+pedírsela sin retomar esa etapa. Verificaciones del SDK: `flutter analyze --no-pub`
+sin observaciones y `flutter build apk --debug --no-pub` correcto con el plugin
+habilitado y el JSON instalado. No se enviaron notificaciones de prueba ni se
+activó el flujo incompleto. Para cargar cambios nativos, detener la ejecución
+actual y usar `flutter run -d emulator-5556 --no-pub --no-dds` desde `app`.
 
 Fuentes: [FCM](https://firebase.google.com/products/cloud-messaging),
 [precios](https://firebase.google.com/pricing),
