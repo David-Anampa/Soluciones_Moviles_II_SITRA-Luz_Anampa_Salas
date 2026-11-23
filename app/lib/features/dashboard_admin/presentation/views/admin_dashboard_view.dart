@@ -35,16 +35,70 @@ class AdminDashboardView extends StatelessWidget {
       Icons.fact_check_rounded,
       '/fichas',
     ),
-    _Module('Farmacia', Icons.local_pharmacy_rounded, '/farmacia'),
-    _Module('Almacén', Icons.inventory_2_rounded, '/almacen'),
-    _Module('Enfermería', Icons.health_and_safety_rounded, '/enfermeria'),
-    _Module('Jefatura de Farmacia', Icons.analytics_rounded, '/jefatura'),
     _Module(
       'Claves de inteligencia artificial',
       Icons.key_rounded,
       '/admin/claves-ia',
     ),
   ];
+
+  static const _vistasPorRol = [
+    _Module('Farmacia', Icons.local_pharmacy_rounded, '/farmacia'),
+    _Module('Almacén', Icons.inventory_2_rounded, '/almacen'),
+    _Module('Enfermería', Icons.health_and_safety_rounded, '/enfermeria'),
+    _Module('Jefatura de Farmacia', Icons.analytics_rounded, '/jefatura'),
+  ];
+
+  Widget _seccion(String titulo, IconData icono, List<_Module> modules) =>
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(icono, color: _red, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  titulo,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          LayoutBuilder(
+            builder: (context, limits) {
+              final gap = limits.maxWidth < 360 ? 10.0 : 16.0;
+              return Column(
+                children: [
+                  for (var i = 0; i < modules.length; i += 2)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: gap),
+                      child: IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(child: _ModuleCard(module: modules[i])),
+                            SizedBox(width: gap),
+                            Expanded(
+                              child: i + 1 < modules.length
+                                  ? _ModuleCard(module: modules[i + 1])
+                                  : const SizedBox.shrink(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -101,44 +155,13 @@ class AdminDashboardView extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'Módulos del sistema',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+                _seccion(
+                  'Administración',
+                  Icons.admin_panel_settings_outlined,
+                  _modules,
                 ),
-                const SizedBox(height: 16),
-                LayoutBuilder(
-                  builder: (context, limits) {
-                    final gap = limits.maxWidth < 360 ? 10.0 : 16.0;
-                    return Column(
-                      children: [
-                        for (var i = 0; i < _modules.length; i += 2)
-                          Padding(
-                            padding: EdgeInsets.only(bottom: gap),
-                            child: IntrinsicHeight(
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Expanded(
-                                    child: _ModuleCard(module: _modules[i]),
-                                  ),
-                                  SizedBox(width: gap),
-                                  Expanded(
-                                    child: i + 1 < _modules.length
-                                        ? _ModuleCard(module: _modules[i + 1])
-                                        : const SizedBox.shrink(),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                      ],
-                    );
-                  },
-                ),
+                const Divider(height: 40, color: Color(0xFFE3E3E9)),
+                _seccion('Vistas por rol', Icons.badge_outlined, _vistasPorRol),
                 const SizedBox(height: 24),
               ],
             ),
