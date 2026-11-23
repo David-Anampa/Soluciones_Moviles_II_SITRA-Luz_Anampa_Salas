@@ -15,6 +15,7 @@ local.properties
 # Compilación
 build/
 .gradle/
+.kotlin/
 DerivedData/
 *.xcuserstate
 node_modules/

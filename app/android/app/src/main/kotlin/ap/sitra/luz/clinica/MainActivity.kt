@@ -1,6 +1,8 @@
 package ap.sitra.luz.clinica
 
 import android.content.ContentValues
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.os.Bundle
 import android.os.Build
 import android.os.Environment
@@ -14,6 +16,11 @@ import java.io.FileInputStream
 class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel("sitra_avisos", "Avisos de SITRA-Luz", NotificationManager.IMPORTANCE_HIGH)
+            channel.description = "Notificaciones de SITRA-Luz"
+            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             splashScreen.setOnExitAnimationListener { splash ->
                 splash.animate().alpha(0f).setDuration(220L)

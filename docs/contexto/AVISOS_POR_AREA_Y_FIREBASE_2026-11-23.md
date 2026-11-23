@@ -136,3 +136,13 @@ continúa en false hasta completar ese flujo. No pedir de nuevo la credencial.
 Fuentes: [FCM](https://firebase.google.com/products/cloud-messaging),
 [precios](https://firebase.google.com/pricing),
 [recepción Flutter](https://firebase.google.com/docs/cloud-messaging/flutter/receive-messages).
+
+## Actualización posterior: primer envío programado
+
+El canal de prueba, registro de dispositivos y bandeja ya se implementaron;
+`enablePushNotifications` ahora está en true. Migración aplicada y función
+`enviar-notificacion-prueba` desplegada. La descripción anterior de flujo aún
+deshabilitado es histórica. El estado actual, pasos para el emulador y pendientes
+operativos están en [PRIMERA_PRUEBA_FCM_2026-11-23.md](PRIMERA_PRUEBA_FCM_2026-11-23.md).
+Todavía debe comprobarse visualmente la primera entrega; los eventos automáticos
+de solicitudes no forman parte de esta primera prueba.

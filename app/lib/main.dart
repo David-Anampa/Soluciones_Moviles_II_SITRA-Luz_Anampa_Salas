@@ -35,25 +35,35 @@ void main() async {
       debugPrint(' Error al inicializar Supabase: $e');
     }
   } else {
-    debugPrint(' Credenciales de Supabase pendientes en lib/core/config/supabase_config.dart');
+    debugPrint(
+      ' Credenciales de Supabase pendientes en lib/core/config/supabase_config.dart',
+    );
   }
 
-  // 2. SDK Firebase Android configurado; el flujo push se habilita por separado.
+  // 2. Canal FCM: registro tras autenticar y permiso solicitado desde la bandeja.
   // Toda la persistencia, modelos relacionales y autenticación se gestionan 100% en Supabase.
   if (NotificationService.enableFirebaseSdk) {
     try {
       await Firebase.initializeApp();
-      debugPrint(' Firebase inicializado exitosamente (exclusivo para notificaciones FCM).');
+      debugPrint(
+        ' Firebase inicializado exitosamente (exclusivo para notificaciones FCM).',
+      );
       if (NotificationService.enablePushNotifications) {
         await NotificationService.instance.initialize();
       } else {
-        debugPrint('FCM: SDK configurado; bandeja y envío automático pendientes.');
+        debugPrint(
+          'FCM: SDK configurado; bandeja y envío automático pendientes.',
+        );
       }
     } catch (e) {
-      debugPrint('ℹ️ Firebase Notifications en pausa o sin archivo de servicios: $e');
+      debugPrint(
+        'ℹ️ Firebase Notifications en pausa o sin archivo de servicios: $e',
+      );
     }
   } else {
-    debugPrint('ℹ️ Notificaciones Push (Firebase FCM) en pausa temporal. Toda la BD y Auth operan en Supabase.');
+    debugPrint(
+      'ℹ️ Notificaciones Push (Firebase FCM) en pausa temporal. Toda la BD y Auth operan en Supabase.',
+    );
   }
 
   // 3. Repositorios de Producción (100% Supabase)
@@ -69,13 +79,20 @@ void main() async {
   String? ultimoPerfil;
   authViewModel.addListener(() {
     final user = authViewModel.currentUser;
-    final perfil = user == null ? null : '${user.uid}:${user.rol.dbValue}:${user.areasAsignadas.join(',')}';
+    NotificationService.instance.bindUser(
+      user?.activo == true ? user!.uid : null,
+    );
+    final perfil = user == null
+        ? null
+        : '${user.uid}:${user.rol.dbValue}:${user.areasAsignadas.join(',')}';
     if (perfil != ultimoPerfil) {
       ultimoPerfil = perfil;
       almacenViewModel.limpiarSesion();
     }
   });
   final router = createRouter(authViewModel);
+  NotificationService.instance.openNotification = (id) =>
+      router.go('/notificaciones?aviso=${Uri.encodeQueryComponent(id)}');
 
   runApp(
     SitraLuzApp(
@@ -107,6 +124,7 @@ class SitraLuzApp extends StatelessWidget {
         ChangeNotifierProvider<AlmacenViewModel>.value(value: almacenViewModel),
       ],
       child: MaterialApp.router(
+        scaffoldMessengerKey: NotificationService.instance.messengerKey,
         title: 'SITRA-Luz • Clínica La Luz',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.theme,

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../theme/app_theme.dart';
+import '../services/notification_service.dart';
 import 'mensajes_app.dart';
 
 /// Barra superior corporativa estandarizada para todos los módulos de SITRA-Luz
@@ -136,6 +137,24 @@ class SitraAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
         ...?actions,
+        if (GoRouterState.of(context).uri.path != '/notificaciones')
+          ListenableBuilder(
+            listenable: NotificationService.instance,
+            builder: (context, _) => IconButton(
+              tooltip:
+                  'Notificaciones: ${NotificationService.instance.unread} sin leer',
+              onPressed: () => context.push('/notificaciones'),
+              icon: Badge(
+                isLabelVisible: NotificationService.instance.unread > 0,
+                label: Text(
+                  NotificationService.instance.unread > 99
+                      ? '99+'
+                      : '${NotificationService.instance.unread}',
+                ),
+                child: Icon(Icons.notifications_outlined, color: roleColor),
+              ),
+            ),
+          ),
         IconButton(
           tooltip: 'Cerrar sesión',
           icon: const Icon(

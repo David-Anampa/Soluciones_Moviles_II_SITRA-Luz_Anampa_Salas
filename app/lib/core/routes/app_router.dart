@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../services/notification_service.dart';
+import '../../features/notificaciones/presentation/notificaciones_view.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/auth/presentation/states/auth_state.dart';
 import '../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
@@ -21,6 +23,7 @@ class AppRoutes {
   AppRoutes._();
 
   static const String login = '/login';
+  static const String notificaciones = '/notificaciones';
   static const String admin = '/admin';
   static const String catalogos = '/admin/catalogos';
   static const String usuarios = '/admin/usuarios';
@@ -71,8 +74,16 @@ class AppRoutes {
 GoRouter createRouter(AuthViewModel authViewModel) {
   return GoRouter(
     initialLocation: AppRoutes.login,
-    refreshListenable: authViewModel,
+    refreshListenable: Listenable.merge([
+      authViewModel,
+      NotificationService.instance,
+    ]),
     routes: [
+      GoRoute(
+        path: AppRoutes.notificaciones,
+        builder: (context, state) =>
+            NotificacionesView(avisoId: state.uri.queryParameters['aviso']),
+      ),
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginView(),
@@ -150,6 +161,12 @@ GoRouter createRouter(AuthViewModel authViewModel) {
       if (!isAuthenticated) {
         return isLoggingIn ? null : AppRoutes.login;
       }
+
+      final pending = NotificationService.instance.takePendingRoute(
+        currentUser.uid,
+      );
+      if (pending != null && pending != state.uri.toString()) return pending;
+      if (state.uri.path == AppRoutes.notificaciones) return null;
 
       // Si está autenticado y está intentando acceder a /login, llevarlo a su dashboard por rol
       if (isLoggingIn) {

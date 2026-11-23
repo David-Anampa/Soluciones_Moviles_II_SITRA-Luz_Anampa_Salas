@@ -102,13 +102,6 @@ class AuthRemoteDataSource {
       // Obtener el perfil asociado desde la tabla 'profiles'
       final userModel = await _getUserModel(user.id);
 
-      // Sincronizar el token de notificaciones FCM con Supabase si está disponible
-      try {
-        await NotificationService.instance.syncTokenWithSupabase();
-      } catch (e, stack) {
-        DiagnosticoRed.error('Sesion.sincronizarNotificaciones', e, stack, 0);
-      }
-
       return userModel;
     } on AuthRetryableFetchException catch (e) {
       throw AuthException(
@@ -155,6 +148,7 @@ class AuthRemoteDataSource {
   /// Cierra la sesión activa en Supabase.
   Future<void> logout() async {
     try {
+      await NotificationService.instance.unregisterDevice();
       await DiagnosticoRed.medir(
         'Sesion.cerrar',
         () => _supabase.auth.signOut(scope: SignOutScope.local),

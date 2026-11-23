@@ -4,3 +4,7 @@ project_id = "nedeqnvpkalrchswrapr"
 # Autenticación explícita con auth.getUser() y comprobación del perfil activo.
 # No depende del algoritmo de firma del JWT que use el proyecto.
 verify_jwt = false
+
+[functions.enviar-notificacion-prueba]
+# La función valida sesión y destinatario mediante auth.getUser().
+verify_jwt = false
