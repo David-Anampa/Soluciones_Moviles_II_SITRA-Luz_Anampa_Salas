@@ -254,22 +254,21 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(14),
                               ),
-                              child: Wrap(
-                                spacing: 12,
-                                runSpacing: 10,
-                                alignment: WrapAlignment.spaceBetween,
-                                crossAxisAlignment: WrapCrossAlignment.center,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   Row(
-                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Container(
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
-                                          color: (_tieneApiKey
-                                                  ? AppColors.success
-                                                  : AppColors.warning)
-                                              .withValues(alpha: 0.14),
+                                          color:
+                                              (_tieneApiKey
+                                                      ? AppColors.success
+                                                      : AppColors.warning)
+                                                  .withValues(alpha: 0.14),
                                           borderRadius: BorderRadius.circular(
                                             10,
                                           ),
@@ -283,10 +282,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                                         ),
                                       ),
                                       const SizedBox(width: 10),
-                                      ConstrainedBox(
-                                        constraints: const BoxConstraints(
-                                          maxWidth: 460,
-                                        ),
+                                      Expanded(
                                         child: Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
@@ -313,6 +309,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                                       ),
                                     ],
                                   ),
+                                  const SizedBox(height: 12),
                                   FilledButton.icon(
                                     style: FilledButton.styleFrom(
                                       backgroundColor: AdminDashboardView._red,
