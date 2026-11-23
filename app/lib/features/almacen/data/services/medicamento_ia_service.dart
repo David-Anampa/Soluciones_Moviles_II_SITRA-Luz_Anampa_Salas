@@ -43,46 +43,16 @@ class MedicamentoIaException implements Exception {
 /// celular, nombre estandarizado con abreviaturas farmacéuticas y homologación de laboratorio
 /// en siglas contra la base de datos.
 class MedicamentoIaService {
-  static const String _prefsGeminiKey = 'sitra_gemini_api_key_v1';
-  static const String _prefsAdminMostrarBotonKey =
-      'sitra_admin_mostrar_boton_key_v1';
-  static const String _envGeminiKey = String.fromEnvironment(
-    'GEMINI_API_KEY',
-    defaultValue: '',
-  );
   static const MethodChannel _galeriaChannel = MethodChannel(
     'ap.sitra.luz.clinica/galeria',
   );
 
   final SupabaseClient? _customSupabase;
-  final http.Client? _customHttp;
 
-  MedicamentoIaService({
-    SupabaseClient? supabaseClient,
-    http.Client? httpClient,
-  }) : _customSupabase = supabaseClient,
-       _customHttp = httpClient;
+  MedicamentoIaService({SupabaseClient? supabaseClient})
+    : _customSupabase = supabaseClient;
 
   SupabaseClient get _supabase => _customSupabase ?? Supabase.instance.client;
-  http.Client get _http => _customHttp ?? http.Client();
-
-  /// Indica si el Administrador tiene visible el botón de administración de la API Key.
-  static Future<bool> obtenerVisibilidadBotonApiKeyAdmin() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getBool(_prefsAdminMostrarBotonKey) ?? true;
-    } catch (_) {
-      return true;
-    }
-  }
-
-  /// Permite al Administrador mostrar u ocultar el botón de configuración de API Key.
-  static Future<void> guardarVisibilidadBotonApiKeyAdmin(bool visible) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_prefsAdminMostrarBotonKey, visible);
-    } catch (_) {}
-  }
 
   /// Guarda una fotografía capturada en la galería del dispositivo Android (`Pictures/SITRA_Luz`).
   static Future<bool> guardarFotoEnGaleriaDispositivo(
@@ -106,118 +76,39 @@ class MedicamentoIaService {
     }
   }
 
-  /// Obtiene la API Key de Gemini configurada por el Administrador (desde Supabase,
-  /// `SharedPreferences` del dispositivo o `--dart-define=GEMINI_API_KEY`),
-  /// para que cualquier usuario de Almacén pueda usarla sin tener que ingresarla.
-  static Future<String> obtenerApiKeyConfigurada() async {
-    String localKey = '';
+  /// Retira credenciales del almacenamiento local antiguo; nunca las reutiliza.
+  static Future<void> limpiarCredencialesLocalesAntiguas() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('sitra_gemini_api_key_v1');
+    await prefs.remove('sitra_admin_mostrar_boton_key_v1');
+  }
+
+  Future<http.Response> _solicitarGemini(Map<String, dynamic> datos) async {
+    await limpiarCredencialesLocalesAntiguas();
     try {
-      final prefs = await SharedPreferences.getInstance();
-      localKey = (prefs.getString(_prefsGeminiKey) ?? '').replaceAll(
-        RegExp(r'\s+'),
-        '',
+      final respuesta = await _supabase.functions
+          .invoke('gemini-ia', body: datos)
+          .timeout(const Duration(seconds: 55));
+      final cuerpo = Map<String, dynamic>.from(respuesta.data as Map);
+      return http.Response(
+        jsonEncode(cuerpo['respuesta']),
+        (cuerpo['estado'] as num).toInt(),
       );
-    } catch (_) {}
-
-    // Intentar sincronizar la clave global configurada por el Administrador en Supabase
-    try {
-      final client = Supabase.instance.client;
-      if (client.auth.currentUser != null) {
-        final rows = await client
-            .from('auditoria_trazabilidad')
-            .select('estado_nuevo')
-            .eq('tipo_evento', 'CONFIG_GEMINI_IA')
-            .eq('area_destino', 'ALMACEN')
-            .order('fecha', ascending: false)
-            .limit(1)
-            .timeout(const Duration(seconds: 4));
-
-        if (rows.isNotEmpty) {
-          final first = rows.first;
-          if (first['estado_nuevo'] is Map) {
-            final estadoNuevo = Map<String, dynamic>.from(
-              first['estado_nuevo'] as Map,
-            );
-            if (estadoNuevo.containsKey('gemini_api_key')) {
-              final remoteKey = (estadoNuevo['gemini_api_key']?.toString() ?? '')
-                  .replaceAll(RegExp(r'\s+'), '');
-              if (remoteKey != localKey) {
-                try {
-                  final prefs = await SharedPreferences.getInstance();
-                  if (remoteKey.isEmpty) {
-                    await prefs.remove(_prefsGeminiKey);
-                  } else {
-                    await prefs.setString(_prefsGeminiKey, remoteKey);
-                  }
-                } catch (_) {}
-              }
-              if (remoteKey.isNotEmpty) return remoteKey;
-              if (estadoNuevo['limpiada'] == true) return '';
-            }
-          }
-        }
-      }
-    } catch (_) {
-      // Si está offline o Supabase aún no está inicializado, continúa con el respaldo local
-    }
-
-    if (localKey.isNotEmpty) return localKey;
-
-    if (_envGeminiKey.trim().isNotEmpty) {
-      return _envGeminiKey.replaceAll(RegExp(r'\s+'), '');
-    }
-    return '';
-  }
-
-  /// Guarda o actualiza la API Key de Gemini administrada por el Administrador,
-  /// tanto en el dispositivo como en Supabase para todos los usuarios de Almacén.
-  static Future<void> guardarApiKey(String apiKey) async {
-    final clean = apiKey.replaceAll(RegExp(r'\s+'), '');
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      if (clean.isEmpty) {
-        await prefs.remove(_prefsGeminiKey);
-      } else {
-        await prefs.setString(_prefsGeminiKey, clean);
-      }
-    } catch (_) {}
-
-    try {
-      final client = Supabase.instance.client;
-      final uid = client.auth.currentUser?.id;
-      if (uid != null) {
-        await client.from('auditoria_trazabilidad').insert({
-          'tipo_evento': 'CONFIG_GEMINI_IA',
-          'tabla_referencia': 'configuracion_ia',
-          'usuario_id': uid,
-          'area_origen': 'ALMACEN',
-          'area_destino': 'ALMACEN',
-          'descripcion': clean.isEmpty
-              ? 'Administrador limpió la API Key global de Gemini Vision IA'
-              : 'Administrador configuró la API Key global de Gemini Vision IA para todos los usuarios',
-          'estado_nuevo': {
-            'gemini_api_key': clean,
-            'limpiada': clean.isEmpty,
-            'updated_at': DateTime.now().toIso8601String(),
-          },
-        });
-      }
-    } catch (e) {
-      debugPrint('Aviso sincronizando clave Gemini en Supabase: $e');
+    } on FunctionException catch (e) {
+      final detalle = e.details;
+      throw MedicamentoIaException(
+        detalle is Map && detalle['error'] is String
+            ? detalle['error'] as String
+            : 'No se pudo conectar al servicio seguro de reconocimiento.',
+      );
     }
   }
 
-  /// Consulta directamente a Google AI Studio (`GET /v1beta/models`) qué modelos
+  /// Consulta mediante el servidor qué modelos de Google AI Studio
   /// con soporte `generateContent` están habilitados para esta API Key.
   /// Evita errores HTTP 404 por modelos retirados (como gemini-1.5-flash).
-  Future<List<String>> descubrirModelosDisponibles(String apiKey) async {
-    final cleanKey = apiKey.replaceAll(RegExp(r'\s+'), '');
-    if (cleanKey.isEmpty) return const [];
-
-    final uri = Uri.parse(
-      'https://generativelanguage.googleapis.com/v1beta/models?key=$cleanKey',
-    );
-    final response = await _http.get(uri).timeout(const Duration(seconds: 12));
+  Future<List<String>> descubrirModelosDisponibles() async {
+    final response = await _solicitarGemini({'accion': 'modelos'});
 
     if (response.statusCode != 200) {
       String detalle = 'HTTP ${response.statusCode}';
@@ -293,10 +184,10 @@ class MedicamentoIaService {
     return ordenados;
   }
 
-  /// Verifica si existe una API Key de Gemini configurada en el dispositivo o entorno.
+  /// Consulta solo disponibilidad: la credencial no sale del servidor.
   static Future<bool> tieneApiKeyConfigurada() async {
-    final key = await obtenerApiKeyConfigurada();
-    return key.isNotEmpty;
+    await limpiarCredencialesLocalesAntiguas();
+    return await Supabase.instance.client.rpc('estado_clave_ia') == true;
   }
 
   /// Verifica conectividad activa antes de iniciar la validación cruzada online (RNF-011).
@@ -467,13 +358,18 @@ class MedicamentoIaService {
     final gs1 = Gs1BarcodeParser.parsear(limpioInput);
     final codigoEfectivo = gs1.gtin.isNotEmpty ? gs1.gtin : limpioInput;
 
-    final fotosValidas = <String>[
-      ...fotosCajaPaths,
-      if (fotoCajaPath != null &&
-          fotoCajaPath.trim().isNotEmpty &&
-          !fotosCajaPaths.contains(fotoCajaPath))
-        fotoCajaPath,
-    ].where((p) => p.trim().isNotEmpty && !kIsWeb && File(p).existsSync()).toList();
+    final fotosValidas =
+        <String>[
+              ...fotosCajaPaths,
+              if (fotoCajaPath != null &&
+                  fotoCajaPath.trim().isNotEmpty &&
+                  !fotosCajaPaths.contains(fotoCajaPath))
+                fotoCajaPath,
+            ]
+            .where(
+              (p) => p.trim().isNotEmpty && !kIsWeb && File(p).existsSync(),
+            )
+            .toList();
 
     if (codigoEfectivo.isEmpty && fotosValidas.isEmpty) {
       throw const MedicamentoIaException(
@@ -518,70 +414,42 @@ class MedicamentoIaService {
 
     String? avisoIaNoEjecutada;
     if (fotosValidas.isNotEmpty) {
-      final apiKey = await obtenerApiKeyConfigurada();
-      if (apiKey.isNotEmpty) {
-        try {
-          final jsonIa = await _extraerConGeminiRestApi(
-            apiKey: apiKey,
-            fotosPaths: fotosValidas,
-            gs1: gs1,
-            catalogoExistente: catalogoExistente,
-            laboratoriosEnBd: laboratoriosEnBd,
-          );
+      try {
+        final jsonIa = await _extraerConGeminiServidor(
+          fotosPaths: fotosValidas,
+          gs1: gs1,
+          catalogoExistente: catalogoExistente,
+          laboratoriosEnBd: laboratoriosEnBd,
+        );
 
-          // Si el GTIN no se había escaneado antes pero la IA lo leyó en una de las fotos, buscamos en catálogo
-          final gtinDetectadoIa =
-              jsonIa['gtin_detectado']?.toString().trim() ?? '';
-          if (catalogoExistente == null &&
-              codigoEfectivo.isEmpty &&
-              gtinDetectadoIa.isNotEmpty) {
-            try {
-              catalogoExistente = await buscarPorGtinEnSupabase(
-                Gs1BarcodeParser.parsear(gtinDetectadoIa),
-              );
-            } catch (_) {}
-          }
-
-          return MedicamentoExtraccionIA.fromStructuredJson(
-            jsonIa,
-            gtinEscaneado:
-                catalogoExistente?['gtin']?.toString() ??
-                (codigoEfectivo.isNotEmpty ? codigoEfectivo : gtinDetectadoIa),
-            fotoPath: fotosValidas.first,
-            fotosPaths: fotosValidas,
-            gs1: gs1,
-            catalogoExistente: catalogoExistente,
-            laboratoriosEnBd: laboratoriosEnBd,
-          );
-        } catch (e) {
-          debugPrint('Aviso en extracción Gemini Vision: $e');
-          avisoIaNoEjecutada =
-              'No se pudo completar el análisis visual con Gemini ($e). Se conservaron los datos verificados del código y catálogo.';
-        }
-      } else {
-        // Intentar Supabase Edge Function `extraer-medicamento-ia` si está desplegada
-        try {
-          final jsonEdge = await _extraerConSupabaseEdgeFunction(
-            fotosPaths: fotosValidas,
-            gs1: gs1,
-            catalogoExistente: catalogoExistente,
-            laboratoriosEnBd: laboratoriosEnBd,
-          );
-          if (jsonEdge != null) {
-            return MedicamentoExtraccionIA.fromStructuredJson(
-              jsonEdge,
-              gtinEscaneado:
-                  catalogoExistente?['gtin']?.toString() ?? codigoEfectivo,
-              fotoPath: fotosValidas.first,
-              fotosPaths: fotosValidas,
-              gs1: gs1,
-              catalogoExistente: catalogoExistente,
-              laboratoriosEnBd: laboratoriosEnBd,
+        // Si el GTIN no se había escaneado antes pero la IA lo leyó en una de las fotos, buscamos en catálogo
+        final gtinDetectadoIa =
+            jsonIa['gtin_detectado']?.toString().trim() ?? '';
+        if (catalogoExistente == null &&
+            codigoEfectivo.isEmpty &&
+            gtinDetectadoIa.isNotEmpty) {
+          try {
+            catalogoExistente = await buscarPorGtinEnSupabase(
+              Gs1BarcodeParser.parsear(gtinDetectadoIa),
             );
-          }
-        } catch (_) {}
+          } catch (_) {}
+        }
+
+        return MedicamentoExtraccionIA.fromStructuredJson(
+          jsonIa,
+          gtinEscaneado:
+              catalogoExistente?['gtin']?.toString() ??
+              (codigoEfectivo.isNotEmpty ? codigoEfectivo : gtinDetectadoIa),
+          fotoPath: fotosValidas.first,
+          fotosPaths: fotosValidas,
+          gs1: gs1,
+          catalogoExistente: catalogoExistente,
+          laboratoriosEnBd: laboratoriosEnBd,
+        );
+      } catch (e) {
+        debugPrint('Aviso en extracción Gemini Vision: $e');
         avisoIaNoEjecutada =
-            'Falta configurar la API Key de Gemini Vision IA en el módulo de Administración.';
+            'No se pudo completar el análisis visual con Gemini ($e). Se conservaron los datos verificados del código y catálogo.';
       }
     }
 
@@ -615,9 +483,8 @@ class MedicamentoIaService {
         principioActivo:
             catalogoExistente['principio_activo']?.toString() ?? '',
         presentacion: catalogoExistente['presentacion']?.toString() ?? '',
-        categoria: (catalogoExistente['categoria']
-                    ?.toString()
-                    .toUpperCase() ==
+        categoria:
+            (catalogoExistente['categoria']?.toString().toUpperCase() ==
                 'DISPOSITIVO_MEDICO')
             ? 'DISPOSITIVO_MEDICO'
             : 'MEDICAMENTO',
@@ -629,8 +496,7 @@ class MedicamentoIaService {
         precioKairos: catalogoExistente['precio_kairos'] != null
             ? double.tryParse(catalogoExistente['precio_kairos'].toString())
             : null,
-        registroSanitario:
-            catalogoExistente['registro_sanitario']?.toString(),
+        registroSanitario: catalogoExistente['registro_sanitario']?.toString(),
         unidadPresentacion: _normalizarUnidadCatalogo(
           catalogoExistente['unidad_presentacion']?.toString() ?? 'unidad',
         ),
@@ -667,11 +533,10 @@ class MedicamentoIaService {
     );
   }
 
-  /// Invoca la API REST oficial de Google Gemini (`gemini-2.5-flash` / `gemini-2.0-flash`)
+  /// Invoca mediante servidor la API de Google Gemini (`gemini-2.5-flash` / `gemini-2.0-flash`)
   /// enviando simultáneamente las 1 a 4 fotografías de la caja y exigiendo salida JSON estructurada
   /// con el formato estandarizado de nombre y siglas de laboratorio.
-  Future<Map<String, dynamic>> _extraerConGeminiRestApi({
-    required String apiKey,
+  Future<Map<String, dynamic>> _extraerConGeminiServidor({
     required List<String> fotosPaths,
     required Gs1ParseResult gs1,
     Map<String, dynamic>? catalogoExistente,
@@ -704,7 +569,8 @@ class MedicamentoIaService {
         ? 'Laboratorios ya registrados en nuestra Base de Datos: [${laboratoriosEnBd.take(80).join(", ")}]. Si el fabricante del empaque corresponde o es similar a alguno de esta lista, devuelve EXACTAMENTE ese mismo nombre/sigla.'
         : 'Devuelve únicamente las SIGLAS o nombre corto en mayúsculas del laboratorio (ej. MEDIFARMA, PORTUGAL, HERSIL, IQFARMA, FARMINDUSTRIA, GENFAR, BAYER, PFIZER, ROCHE), nunca la razón social larga.';
 
-    final prompt = '''
+    final prompt =
+        '''
 Eres un químico farmacéutico experto en recepción hospitalaria (DIGEMID - Perú) para el sistema clínico SITRA-Luz.
 Se te adjuntan ${imageParts.length} fotografía(s) de distintas caras del mismo empaque de medicamento o dispositivo médico.
 Combina la información visible en TODAS las fotografías para no dejar ningún campo vacío si aparece en alguna de las fotos.
@@ -764,10 +630,9 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta (usa "" o
 }
 ''';
 
-    final cleanKey = apiKey.replaceAll(RegExp(r'\s+'), '');
     List<String> modelos = const [];
     try {
-      modelos = await descubrirModelosDisponibles(cleanKey);
+      modelos = await descubrirModelosDisponibles();
     } on MedicamentoIaException {
       rethrow;
     } catch (_) {}
@@ -785,30 +650,21 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta (usa "" o
     Object? ultimoError;
 
     for (final modelo in modelos.take(5)) {
-      final uri = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/$modelo:generateContent?key=$cleanKey',
-      );
       try {
-        final response = await _http
-            .post(
-              uri,
-              headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({
-                'contents': [
-                  {
-                    'parts': [
-                      {'text': prompt},
-                      ...imageParts,
-                    ],
-                  },
+        final response = await _solicitarGemini({
+          'accion': 'generar',
+          'modelo': modelo,
+          'contenido': {
+            'contents': [
+              {
+                'parts': [
+                  {'text': prompt},
+                  ...imageParts,
                 ],
-                'generationConfig': {
-                  'temperature': 0.1,
-                  'responseMimeType': 'application/json',
-                },
-              }),
-            )
-            .timeout(const Duration(seconds: 45));
+              },
+            ],
+          },
+        });
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
           final decoded = jsonDecode(response.body) as Map<String, dynamic>;
@@ -839,8 +695,7 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta (usa "" o
           String msgError = 'HTTP ${response.statusCode}';
           try {
             final bodyMap = jsonDecode(response.body);
-            msgError =
-                bodyMap['error']?['message']?.toString() ?? msgError;
+            msgError = bodyMap['error']?['message']?.toString() ?? msgError;
           } catch (_) {}
 
           if (response.statusCode == 401 || response.statusCode == 403) {
@@ -862,42 +717,6 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta (usa "" o
     throw MedicamentoIaException(
       'No se obtuvo respuesta válida de Gemini Vision (${primerErrorSignificativo ?? ultimoError ?? "tiempo agotado"}).',
     );
-  }
-
-  Future<Map<String, dynamic>?> _extraerConSupabaseEdgeFunction({
-    required List<String> fotosPaths,
-    required Gs1ParseResult gs1,
-    Map<String, dynamic>? catalogoExistente,
-    List<String> laboratoriosEnBd = const [],
-  }) async {
-    final primera = File(fotosPaths.first);
-    final bytes = await primera.readAsBytes();
-    final imagenesBase64 = <Map<String, String>>[];
-    for (final p in fotosPaths.take(4)) {
-      final f = File(p);
-      if (f.existsSync()) {
-        imagenesBase64.add({
-          'mime_type': _detectarMimeType(p),
-          'data': base64Encode(await f.readAsBytes()),
-        });
-      }
-    }
-
-    final response = await _supabase.functions.invoke(
-      'extraer-medicamento-ia',
-      body: {
-        'gtin': gs1.gtin,
-        'imagen_base64': base64Encode(bytes),
-        'mime_type': _detectarMimeType(fotosPaths.first),
-        'imagenes': imagenesBase64,
-        'catalogo_existente': catalogoExistente,
-        'laboratorios_bd': laboratoriosEnBd,
-      },
-    );
-    if (response.status == 200 && response.data is Map) {
-      return Map<String, dynamic>.from(response.data as Map);
-    }
-    return null;
   }
 
   /// Limpia bloques markdown ```json ... ``` si el modelo los incluye y decodifica el mapa JSON.

@@ -9,14 +9,11 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/widgets/mensajes_app.dart';
-import '../../../auth/domain/entities/user_entity.dart';
-import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../data/services/medicamento_ia_service.dart';
 import '../../domain/entities/medicamento_entity.dart';
 import '../../domain/entities/medicamento_extraccion_ia.dart';
 import '../states/almacen_state.dart';
 import '../viewmodels/almacen_viewmodel.dart';
-import '../widgets/configurar_gemini_dialog.dart';
 import 'escaner_gtin_view.dart';
 
 /// Formulario de revisión editable y persistencia atómica para registrar un medicamento
@@ -48,7 +45,6 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
   bool _existeEnCatalogo = false;
   bool _analizandoFotoIa = false;
   bool _actualizandoPreciosInternamente = false;
-  bool _mostrarBotonApiKeyAdmin = true;
 
   // Controladores de Medicamento
   final _gtinController = TextEditingController();
@@ -149,16 +145,6 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
     }
 
     _cargarLaboratoriosDeBaseDatos();
-    _cargarPreferenciaBotonApiKeyAdmin();
-  }
-
-  Future<void> _cargarPreferenciaBotonApiKeyAdmin() async {
-    try {
-      final mostrar =
-          await MedicamentoIaService.obtenerVisibilidadBotonApiKeyAdmin();
-      if (!mounted) return;
-      setState(() => _mostrarBotonApiKeyAdmin = mostrar);
-    } catch (_) {}
   }
 
   Future<void> _cargarLaboratoriosDeBaseDatos() async {
@@ -338,8 +324,8 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
       }
 
       if (d.cantidadPorPresentacion > 0) {
-        _cantidadPresentacionController.text =
-            d.cantidadPorPresentacion.toString();
+        _cantidadPresentacionController.text = d.cantidadPorPresentacion
+            .toString();
       }
 
       _requiereCadenaFrio = d.requiereCadenaFrio;
@@ -729,10 +715,7 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
       final vm = Provider.of<AlmacenViewModel>(context, listen: false);
       final st = vm.state;
       if (st is! AlmacenLoaded) return null;
-      final candidatos = <String>{
-        gs1.gtin.trim(),
-        gs1.rawCode.trim(),
-      };
+      final candidatos = <String>{gs1.gtin.trim(), gs1.rawCode.trim()};
       if (gs1.gtin.length == 14 && gs1.gtin.startsWith('0')) {
         candidatos.add(gs1.gtin.substring(1));
       } else if (gs1.gtin.length == 13) {
@@ -993,14 +976,6 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
     final vm = context.watch<AlmacenViewModel>();
     final isSaving = vm.isSaving;
 
-    AuthViewModel? authVm;
-    try {
-      authVm = Provider.of<AuthViewModel>(context);
-    } catch (_) {
-      authVm = null;
-    }
-    final esAdmin = authVm?.currentUser?.rol == UserRole.administrador;
-
     final laboratoriosSugeridos = <String>{
       ..._laboratoriosBd,
       ...(vm.state is AlmacenLoaded ? (vm.state as AlmacenLoaded).catalogo : [])
@@ -1028,12 +1003,6 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
         actionsIconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
         actions: [
-          if (esAdmin && _mostrarBotonApiKeyAdmin)
-            IconButton(
-              tooltip: 'Configurar clave de Gemini Vision IA',
-              icon: const Icon(Icons.key_rounded),
-              onPressed: () => ConfigurarGeminiDialog.mostrar(context),
-            ),
           IconButton(
             tooltip: 'Escanear con Cámara (ML Kit + 3-4 Fotos IA)',
             icon: const Icon(Icons.qr_code_scanner_rounded),
@@ -1900,8 +1869,7 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
             runSpacing: 8,
             children: List.generate(4, (i) {
               final path = _fotosCaras[i];
-              final existe =
-                  path != null && !kIsWeb && File(path).existsSync();
+              final existe = path != null && !kIsWeb && File(path).existsSync();
               return InkWell(
                 borderRadius: BorderRadius.circular(10),
                 onTap: () => _capturarFotoEnRanura(i, ImageSource.camera),
@@ -1912,9 +1880,7 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: existe
-                          ? AppColors.success
-                          : Colors.grey.shade300,
+                      color: existe ? AppColors.success : Colors.grey.shade300,
                     ),
                   ),
                   child: Column(

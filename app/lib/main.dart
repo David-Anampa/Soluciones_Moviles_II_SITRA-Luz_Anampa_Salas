@@ -10,6 +10,7 @@ import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/almacen/data/datasources/almacen_remote_datasource.dart';
 import 'features/almacen/data/repositories/almacen_repository_impl.dart';
+import 'features/almacen/data/services/medicamento_ia_service.dart';
 import 'features/almacen/domain/repositories/almacen_repository.dart';
 import 'features/almacen/presentation/viewmodels/almacen_viewmodel.dart';
 import 'features/auth/data/datasources/auth_remote_datasource.dart';
@@ -20,6 +21,7 @@ import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await MedicamentoIaService.limpiarCredencialesLocalesAntiguas();
 
   // 1. Inicialización de Supabase (Base de Datos principal y Autenticación)
   if (SupabaseConfig.isConfigured) {

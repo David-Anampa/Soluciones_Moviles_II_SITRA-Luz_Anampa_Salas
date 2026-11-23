@@ -23,3 +23,6 @@ Pods/
 .idea/
 .vscode/
 .DS_Store
+
+# Estado local de Supabase CLI
+supabase/.temp/

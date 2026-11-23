@@ -7,6 +7,7 @@ import '../../features/auth/presentation/views/login_view.dart';
 import '../../features/dashboard_admin/presentation/views/admin_dashboard_view.dart';
 import '../../features/administracion/presentation/views/catalogos_admin_view.dart';
 import '../../features/administracion/presentation/views/usuarios_admin_view.dart';
+import '../../features/administracion/presentation/views/claves_ia_admin_view.dart';
 import '../../features/kits/presentation/views/kits_admin_view.dart';
 import '../../features/dashboard_almacen/presentation/views/almacen_dashboard_view.dart';
 import '../../features/dashboard_enfermeria/presentation/views/enfermeria_dashboard_view.dart';
@@ -23,6 +24,7 @@ class AppRoutes {
   static const String admin = '/admin';
   static const String catalogos = '/admin/catalogos';
   static const String usuarios = '/admin/usuarios';
+  static const String clavesIa = '/admin/claves-ia';
   static const String kits = '/admin/kits';
   static const String kitsArea = '/kits';
   static const String fichas = '/fichas';
@@ -92,6 +94,10 @@ GoRouter createRouter(AuthViewModel authViewModel) {
         builder: (context, state) => const UsuariosAdminView(),
       ),
       GoRoute(
+        path: AppRoutes.clavesIa,
+        builder: (context, state) => const ClavesIaAdminView(),
+      ),
+      GoRoute(
         path: AppRoutes.kits,
         builder: (context, state) => const KitsAdminView(),
       ),
@@ -108,9 +114,8 @@ GoRouter createRouter(AuthViewModel authViewModel) {
       ),
       GoRoute(
         path: AppRoutes.nuevaFicha,
-        builder: (context, state) => RegistroFichaView(
-          areaInicial: state.uri.queryParameters['area'],
-        ),
+        builder: (context, state) =>
+            RegistroFichaView(areaInicial: state.uri.queryParameters['area']),
       ),
       GoRoute(
         path: AppRoutes.detalleFicha,

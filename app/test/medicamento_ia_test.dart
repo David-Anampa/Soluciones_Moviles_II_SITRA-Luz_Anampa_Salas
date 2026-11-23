@@ -198,35 +198,17 @@ void main() {
       },
     );
 
-    test(
-      'Administrador puede mostrar/ocultar el botón de API Key y guardar clave global',
-      () async {
-        SharedPreferences.setMockInitialValues({});
-
-        expect(
-          await MedicamentoIaService.obtenerVisibilidadBotonApiKeyAdmin(),
-          isTrue,
-        );
-
-        await MedicamentoIaService.guardarVisibilidadBotonApiKeyAdmin(false);
-        expect(
-          await MedicamentoIaService.obtenerVisibilidadBotonApiKeyAdmin(),
-          isFalse,
-        );
-
-        await MedicamentoIaService.guardarVisibilidadBotonApiKeyAdmin(true);
-        expect(
-          await MedicamentoIaService.obtenerVisibilidadBotonApiKeyAdmin(),
-          isTrue,
-        );
-
-        await MedicamentoIaService.guardarApiKey('AIzaSyTestKeyClinica12345');
-        expect(await MedicamentoIaService.tieneApiKeyConfigurada(), isTrue);
-        expect(
-          await MedicamentoIaService.obtenerApiKeyConfigurada(),
-          'AIzaSyTestKeyClinica12345',
-        );
-      },
-    );
+    test('Retira credenciales antiguas del almacenamiento local', () async {
+      SharedPreferences.setMockInitialValues({
+        'sitra_gemini_api_key_v1': 'clave-local-antigua-de-prueba',
+        'sitra_admin_mostrar_boton_key_v1': true,
+        'otra_preferencia': 'conservar',
+      });
+      await MedicamentoIaService.limpiarCredencialesLocalesAntiguas();
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.containsKey('sitra_gemini_api_key_v1'), isFalse);
+      expect(prefs.containsKey('sitra_admin_mostrar_boton_key_v1'), isFalse);
+      expect(prefs.getString('otra_preferencia'), 'conservar');
+    });
   });
 }

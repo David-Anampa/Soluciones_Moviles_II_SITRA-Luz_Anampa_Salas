@@ -1,110 +1,50 @@
 import 'package:flutter/material.dart';
-import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/widgets/sitra_app_bar.dart';
-import '../../../almacen/data/services/medicamento_ia_service.dart';
-import '../../../almacen/presentation/widgets/configurar_gemini_dialog.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 
-class AdminDashboardView extends StatefulWidget {
+class AdminDashboardView extends StatelessWidget {
   const AdminDashboardView({super.key});
-
   static const _red = Color(0xFFC62828);
   static const _modules = [
     _Module(
       'Gestión de usuarios',
-      'Consulta al personal, sus datos, roles y áreas asignadas.',
       Icons.manage_accounts_rounded,
       '/admin/usuarios',
     ),
     _Module(
       'Financiamientos, seguros y áreas',
-      'Administra áreas, convenios y cobertura de medicamentos.',
       Icons.settings_applications_rounded,
       '/admin/catalogos',
     ),
     _Module(
       'Plantillas de kits quirúrgicos',
-      'Configuración de kits clínicos para SOP, Coche de Paros y Emergencia.',
       Icons.medical_services_rounded,
       '/admin/kits',
     ),
     _Module(
       'Registro de fichas de pedido',
-      'Emisión de fichas General y Neonatología con stock real y aplicación de kits.',
       Icons.assignment_add,
       '/fichas/nueva',
     ),
     _Module(
       'Atención y trazabilidad de fichas',
-      'HU-006 a HU-011: Listado con filtros, preparación, despacho parcial, entrega FEFO y anulación.',
       Icons.fact_check_rounded,
       '/fichas',
     ),
+    _Module('Farmacia', Icons.local_pharmacy_rounded, '/farmacia'),
+    _Module('Almacén', Icons.inventory_2_rounded, '/almacen'),
+    _Module('Enfermería', Icons.health_and_safety_rounded, '/enfermeria'),
+    _Module('Jefatura de Farmacia', Icons.analytics_rounded, '/jefatura'),
     _Module(
-      'Farmacia',
-      'Inventario, abastecimiento y recepción de medicamentos.',
-      Icons.local_pharmacy_rounded,
-      '/farmacia',
-    ),
-    _Module(
-      'Almacén',
-      'Registro de medicamentos, entradas y atención de pedidos.',
-      Icons.inventory_2_rounded,
-      '/almacen',
-    ),
-    _Module(
-      'Enfermería',
-      'Fichas y actividades de las áreas clínicas.',
-      Icons.health_and_safety_rounded,
-      '/enfermeria',
-    ),
-    _Module(
-      'Jefatura de Farmacia',
-      'Consulta y supervisión de la operación.',
-      Icons.analytics_rounded,
-      '/jefatura',
+      'Claves de inteligencia artificial',
+      Icons.key_rounded,
+      '/admin/claves-ia',
     ),
   ];
-
-  @override
-  State<AdminDashboardView> createState() => _AdminDashboardViewState();
-}
-
-class _AdminDashboardViewState extends State<AdminDashboardView> {
-  bool _mostrarBotonApiKey = true;
-  bool _tieneApiKey = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _cargarEstadoApiKey();
-  }
-
-  Future<void> _cargarEstadoApiKey() async {
-    final visible =
-        await MedicamentoIaService.obtenerVisibilidadBotonApiKeyAdmin();
-    final tiene = await MedicamentoIaService.tieneApiKeyConfigurada();
-    if (!mounted) return;
-    setState(() {
-      _mostrarBotonApiKey = visible;
-      _tieneApiKey = tiene;
-    });
-  }
-
-  Future<void> _alternarVisibilidadBotonApiKey() async {
-    final nuevo = !_mostrarBotonApiKey;
-    await MedicamentoIaService.guardarVisibilidadBotonApiKeyAdmin(nuevo);
-    if (!mounted) return;
-    setState(() => _mostrarBotonApiKey = nuevo);
-  }
-
-  Future<void> _abrirConfiguracionApiKey() async {
-    await ConfigurarGeminiDialog.mostrar(context);
-    await _cargarEstadoApiKey();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,298 +55,92 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
         alto: DisenoAdaptable.altoCabecera(context),
         title: 'Menú de administración',
         subtitle: 'Acceso a los módulos de SITRA-Luz',
-        actions: [
-          if (_mostrarBotonApiKey)
-            IconButton(
-              tooltip: _tieneApiKey
-                  ? 'API Key Gemini IA activa (Clic para cambiar)'
-                  : 'Configurar API Key Gemini IA para Almacén',
-              onPressed: _abrirConfiguracionApiKey,
-              icon: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Icon(
-                    Icons.key_rounded,
-                    color: _tieneApiKey
-                        ? AppColors.success
-                        : AppColors.almacenColor,
-                  ),
-                  if (_tieneApiKey)
-                    Positioned(
-                      right: -2,
-                      top: -2,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppColors.success,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          IconButton(
-            tooltip: _mostrarBotonApiKey
-                ? 'Ocultar botón de API Key IA'
-                : 'Mostrar botón de API Key IA',
-            onPressed: _alternarVisibilidadBotonApiKey,
-            icon: Icon(
-              _mostrarBotonApiKey
-                  ? Icons.visibility_rounded
-                  : Icons.visibility_off_rounded,
-              color: AdminDashboardView._red,
-            ),
-          ),
-        ],
       ),
-      body: ContenidoAdaptable(
-        anchoMaximo: 1100,
-        padding: EdgeInsets.zero,
-        child: SafeArea(
+      body: SafeArea(
+        child: ContenidoAdaptable(
+          anchoMaximo: 1000,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1000),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AdminDashboardView._red, Color(0xFFE05252)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [_red, Color(0xFFE05252)],
+                    ),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.admin_panel_settings_rounded,
+                        color: Colors.white,
+                        size: 32,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.admin_panel_settings_rounded,
-                                color: Colors.white,
-                                size: 32,
-                              ),
-                              const Spacer(),
-                              TextButton.icon(
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Colors.white,
-                                  backgroundColor: Colors.white.withValues(
-                                    alpha: 0.16,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                ),
-                                onPressed: _alternarVisibilidadBotonApiKey,
-                                icon: Icon(
-                                  _mostrarBotonApiKey
-                                      ? Icons.visibility_off_outlined
-                                      : Icons.key_rounded,
-                                  size: 16,
-                                ),
-                                label: Text(
-                                  _mostrarBotonApiKey
-                                      ? 'Ocultar botón API Key'
-                                      : 'Mostrar botón API Key',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Bienvenido, ${user?.nombre ?? "Administrador"}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Elige el módulo en el que deseas trabajar. Mantendrás tu sesión de Administrador.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              height: 1.5,
-                              color: Colors.white,
-                            ),
-                          ),
-                          if (_mostrarBotonApiKey) ...[
-                            const SizedBox(height: 14),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Column(
+                      const SizedBox(height: 12),
+                      Text(
+                        'Bienvenido, ${user?.nombre ?? "Administrador"}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Elige el módulo en el que deseas trabajar.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.5,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Módulos del sistema',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                LayoutBuilder(
+                  builder: (context, limits) {
+                    final gap = limits.maxWidth < 360 ? 10.0 : 16.0;
+                    return Column(
+                      children: [
+                        for (var i = 0; i < _modules.length; i += 2)
+                          Padding(
+                            padding: EdgeInsets.only(bottom: gap),
+                            child: IntrinsicHeight(
+                              child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color:
-                                              (_tieneApiKey
-                                                      ? AppColors.success
-                                                      : AppColors.warning)
-                                                  .withValues(alpha: 0.14),
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.key_rounded,
-                                          color: _tieneApiKey
-                                              ? AppColors.success
-                                              : AppColors.warning,
-                                          size: 20,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              _tieneApiKey
-                                                  ? 'API Key Gemini Vision Activa (Global para Almacén)'
-                                                  : 'API Key Gemini Vision Pendiente de Configurar',
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w700,
-                                                color: AppColors.textPrimary,
-                                              ),
-                                            ),
-                                            const Text(
-                                              'Solo el Administrador gestiona esta clave; todos los usuarios de Almacén la usarán automáticamente al capturar fotos.',
-                                              style: TextStyle(
-                                                fontSize: 11.5,
-                                                color: AppColors.textSecondary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                                  Expanded(
+                                    child: _ModuleCard(module: _modules[i]),
                                   ),
-                                  const SizedBox(height: 12),
-                                  FilledButton.icon(
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: AdminDashboardView._red,
-                                    ),
-                                    onPressed: _abrirConfiguracionApiKey,
-                                    icon: const Icon(
-                                      Icons.key_rounded,
-                                      size: 16,
-                                    ),
-                                    label: Text(
-                                      _tieneApiKey
-                                          ? 'Cambiar API Key'
-                                          : 'Añadir API Key',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12.5,
-                                      ),
-                                    ),
+                                  SizedBox(width: gap),
+                                  Expanded(
+                                    child: i + 1 < _modules.length
+                                        ? _ModuleCard(module: _modules[i + 1])
+                                        : const SizedBox.shrink(),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Módulos del sistema',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Selecciona una tarjeta para ingresar.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final columns = constraints.maxWidth >= 600 ? 2 : 1;
-                        final width =
-                            (constraints.maxWidth - (columns - 1) * 16) /
-                            columns;
-                        return Wrap(
-                          spacing: 16,
-                          runSpacing: 16,
-                          children: AdminDashboardView._modules
-                              .map(
-                                (module) => SizedBox(
-                                  width: width,
-                                  child: _ModuleCard(module: module),
-                                ),
-                              )
-                              .toList(),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF1F1),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFFFDDDD)),
-                      ),
-                      child: const Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.grid_view_rounded,
-                            size: 20,
-                            color: AdminDashboardView._red,
                           ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Para cambiar de módulo, utiliza el botón Menú de módulos de la barra superior.',
-                              style: TextStyle(
-                                fontSize: 13,
-                                height: 1.5,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                      ],
+                    );
+                  },
                 ),
-              ),
+                const SizedBox(height: 24),
+              ],
             ),
           ),
         ),
@@ -417,20 +151,18 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
 
 class _Module {
   final String name;
-  final String description;
   final IconData icon;
   final String route;
-  const _Module(this.name, this.description, this.icon, this.route);
+  const _Module(this.name, this.icon, this.route);
 }
 
 class _ModuleCard extends StatelessWidget {
   final _Module module;
   const _ModuleCard({required this.module});
-
   @override
-  Widget build(BuildContext context) {
-    const red = Color(0xFFC62828);
-    return Material(
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    child: Material(
       color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
@@ -439,69 +171,40 @@ class _ModuleCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => context.go(module.route),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: double.infinity,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF1F1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(module.icon, size: 42, color: red),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 154),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF1F1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    module.icon,
+                    size: 32,
+                    color: AdminDashboardView._red,
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                module.name,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                module.description,
-                style: const TextStyle(
-                  fontSize: 13,
-                  height: 1.5,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 18),
-              const Wrap(
-                alignment: WrapAlignment.start,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  Text(
-                    'Abrir módulo',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: red,
-                    ),
+                const SizedBox(height: 14),
+                Text(
+                  module.name,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
                   ),
-                  Icon(Icons.arrow_forward_rounded, size: 20, color: red),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }

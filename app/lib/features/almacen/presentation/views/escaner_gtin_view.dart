@@ -9,14 +9,11 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/widgets/mensajes_app.dart';
-import '../../../auth/domain/entities/user_entity.dart';
-import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../data/services/medicamento_ia_service.dart';
 import '../../domain/entities/medicamento_entity.dart';
 import '../../domain/entities/medicamento_extraccion_ia.dart';
 import '../states/almacen_state.dart';
 import '../viewmodels/almacen_viewmodel.dart';
-import '../widgets/configurar_gemini_dialog.dart';
 import 'registro_medicamento_view.dart';
 
 /// Vista de escaneo de código de barras GS1/GTIN y captura multi-ángulo (3 a 4 fotos)
@@ -64,8 +61,6 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
 
   bool _isProcessingIA = false;
   bool _torchOn = false;
-  bool _tieneGeminiKey = false;
-  bool _mostrarBotonApiKeyAdmin = true;
   String? _errorSinRedMensaje;
 
   bool get _esPlataformaEscritorio =>
@@ -79,18 +74,6 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
   @override
   void initState() {
     super.initState();
-    _verificarEstadoGeminiKey();
-  }
-
-  Future<void> _verificarEstadoGeminiKey() async {
-    final tiene = await MedicamentoIaService.tieneApiKeyConfigurada();
-    final mostrarBoton =
-        await MedicamentoIaService.obtenerVisibilidadBotonApiKeyAdmin();
-    if (!mounted) return;
-    setState(() {
-      _tieneGeminiKey = tiene;
-      _mostrarBotonApiKeyAdmin = mostrarBoton;
-    });
   }
 
   @override
@@ -148,10 +131,7 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
       final vm = Provider.of<AlmacenViewModel>(context, listen: false);
       final st = vm.state;
       if (st is! AlmacenLoaded) return null;
-      final candidatos = <String>{
-        gs1.gtin.trim(),
-        gs1.rawCode.trim(),
-      };
+      final candidatos = <String>{gs1.gtin.trim(), gs1.rawCode.trim()};
       if (gs1.gtin.length == 14 && gs1.gtin.startsWith('0')) {
         candidatos.add(gs1.gtin.substring(1));
       } else if (gs1.gtin.length == 13) {
@@ -473,7 +453,9 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
                                 child: Text(
                                   '${snapshot.error}',
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(color: AppColors.error),
+                                  style: const TextStyle(
+                                    color: AppColors.error,
+                                  ),
                                 ),
                               );
                             }
@@ -555,14 +537,6 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
 
   @override
   Widget build(BuildContext context) {
-    AuthViewModel? authVm;
-    try {
-      authVm = Provider.of<AuthViewModel>(context);
-    } catch (_) {
-      authVm = null;
-    }
-    final esAdmin = authVm?.currentUser?.rol == UserRole.administrador;
-
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -575,39 +549,6 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         actions: [
-          if (esAdmin && _mostrarBotonApiKeyAdmin)
-            IconButton(
-              tooltip: _tieneGeminiKey
-                  ? 'Gemini Vision IA Configurado (Clic para editar)'
-                  : 'Configurar API Key de Gemini Vision IA',
-              icon: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Icon(
-                    Icons.key_rounded,
-                    color:
-                        _tieneGeminiKey ? Colors.greenAccent : Colors.white70,
-                  ),
-                  if (_tieneGeminiKey)
-                    Positioned(
-                      right: -2,
-                      top: -2,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: Colors.greenAccent,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              onPressed: () async {
-                await ConfigurarGeminiDialog.mostrar(context);
-                await _verificarEstadoGeminiKey();
-              },
-            ),
           if (_codigoBrutoEscaneado == null && !_esPlataformaEscritorio)
             IconButton(
               icon: Icon(
@@ -899,10 +840,7 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
                             onPressed: _isProcessingIA
                                 ? null
                                 : _continuarConDatosLocales,
-                            icon: const Icon(
-                              Icons.edit_note_rounded,
-                              size: 16,
-                            ),
+                            icon: const Icon(Icons.edit_note_rounded, size: 16),
                             label: const Text(
                               'Continuar al formulario sin perder datos',
                             ),
@@ -1426,9 +1364,7 @@ class _EscanerGtinViewState extends State<EscanerGtinView> {
                 ),
                 onPressed: _mostrarSelectorCatalogoRealSupabase,
                 icon: const Icon(Icons.inventory_2_outlined),
-                label: const Text(
-                  'SELECCIONAR DEL CATÁLOGO REAL EN SUPABASE',
-                ),
+                label: const Text('SELECCIONAR DEL CATÁLOGO REAL EN SUPABASE'),
               ),
             ),
           ],
@@ -1563,7 +1499,10 @@ class _DialogoIngresoManualGtinState extends State<_DialogoIngresoManualGtin> {
             children: [
               const Text(
                 'Escribe un código EAN-13 (13 dígitos), GTIN-14 o cadena GS1 como (01)07750215001234(17)281231(10)L2026A:',
-                style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 12),
               TextField(

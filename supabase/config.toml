@@ -1,0 +1,6 @@
+project_id = "nedeqnvpkalrchswrapr"
+
+[functions.gemini-ia]
+# Autenticación explícita con auth.getUser() y comprobación del perfil activo.
+# No depende del algoritmo de firma del JWT que use el proyecto.
+verify_jwt = false
