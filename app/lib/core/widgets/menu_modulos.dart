@@ -67,10 +67,10 @@ class BotonModulo extends StatelessWidget {
       button: true,
       enabled: activo,
       child: Material(
-        color: Colors.white,
+        color: activo ? const Color(0xFFFFF1F1) : const Color(0xFFF2F2F5),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
-          side: const BorderSide(color: Color(0xFFE8E8E8)),
+          side: const BorderSide(color: Colors.white, width: 2),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -84,11 +84,9 @@ class BotonModulo extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: activo
-                          ? const Color(0xFFFFF1F1)
-                          : const Color(0xFFF2F2F5),
-                      borderRadius: BorderRadius.circular(16),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
                     ),
                     child: Icon(icono, size: 40, color: acento),
                   ),
