@@ -1,6 +1,7 @@
 package ap.sitra.luz.clinica
 
 import android.content.ContentValues
+import android.os.Bundle
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
@@ -11,6 +12,16 @@ import java.io.File
 import java.io.FileInputStream
 
 class MainActivity : FlutterActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            splashScreen.setOnExitAnimationListener { splash ->
+                splash.animate().alpha(0f).setDuration(220L)
+                    .withEndAction { splash.remove() }.start()
+            }
+        }
+    }
+
     private val CHANNEL = "ap.sitra.luz.clinica/galeria"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {

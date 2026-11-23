@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="300 80 630 630" width="630" height="630" role="img" aria-labelledby="sitra-title sitra-desc">
+  <title id="sitra-title">SITRA - LUZ</title>
+  <desc id="sitra-desc">Cápsula roja con borde y división blancos, delante de un recorrido rojo que une tres nodos de trazabilidad. Fondo transparente.</desc>
+  <defs>
+    <path id="capsule" d="M 619.58 527.30 L 844.58 310.30 A 106 106 0 0 0 697.42 157.70 L 472.42 374.70 A 106 106 0 0 0 619.58 527.30 Z"/>
+    <clipPath id="capsule-clip"><use href="#capsule"/></clipPath>
+    <mask id="node-holes" maskUnits="userSpaceOnUse" x="300" y="80" width="630" height="630">
+      <rect x="300" y="80" width="630" height="630" fill="white"/>
+      <g fill="black"><circle cx="430" cy="178" r="24"/><circle cx="413" cy="578" r="24"/><circle cx="813" cy="578" r="24"/></g>
+    </mask>
+  </defs>
+  <g mask="url(#node-holes)">
+  <g fill="none" stroke="#D31012" stroke-width="52" stroke-linejoin="round">
+    <path d="M 430 178 H 648 C 704 178 713 221 665 251 C 617 281 535 260 482 288 C 403 329 408 408 483 445 C 551 479 645 416 711 439 C 777 462 813 512 813 578 H 413"/>
+  </g>
+  </g>
+  <g fill="#D31012" fill-rule="evenodd">
+    <path d="M 498 178 A 68 68 0 1 0 362 178 A 68 68 0 1 0 498 178 Z M 454 178 A 24 24 0 1 1 406 178 A 24 24 0 1 1 454 178 Z"/>
+    <path d="M 481 578 A 68 68 0 1 0 345 578 A 68 68 0 1 0 481 578 Z M 437 578 A 24 24 0 1 1 389 578 A 24 24 0 1 1 437 578 Z"/>
+    <path d="M 881 578 A 68 68 0 1 0 745 578 A 68 68 0 1 0 881 578 Z M 837 578 A 24 24 0 1 1 789 578 A 24 24 0 1 1 837 578 Z"/>
+  </g>
+  <use href="#capsule" fill="#D31012" stroke="#FFFFFF" stroke-width="13" stroke-linejoin="round"/>
+  <path d="M 565 294 L 748 400" fill="none" stroke="#FFFFFF" stroke-width="12" clip-path="url(#capsule-clip)"/>
+</svg>
