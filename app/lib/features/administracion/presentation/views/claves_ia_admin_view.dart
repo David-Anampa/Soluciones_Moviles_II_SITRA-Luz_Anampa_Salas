@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
@@ -9,6 +11,173 @@ import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../../almacen/data/services/medicamento_ia_service.dart';
 import '../../data/claves_ia_repository.dart';
 import '../widgets/catalogo_estilo.dart';
+
+ThemeData _temaClaves(BuildContext context) {
+  final base = CatalogoEstilo.tema(context);
+  final borde = OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: const BorderSide(color: Color(0xFFE3E3E9)),
+  );
+  return base.copyWith(
+    scaffoldBackgroundColor: AppColors.background,
+    textTheme: base.textTheme.apply(
+      bodyColor: AppColors.textPrimary,
+      displayColor: AppColors.textPrimary,
+    ),
+    inputDecorationTheme: base.inputDecorationTheme.copyWith(
+      filled: true,
+      fillColor: Colors.white,
+      border: borde,
+      enabledBorder: borde,
+      focusedBorder: borde.copyWith(
+        borderSide: const BorderSide(color: CatalogoEstilo.rojo, width: 1.5),
+      ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: CatalogoEstilo.rojo,
+        foregroundColor: Colors.white,
+        minimumSize: const Size(48, 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: CatalogoEstilo.rojo,
+        minimumSize: const Size(48, 48),
+        side: const BorderSide(color: Color(0xFFE9BBBB)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        foregroundColor: CatalogoEstilo.rojo,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    ),
+  );
+}
+
+Widget _accionIcono(String etiqueta, IconData icono, VoidCallback? onPressed) =>
+    IconButton.filledTonal(
+      tooltip: etiqueta,
+      onPressed: onPressed,
+      icon: Icon(icono),
+      style: IconButton.styleFrom(
+        backgroundColor: CatalogoEstilo.pastel,
+        foregroundColor: CatalogoEstilo.rojo,
+      ),
+    );
+
+class _ComprobacionClaveDialog extends StatefulWidget {
+  const _ComprobacionClaveDialog();
+  @override
+  State<_ComprobacionClaveDialog> createState() =>
+      _ComprobacionClaveDialogState();
+}
+
+class _ComprobacionClaveDialogState extends State<_ComprobacionClaveDialog> {
+  Timer? _cierre;
+  bool _cargando = true, _exito = false;
+  String _mensaje = 'Estamos verificando la conexión segura con Gemini.';
+  @override
+  void initState() {
+    super.initState();
+    _verificar();
+  }
+
+  Future<void> _verificar() async {
+    var exito = false;
+    String mensaje;
+    try {
+      final modelos = await MedicamentoIaService()
+          .descubrirModelosDisponibles();
+      exito = modelos.isNotEmpty;
+      mensaje = exito
+          ? 'Comprobación exitosa. Tu API key está lista para el reconocimiento.'
+          : 'La API key respondió, pero no tiene modelos de reconocimiento habilitados.';
+    } catch (e) {
+      mensaje = e is MedicamentoIaException
+          ? e.message
+          : 'No se pudo verificar la conexión. Intenta nuevamente.';
+    }
+    if (!mounted) return;
+    setState(() {
+      _cargando = false;
+      _exito = exito;
+      _mensaje = mensaje;
+    });
+    _cierre = Timer(Duration(seconds: exito ? 3 : 7), () {
+      if (mounted) Navigator.of(context).pop();
+    });
+  }
+
+  @override
+  void dispose() {
+    _cierre?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => DialogoAdaptable(
+    anchoMaximo: 400,
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            child: _cargando
+                ? const SizedBox(
+                    key: ValueKey('cargando'),
+                    width: 52,
+                    height: 52,
+                    child: CircularProgressIndicator(strokeWidth: 3),
+                  )
+                : Icon(
+                    _exito
+                        ? Icons.verified_rounded
+                        : Icons.error_outline_rounded,
+                    key: ValueKey(_exito),
+                    size: 56,
+                    color: _exito
+                        ? const Color(0xFF23713B)
+                        : CatalogoEstilo.rojo,
+                  ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            _cargando
+                ? 'Comprobando API key'
+                : _exito
+                ? 'API key verificada'
+                : 'Revisa tu conexión o clave',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 10),
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              _mensaje,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 13, height: 1.5),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _accionIcono(
+            'Cerrar',
+            Icons.close_rounded,
+            () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
 class ClavesIaAdminView extends StatefulWidget {
   const ClavesIaAdminView({super.key});
@@ -97,7 +266,10 @@ class _ClavesIaAdminViewState extends State<ClavesIaAdminView> {
     final guardada = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => _FormularioClave(clave: clave, repo: _repo),
+      builder: (_) => Theme(
+        data: _temaClaves(context),
+        child: _FormularioClave(clave: clave, repo: _repo),
+      ),
     );
     if (guardada == true && mounted) {
       // El guardado ya terminó: un fallo al refrescar no debe presentarse como fallo al guardar.
@@ -110,28 +282,17 @@ class _ClavesIaAdminViewState extends State<ClavesIaAdminView> {
   }
 
   Future<void> _comprobarConexion() async {
+    if (_operando) return;
     setState(() => _operando = true);
     try {
-      final modelos = await MedicamentoIaService()
-          .descubrirModelosDisponibles();
-      if (!mounted) return;
-      MensajesApp.mostrar(
-        context,
-        modelos.isEmpty
-            ? 'La clave respondió, pero no tiene modelos de reconocimiento habilitados.'
-            : 'Conexión con Gemini verificada.',
-        tipo: modelos.isEmpty ? TipoMensaje.advertencia : TipoMensaje.exito,
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => Theme(
+          data: _temaClaves(context),
+          child: const _ComprobacionClaveDialog(),
+        ),
       );
-    } catch (e) {
-      if (mounted) {
-        MensajesApp.mostrar(
-          context,
-          e is MedicamentoIaException
-              ? e.message
-              : 'No se pudo verificar la conexión. Intenta nuevamente.',
-          tipo: TipoMensaje.error,
-        );
-      }
     } finally {
       if (mounted) setState(() => _operando = false);
     }
@@ -173,56 +334,67 @@ class _ClavesIaAdminViewState extends State<ClavesIaAdminView> {
     if (_operando) return;
     final accion = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertaAdaptable(
-        title: Text(clave.nombre),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            MensajesApp.nota(
-              'La clave está cifrada y no se puede revelar. ${clave.activa ? 'Se utiliza para el reconocimiento.' : 'Está guardada y no se utiliza actualmente.'}',
-            ),
-            const SizedBox(height: 18),
-            const Text(
-              'Fecha de creación',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 4),
-            Text(_fecha(clave.creada), style: const TextStyle(fontSize: 13)),
-            const SizedBox(height: 14),
-            const Text(
-              'Última edición',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _fecha(clave.actualizada),
-              style: const TextStyle(fontSize: 13),
+      builder: (ctx) => Theme(
+        data: _temaClaves(context),
+        child: AlertaAdaptable(
+          title: Text(clave.nombre),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              MensajesApp.nota(
+                'La clave está cifrada y no se puede revelar. ${clave.activa ? 'Se utiliza para el reconocimiento.' : 'Está guardada y no se utiliza actualmente.'}',
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'Fecha de creación',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 4),
+              Text(_fecha(clave.creada), style: const TextStyle(fontSize: 13)),
+              const SizedBox(height: 14),
+              const Text(
+                'Última edición',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _fecha(clave.actualizada),
+                style: const TextStyle(fontSize: 13),
+              ),
+            ],
+          ),
+          actions: [
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              alignment: WrapAlignment.end,
+              children: [
+                if (!clave.activa)
+                  _accionIcono(
+                    'Usar clave',
+                    Icons.check_circle_rounded,
+                    () => Navigator.pop(ctx, 'ACTIVAR'),
+                  ),
+                _accionIcono(
+                  'Editar clave',
+                  Icons.edit_rounded,
+                  () => Navigator.pop(ctx, 'EDITAR'),
+                ),
+                _accionIcono(
+                  'Eliminar clave',
+                  Icons.delete_outline_rounded,
+                  () => Navigator.pop(ctx, 'ELIMINAR'),
+                ),
+                _accionIcono(
+                  'Cerrar',
+                  Icons.close_rounded,
+                  () => Navigator.pop(ctx),
+                ),
+              ],
             ),
           ],
         ),
-        actions: [
-          if (!clave.activa)
-            FilledButton.icon(
-              onPressed: () => Navigator.pop(ctx, 'ACTIVAR'),
-              icon: const Icon(Icons.check_circle_outline),
-              label: const Text('Usar clave'),
-            ),
-          OutlinedButton.icon(
-            onPressed: () => Navigator.pop(ctx, 'EDITAR'),
-            icon: const Icon(Icons.edit_outlined),
-            label: const Text('Editar'),
-          ),
-          TextButton.icon(
-            onPressed: () => Navigator.pop(ctx, 'ELIMINAR'),
-            icon: const Icon(Icons.delete_outline),
-            label: const Text('Eliminar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cerrar'),
-          ),
-        ],
       ),
     );
     if (!mounted) return;
@@ -335,7 +507,7 @@ class _ClavesIaAdminViewState extends State<ClavesIaAdminView> {
       );
     }
     return Theme(
-      data: CatalogoEstilo.tema(context),
+      data: _temaClaves(context),
       child: Scaffold(
         appBar: AppBar(
           leading: BackButton(onPressed: () => context.go('/admin')),
@@ -404,21 +576,24 @@ class _ClavesIaAdminViewState extends State<ClavesIaAdminView> {
                           ],
                         ),
                         const SizedBox(height: 20),
-                        FilledButton.icon(
-                          onPressed: _operando ? null : () => _editar(),
-                          icon: const Icon(Icons.add_rounded),
-                          label: const Text('Añadir clave'),
-                        ),
-                        if (_claves.any((c) => c.activa)) ...[
-                          const SizedBox(height: 8),
-                          OutlinedButton.icon(
-                            onPressed: _operando ? null : _comprobarConexion,
-                            icon: const Icon(Icons.wifi_tethering_rounded),
-                            label: Text(
-                              _operando ? 'Procesando…' : 'Comprobar conexión',
+                        AccionesAdaptables(
+                          anchoMinimo: 140,
+                          acciones: [
+                            FilledButton.icon(
+                              onPressed: _operando ? null : () => _editar(),
+                              icon: const Icon(Icons.add_moderator_rounded),
+                              label: const Text('Añadir clave'),
                             ),
-                          ),
-                        ],
+                            OutlinedButton.icon(
+                              onPressed:
+                                  _operando || !_claves.any((c) => c.activa)
+                                  ? null
+                                  : _comprobarConexion,
+                              icon: const Icon(Icons.verified_user_rounded),
+                              label: const Text('Comprobar'),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 20),
                         if (_claves.isEmpty)
                           MensajesApp.nota(
@@ -571,14 +746,34 @@ class _FormularioClaveState extends State<_FormularioClave> {
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: _guardando ? null : () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton.icon(
-          onPressed: _guardando ? null : _guardar,
-          icon: const Icon(Icons.lock_outline),
-          label: Text(_guardando ? 'Guardando…' : 'Guardar clave'),
+        Wrap(
+          spacing: 12,
+          alignment: WrapAlignment.end,
+          children: [
+            _accionIcono(
+              'Cancelar',
+              Icons.close_rounded,
+              _guardando ? null : () => Navigator.pop(context),
+            ),
+            IconButton.filled(
+              tooltip: _guardando ? 'Guardando clave' : 'Guardar clave',
+              style: IconButton.styleFrom(
+                backgroundColor: CatalogoEstilo.rojo,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: _guardando ? null : _guardar,
+              icon: _guardando
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.save_rounded),
+            ),
+          ],
         ),
       ],
     ),
