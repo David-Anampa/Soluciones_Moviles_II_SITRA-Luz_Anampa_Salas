@@ -11,32 +11,32 @@ class AdminDashboardView extends StatelessWidget {
   static const _red = Color(0xFFC62828);
   static const _modules = [
     _Module(
-      'Gestión de usuarios',
+      'Gestionar usuarios',
       Icons.manage_accounts_rounded,
       '/admin/usuarios',
     ),
     _Module(
-      'Financiamientos, seguros y áreas',
+      'Gestionar catálogos',
       Icons.settings_applications_rounded,
       '/admin/catalogos',
     ),
     _Module(
-      'Plantillas de kits quirúrgicos',
+      'Gestionar kits',
       Icons.medical_services_rounded,
       '/admin/kits',
     ),
     _Module(
-      'Registro de fichas de pedido',
+      'Registrar pedido',
       Icons.assignment_add,
       '/fichas/nueva',
     ),
     _Module(
-      'Atención y trazabilidad de fichas',
+      'Gestionar pedidos',
       Icons.fact_check_rounded,
       '/fichas',
     ),
     _Module(
-      'Claves de inteligencia artificial',
+      'Gestionar claves IA',
       Icons.key_rounded,
       '/admin/claves-ia',
     ),
