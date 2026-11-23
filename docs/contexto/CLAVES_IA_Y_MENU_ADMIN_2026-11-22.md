@@ -12,9 +12,11 @@ Implementación: `758c81c`, rama `Sprint-08`.
 - Nuevo módulo **Claves de inteligencia artificial**, ruta `/admin/claves-ia`.
   El Administrador activo es el único que puede acceder o modificar credenciales;
   la protección también se aplica en servidor, no solo ocultando botones.
-- Varias claves de Gemini, identificadas por nombre e icono de llave. La lista
-  muestra estado «En uso»/«Guardada», fecha y hora local de creación y última
-  edición. Nunca muestra, revela ni copia el secreto guardado.
+- Resumen con cantidades reales de claves registradas y en uso. Cuadrícula de
+  tarjetas pastel con nombre, llave, estado «En uso»/«Guardada» y última fecha
+  de edición. Al tocar una tarjeta se ven las fechas y horas locales completas
+  de creación/edición y las opciones para gestionar esa clave.
+  Nunca muestra, revela ni copia el secreto guardado.
 - Alta con entrada oculta; edición de nombre y reemplazo opcional de clave.
   Una clave en uso para todo el reconocimiento: la primera se activa; las demás
   se guardan. Cambiar la activa requiere confirmación. No se rotan por cuota

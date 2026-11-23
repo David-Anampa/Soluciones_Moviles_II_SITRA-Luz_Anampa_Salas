@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/widgets/mensajes_app.dart';
+import '../../../../core/widgets/menu_modulos.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../../almacen/data/services/medicamento_ia_service.dart';
@@ -139,6 +140,191 @@ class _ClavesIaAdminViewState extends State<ClavesIaAdminView> {
   String _fecha(DateTime f) =>
       '${f.day.toString().padLeft(2, '0')}/${f.month.toString().padLeft(2, '0')}/${f.year} · ${f.hour.toString().padLeft(2, '0')}:${f.minute.toString().padLeft(2, '0')}';
 
+  Widget _resumen(String titulo, int cantidad, IconData icono) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: const Color(0xFFECE3E3)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icono, color: CatalogoEstilo.rojo, size: 26),
+        const SizedBox(height: 12),
+        Text(
+          '$cantidad',
+          style: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w700,
+            color: CatalogoEstilo.rojo,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          titulo,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
+      ],
+    ),
+  );
+
+  Future<void> _verDetalle(ClaveIa clave) async {
+    if (_operando) return;
+    final accion = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertaAdaptable(
+        title: Text(clave.nombre),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            MensajesApp.nota(
+              'La clave está cifrada y no se puede revelar. ${clave.activa ? 'Se utiliza para el reconocimiento.' : 'Está guardada y no se utiliza actualmente.'}',
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              'Fecha de creación',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(_fecha(clave.creada), style: const TextStyle(fontSize: 13)),
+            const SizedBox(height: 14),
+            const Text(
+              'Última edición',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _fecha(clave.actualizada),
+              style: const TextStyle(fontSize: 13),
+            ),
+          ],
+        ),
+        actions: [
+          if (!clave.activa)
+            FilledButton.icon(
+              onPressed: () => Navigator.pop(ctx, 'ACTIVAR'),
+              icon: const Icon(Icons.check_circle_outline),
+              label: const Text('Usar clave'),
+            ),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.pop(ctx, 'EDITAR'),
+            icon: const Icon(Icons.edit_outlined),
+            label: const Text('Editar'),
+          ),
+          TextButton.icon(
+            onPressed: () => Navigator.pop(ctx, 'ELIMINAR'),
+            icon: const Icon(Icons.delete_outline),
+            label: const Text('Eliminar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    if (accion == 'EDITAR') {
+      await _editar(clave);
+    } else if (accion == 'ACTIVAR' || accion == 'ELIMINAR') {
+      await _operar(accion!, clave);
+    }
+  }
+
+  Widget _tarjetaClave(ClaveIa clave) => Semantics(
+    button: true,
+    label:
+        '${clave.nombre}, ${clave.activa ? 'en uso' : 'guardada'}. Ver detalles y opciones.',
+    child: Material(
+      color: CatalogoEstilo.pastel,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: clave.activa
+              ? CatalogoEstilo.rojo.withValues(alpha: .35)
+              : Colors.white,
+          width: 2,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: _operando ? null : () => _verDetalle(clave),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 190),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.key_rounded,
+                    size: 36,
+                    color: CatalogoEstilo.rojo,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  clave.nombre,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: clave.activa
+                        ? const Color(0xFFE4F2E8)
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    clave.activa ? 'En uso' : 'Guardada',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: clave.activa
+                          ? const Color(0xFF23713B)
+                          : const Color(0xFF64646D),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Editada ${_fecha(clave.actualizada).split(' · ').first}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF64646D),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Icon(
+                  Icons.more_horiz_rounded,
+                  size: 22,
+                  color: CatalogoEstilo.rojo,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     if (!_esAdmin) {
@@ -202,6 +388,22 @@ class _ClavesIaAdminViewState extends State<ClavesIaAdminView> {
                           label: const Text('Volver a cargar'),
                         ),
                       ] else ...[
+                        CuadriculaPanel(
+                          esResumen: true,
+                          children: [
+                            _resumen(
+                              'Claves registradas',
+                              _claves.length,
+                              Icons.key_rounded,
+                            ),
+                            _resumen(
+                              'En uso',
+                              _claves.where((c) => c.activa).length,
+                              Icons.verified_user_outlined,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
                         FilledButton.icon(
                           onPressed: _operando ? null : () => _editar(),
                           icon: const Icon(Icons.add_rounded),
@@ -227,113 +429,28 @@ class _ClavesIaAdminViewState extends State<ClavesIaAdminView> {
                             'No hay una clave en uso. Elige una para activar el reconocimiento.',
                             tipo: TipoMensaje.advertencia,
                           ),
-                        for (final clave in _claves) ...[
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: clave.activa
-                                    ? CatalogoEstilo.rojo.withValues(alpha: .4)
-                                    : const Color(0xFFE5E5EA),
-                              ),
+                        if (_claves.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Mis claves',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: CatalogoEstilo.pastel,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(
-                                        Icons.key_rounded,
-                                        color: CatalogoEstilo.rojo,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            clave.nombre,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 6),
-                                          Text(
-                                            clave.activa
-                                                ? 'En uso'
-                                                : 'Guardada',
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              color: clave.activa
-                                                  ? CatalogoEstilo.rojo
-                                                  : Colors.black54,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const Icon(
-                                      Icons.lock_rounded,
-                                      size: 20,
-                                      color: Colors.black45,
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 14),
-                                Text(
-                                  'Creada: ${_fecha(clave.creada)}',
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Última edición: ${_fecha(clave.actualizada)}',
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                                const SizedBox(height: 14),
-                                AccionesAdaptables(
-                                  anchoMinimo: 140,
-                                  acciones: [
-                                    if (!clave.activa)
-                                      OutlinedButton.icon(
-                                        onPressed: _operando
-                                            ? null
-                                            : () => _operar('ACTIVAR', clave),
-                                        icon: const Icon(
-                                          Icons.check_circle_outline,
-                                        ),
-                                        label: const Text('Usar clave'),
-                                      ),
-                                    OutlinedButton.icon(
-                                      onPressed: _operando
-                                          ? null
-                                          : () => _editar(clave),
-                                      icon: const Icon(Icons.edit_outlined),
-                                      label: const Text('Editar'),
-                                    ),
-                                    TextButton.icon(
-                                      onPressed: _operando
-                                          ? null
-                                          : () => _operar('ELIMINAR', clave),
-                                      icon: const Icon(Icons.delete_outline),
-                                      label: const Text('Eliminar'),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Toca una tarjeta para ver sus fechas y opciones.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF64646D),
                             ),
+                          ),
+                          const SizedBox(height: 14),
+                          CuadriculaPanel(
+                            children: [
+                              for (final clave in _claves) _tarjetaClave(clave),
+                            ],
                           ),
                         ],
                       ],
