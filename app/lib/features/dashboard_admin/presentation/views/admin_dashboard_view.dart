@@ -16,7 +16,7 @@ class AdminDashboardView extends StatelessWidget {
       '/admin/usuarios',
     ),
     _Module(
-      'Gestionar catálogos',
+      'Gestionar áreas y financiamientos',
       Icons.settings_applications_rounded,
       '/admin/catalogos',
     ),
