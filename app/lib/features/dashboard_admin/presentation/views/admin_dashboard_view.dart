@@ -42,51 +42,7 @@ class AdminDashboardView extends StatelessWidget {
   ) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [_red, Color(0xFFE05252)],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: _red.withValues(alpha: .12),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: .16),
-                borderRadius: BorderRadius.circular(11),
-                border: Border.all(color: Colors.white.withValues(alpha: .20)),
-              ),
-              child: Icon(icono, color: Colors.white, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Semantics(
-                header: true,
-                child: Text(
-                  titulo,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      CabeceraMenu(titulo: titulo, icono: icono),
       const SizedBox(height: 16),
       CuadriculaPanel(
         children: [

@@ -260,13 +260,9 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                   const SizedBox(height: 20),
 
                   // 2. MÉTRICAS OPERATIVAS REALES DE ALMACÉN
-                  const Text(
-                    'Estado del Almacén General',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
+                  const CabeceraMenu(
+                    titulo: 'Estado del Almacén General',
+                    icono: Icons.warehouse_outlined,
                   ),
                   const SizedBox(height: 12),
 
@@ -328,13 +324,9 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                   const SizedBox(height: 24),
 
                   // 3. ACCIONES RÁPIDAS
-                  const Text(
-                    'Operaciones de Almacén',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
+                  const CabeceraMenu(
+                    titulo: 'Operaciones de Almacén',
+                    icono: Icons.inventory_2_outlined,
                   ),
                   const SizedBox(height: 12),
 

@@ -300,13 +300,9 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                   const SizedBox(height: 20),
 
                   // Métricas de atención
-                  const Text(
-                    'Abastecimiento de Farmacia',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
+                  const CabeceraMenu(
+                    titulo: 'Abastecimiento de Farmacia',
+                    icono: Icons.inventory_2_outlined,
                   ),
                   const SizedBox(height: 12),
 
@@ -342,13 +338,9 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                   const SizedBox(height: 24),
 
                   // Acciones directas
-                  const Text(
-                    'Operaciones de Farmacia',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
+                  const CabeceraMenu(
+                    titulo: 'Operaciones de Farmacia',
+                    icono: Icons.local_pharmacy_outlined,
                   ),
                   const SizedBox(height: 12),
 

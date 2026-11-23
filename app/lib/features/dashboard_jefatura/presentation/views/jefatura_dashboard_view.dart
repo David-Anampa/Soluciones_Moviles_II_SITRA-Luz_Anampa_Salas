@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/menu_modulos.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:go_router/go_router.dart';
 import '../../../almacen/presentation/views/diferencias_abastecimiento_view.dart';
@@ -219,13 +220,9 @@ class JefaturaDashboardView extends StatelessWidget {
                 const SizedBox(height: 20),
 
                 // Tarjetas FEFO y Trazabilidad
-                const Text(
-                  'Indicadores de Trazabilidad & FEFO',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+                const CabeceraMenu(
+                  titulo: 'Indicadores de Trazabilidad & FEFO',
+                  icono: Icons.analytics_outlined,
                 ),
                 const SizedBox(height: 12),
 
@@ -330,13 +327,9 @@ class JefaturaDashboardView extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // Módulos de Jefatura
-                const Text(
-                  'Herramientas de Supervisión',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+                const CabeceraMenu(
+                  titulo: 'Herramientas de Supervisión',
+                  icono: Icons.fact_check_outlined,
                 ),
                 const SizedBox(height: 12),
 

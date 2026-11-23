@@ -223,13 +223,9 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
                   const SizedBox(height: 20),
 
                   // Métricas en tiempo real del servicio
-                  const Text(
-                    'Estado en Tiempo Real del Servicio',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
+                  const CabeceraMenu(
+                    titulo: 'Estado en Tiempo Real del Servicio',
+                    icono: Icons.monitor_heart_outlined,
                   ),
                   const SizedBox(height: 12),
 
@@ -276,13 +272,9 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
                   const SizedBox(height: 24),
 
                   // Módulos operativos reales
-                  const Text(
-                    'Operaciones del área',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
+                  const CabeceraMenu(
+                    titulo: 'Operaciones del área',
+                    icono: Icons.medical_services_outlined,
                   ),
                   const SizedBox(height: 12),
 
