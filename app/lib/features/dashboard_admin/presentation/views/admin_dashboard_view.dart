@@ -195,7 +195,7 @@ class _ModuleCard extends StatelessWidget {
                   module.name,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 17,
+                    fontSize: 14.45,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
