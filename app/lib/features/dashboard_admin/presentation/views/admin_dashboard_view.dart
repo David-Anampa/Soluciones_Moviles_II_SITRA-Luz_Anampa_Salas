@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
+import '../../../../core/widgets/menu_modulos.dart';
 import '../../../../core/widgets/sitra_app_bar.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 
@@ -20,26 +21,10 @@ class AdminDashboardView extends StatelessWidget {
       Icons.settings_applications_rounded,
       '/admin/catalogos',
     ),
-    _Module(
-      'Gestionar kits',
-      Icons.medical_services_rounded,
-      '/admin/kits',
-    ),
-    _Module(
-      'Registrar pedido',
-      Icons.assignment_add,
-      '/fichas/nueva',
-    ),
-    _Module(
-      'Gestionar pedidos',
-      Icons.fact_check_rounded,
-      '/fichas',
-    ),
-    _Module(
-      'Gestionar claves IA',
-      Icons.key_rounded,
-      '/admin/claves-ia',
-    ),
+    _Module('Gestionar kits', Icons.medical_services_rounded, '/admin/kits'),
+    _Module('Registrar pedido', Icons.assignment_add, '/fichas/nueva'),
+    _Module('Gestionar pedidos', Icons.fact_check_rounded, '/fichas'),
+    _Module('Gestionar claves IA', Icons.key_rounded, '/admin/claves-ia'),
   ];
 
   static const _vistasPorRol = [
@@ -49,56 +34,43 @@ class AdminDashboardView extends StatelessWidget {
     _Module('Jefatura de Farmacia', Icons.analytics_rounded, '/jefatura'),
   ];
 
-  Widget _seccion(String titulo, IconData icono, List<_Module> modules) =>
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _seccion(
+    BuildContext context,
+    String titulo,
+    IconData icono,
+    List<_Module> modules,
+  ) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Row(
         children: [
-          Row(
-            children: [
-              Icon(icono, color: _red, size: 22),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  titulo,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
+          Icon(icono, color: _red, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              titulo,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          LayoutBuilder(
-            builder: (context, limits) {
-              final gap = limits.maxWidth < 360 ? 10.0 : 16.0;
-              return Column(
-                children: [
-                  for (var i = 0; i < modules.length; i += 2)
-                    Padding(
-                      padding: EdgeInsets.only(bottom: gap),
-                      child: IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(child: _ModuleCard(module: modules[i])),
-                            SizedBox(width: gap),
-                            Expanded(
-                              child: i + 1 < modules.length
-                                  ? _ModuleCard(module: modules[i + 1])
-                                  : const SizedBox.shrink(),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
+            ),
           ),
         ],
-      );
+      ),
+      const SizedBox(height: 16),
+      CuadriculaPanel(
+        children: [
+          for (final module in modules)
+            BotonModulo(
+              nombre: module.name,
+              icono: module.icon,
+              onTap: () => context.go(module.route),
+            ),
+        ],
+      ),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -156,12 +128,18 @@ class AdminDashboardView extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 _seccion(
+                  context,
                   'Administración',
                   Icons.admin_panel_settings_outlined,
                   _modules,
                 ),
                 const Divider(height: 40, color: Color(0xFFE3E3E9)),
-                _seccion('Vistas por rol', Icons.badge_outlined, _vistasPorRol),
+                _seccion(
+                  context,
+                  'Vistas por rol',
+                  Icons.badge_outlined,
+                  _vistasPorRol,
+                ),
                 const SizedBox(height: 24),
               ],
             ),
@@ -177,57 +155,4 @@ class _Module {
   final IconData icon;
   final String route;
   const _Module(this.name, this.icon, this.route);
-}
-
-class _ModuleCard extends StatelessWidget {
-  final _Module module;
-  const _ModuleCard({required this.module});
-  @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    child: Material(
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: const BorderSide(color: Color(0xFFE8E8E8)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.go(module.route),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 154),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF1F1),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    module.icon,
-                    size: 40,
-                    color: AdminDashboardView._red,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  module.name,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
+import '../../../../core/widgets/menu_modulos.dart';
 import 'package:go_router/go_router.dart';
 import '../../../almacen/presentation/views/diferencias_abastecimiento_view.dart';
 import 'package:provider/provider.dart';
@@ -105,45 +106,6 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
         alto: DisenoAdaptable.altoCabecera(context),
         title: 'Farmacia Clínica',
         subtitle: 'Dispensación y Reposición Inter-Áreas',
-        actions: [
-          IconButton(
-            tooltip: 'Mis Solicitudes a Almacén',
-            icon: Badge(
-              isLabelVisible: listasParaRecepcion > 0,
-              label: Text(
-                '$listasParaRecepcion',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 10,
-                ),
-              ),
-              backgroundColor: AppColors.primary,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceVariant,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.local_shipping_outlined,
-                  size: 18,
-                  color: AppColors.farmaciaColor,
-                ),
-              ),
-            ),
-            onPressed: _abrirMisSolicitudes,
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add_shopping_cart_rounded),
-        label: const Text(
-          'Solicitar a Almacén',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        onPressed: _abrirCrearSolicitud,
       ),
       body: ContenidoAdaptable(
         anchoMaximo: 1100,
@@ -163,19 +125,6 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFFC62828),
-                        minimumSize: const Size(48, 48),
-                      ),
-                      icon: const Icon(Icons.medical_services_outlined),
-                      label: const Text('Consultar kits por área'),
-                      onPressed: () => context.push('/kits'),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                   // 1. Banner de Farmacia
                   Container(
                     width: double.infinity,
@@ -361,9 +310,9 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                   ),
                   const SizedBox(height: 12),
 
-                  AccionesAdaptables(
-                    anchoMinimo: 150,
-                    acciones: [
+                  CuadriculaPanel(
+                    esResumen: true,
+                    children: [
                       _buildMetricCard(
                         title: 'Fichas de pisos',
                         value: '$_fichasPendientes',
@@ -394,7 +343,7 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
 
                   // Acciones directas
                   const Text(
-                    'Operaciones Farmacéuticas',
+                    'Operaciones de Farmacia',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -403,65 +352,51 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                   ),
                   const SizedBox(height: 12),
 
-                  // HU-029: Solicitar abastecimiento a Almacén.
-                  _buildModuleTile(
-                    icon: Icons.add_shopping_cart_rounded,
-                    title: 'Solicitar Abastecimiento a Almacén',
-                    subtitle:
-                        'Crear solicitud de reposición por faltantes de guardia o stock crítico.',
-                    color: AppColors.primary,
-                    onTap: _abrirCrearSolicitud,
-                  ),
-                  const SizedBox(height: 10),
-
-                  // MIS SOLICITUDES Y RECEPCIÓN FÍSICA
-                  _buildModuleTile(
-                    icon: Icons.fact_check_outlined,
-                    title: 'Mis reportes e historial',
-                    subtitle:
-                        'Sigue diferencias, revisa propuestas y consulta sus justificaciones.',
-                    color: AppColors.primary,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const DiferenciasAbastecimientoView(
-                          esFarmacia: true,
+                  CuadriculaPanel(
+                    children: [
+                      BotonModulo(
+                        nombre: 'Solicitar abastecimiento',
+                        icono: Icons.add_shopping_cart_rounded,
+                        onTap: _abrirCrearSolicitud,
+                      ),
+                      BotonModulo(
+                        nombre: 'Solicitudes y recepción',
+                        icono: Icons.download_done_rounded,
+                        onTap: _abrirMisSolicitudes,
+                      ),
+                      BotonModulo(
+                        nombre: 'Atender pedidos de áreas',
+                        icono: Icons.fact_check_rounded,
+                        onTap: () => _abrirAtencionFichas(),
+                      ),
+                      BotonModulo(
+                        nombre: 'Consultar existencias',
+                        icono: Icons.warehouse_outlined,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const StockUbicacionesView(
+                              puedeSolicitar: true,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildModuleTile(
-                    icon: Icons.download_done_rounded,
-                    title: 'Mis Solicitudes y Recepción de Mercadería',
-                    subtitle:
-                        'Monitorear estado de pedidos y confirmar recepción de lotes despachados.',
-                    color: AppColors.secondary,
-                    onTap: _abrirMisSolicitudes,
-                  ),
-                  const SizedBox(height: 10),
-
-                  _buildModuleTile(
-                    icon: Icons.inventory_rounded,
-                    title: 'Atender Fichas de Pedido de Pisos (HU-006 a HU-011)',
-                    subtitle:
-                        'Preparar fichas Generales y de Neonatología, registrar despacho parcial, confirmar entrega FEFO y anular con motivo.',
-                    color: AppColors.warning,
-                    onTap: () => _abrirAtencionFichas(),
-                  ),
-                  const SizedBox(height: 10),
-
-                  _buildModuleTile(
-                    icon: Icons.search_rounded,
-                    title: 'Stock de Farmacia y Almacén',
-                    subtitle:
-                        'Consulta disponibilidad por ubicación y lo que aún está en tránsito.',
-                    color: AppColors.primary,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            const StockUbicacionesView(puedeSolicitar: true),
+                      BotonModulo(
+                        nombre: 'Consultar kits por área',
+                        icono: Icons.medical_services_outlined,
+                        onTap: () => context.push('/kits'),
                       ),
-                    ),
+                      BotonModulo(
+                        nombre: 'Reportes y diferencias',
+                        icono: Icons.rule_folder_outlined,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const DiferenciasAbastecimientoView(
+                              esFarmacia: true,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 40),
@@ -532,72 +467,6 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildModuleTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.surfaceVariant),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 24),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16,
-                color: AppColors.textSecondary,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

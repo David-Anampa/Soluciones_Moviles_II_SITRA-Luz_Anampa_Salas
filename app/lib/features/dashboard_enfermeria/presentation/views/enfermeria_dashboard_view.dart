@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
+import '../../../../core/widgets/menu_modulos.dart';
 import '../../../../core/widgets/sitra_app_bar.dart';
 import '../../../almacen/presentation/views/stock_ubicaciones_view.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
@@ -51,26 +52,26 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
         if (ctx.areas.isNotEmpty) {
           _nombreAreaReal = ctx.areas.first.nombre as String;
         }
-        _itemsDisponiblesFarmacia =
-            stock.where((m) => (m.farmaciaDisponible as int) > 0).length;
+        _itemsDisponiblesFarmacia = stock
+            .where((m) => (m.farmaciaDisponible as int) > 0)
+            .length;
         _fichasEnProceso = fichas
             .where(
-              (f) =>
-                  f.estado == 'SOLICITADO' || f.estado == 'EN_PREPARACION',
+              (f) => f.estado == 'SOLICITADO' || f.estado == 'EN_PREPARACION',
             )
             .length;
-        _fichasListasRecojo =
-            fichas.where((f) => f.estado == 'LISTO_PARA_RECOJO').length;
-        _fichasEntregadas =
-            fichas.where((f) => f.estado == 'ENTREGADO').length;
+        _fichasListasRecojo = fichas
+            .where((f) => f.estado == 'LISTO_PARA_RECOJO')
+            .length;
+        _fichasEntregadas = fichas.where((f) => f.estado == 'ENTREGADO').length;
       });
     } catch (_) {}
   }
 
   Future<void> _abrirNuevaFicha() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const RegistroFichaView()),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const RegistroFichaView()));
     if (mounted) {
       await _cargarMetricasReales();
     }
@@ -90,7 +91,8 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthViewModel>().currentUser;
-    final areaAsignada = _nombreAreaReal ??
+    final areaAsignada =
+        _nombreAreaReal ??
         ((user?.areasAsignadas.isNotEmpty ?? false)
             ? user!.areasAsignadas.first
             : 'Servicio Clínico');
@@ -115,43 +117,6 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AccionesAdaptables(
-                    anchoMinimo: 220,
-                    acciones: [
-                      FilledButton.icon(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.enfermeriaColor,
-                          minimumSize: const Size(48, 48),
-                        ),
-                        icon: const Icon(Icons.assignment_add),
-                        label: const Text(
-                          'Registrar ficha de pedido (General / Neonatología)',
-                        ),
-                        onPressed: _abrirNuevaFicha,
-                      ),
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF0F4C81),
-                          minimumSize: const Size(48, 48),
-                        ),
-                        icon: const Icon(Icons.assignment_turned_in_outlined),
-                        label: const Text(
-                          'Mis fichas, estado y recojo (HU-006)',
-                        ),
-                        onPressed: () => _abrirListadoFichas(),
-                      ),
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFFC62828),
-                          minimumSize: const Size(48, 48),
-                        ),
-                        icon: const Icon(Icons.medical_services_outlined),
-                        label: const Text('Kits de mi área'),
-                        onPressed: () => context.push('/kits'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
                   // Banner de Enfermería
                   Container(
                     width: double.infinity,
@@ -165,7 +130,9 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.enfermeriaColor.withValues(alpha: 0.3),
+                          color: AppColors.enfermeriaColor.withValues(
+                            alpha: 0.3,
+                          ),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         ),
@@ -266,9 +233,9 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
                   ),
                   const SizedBox(height: 12),
 
-                  AccionesAdaptables(
-                    anchoMinimo: 150,
-                    acciones: [
+                  CuadriculaPanel(
+                    esResumen: true,
+                    children: [
                       _buildMetricCard(
                         title: 'En Farmacia',
                         value: '$_itemsDisponiblesFarmacia',
@@ -286,9 +253,9 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  AccionesAdaptables(
-                    anchoMinimo: 150,
-                    acciones: [
+                  CuadriculaPanel(
+                    esResumen: true,
+                    children: [
                       _buildMetricCard(
                         title: 'Listas para recojo',
                         value: '$_fichasListasRecojo',
@@ -308,35 +275,9 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
 
                   const SizedBox(height: 24),
 
-                  // Botón de acción rápida: Solicitud urgente
-                  FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.enfermeriaColor,
-                      minimumSize: const Size(double.infinity, 52),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    icon: const Icon(
-                      Icons.emergency_rounded,
-                      color: Colors.white,
-                    ),
-                    label: const Text(
-                      'NUEVO PEDIDO DE MEDICAMENTOS E INSUMOS A FARMACIA',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    onPressed: _abrirNuevaFicha,
-                  ),
-
-                  const SizedBox(height: 24),
-
                   // Módulos operativos reales
                   const Text(
-                    'Operaciones del Servicio Clínico',
+                    'Operaciones del área',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -345,37 +286,35 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
                   ),
                   const SizedBox(height: 12),
 
-                  _buildModuleTile(
-                    icon: Icons.assignment_add,
-                    title: 'Registrar Ficha de Pedido (General / Neonatología)',
-                    subtitle:
-                        'HU-003 / HU-004 / HU-005: Paciente, área, médico, financiamiento, receptor, stock en tiempo real y aplicación de kits.',
-                    color: AppColors.enfermeriaColor,
-                    onTap: _abrirNuevaFicha,
-                  ),
-                  const SizedBox(height: 10),
-                  _buildModuleTile(
-                    icon: Icons.fact_check_rounded,
-                    title:
-                        'Seguimiento de Fichas, Confirmación de Recojo y Anulación',
-                    subtitle:
-                        'HU-006 / HU-007 / HU-010 / HU-011: Consultar estado de preparación en Farmacia, confirmar recepción por lote FEFO o anular con motivo.',
-                    color: AppColors.primary,
-                    onTap: () => _abrirListadoFichas(),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildModuleTile(
-                    icon: Icons.medication_liquid_rounded,
-                    title: 'Consultar Stock de Farmacia y Almacén (HU-023)',
-                    subtitle:
-                        'Verificación en tiempo real de medicamentos, dispositivos médicos y lotes vigentes.',
-                    color: AppColors.secondary,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            const StockUbicacionesView(puedeSolicitar: false),
+                  CuadriculaPanel(
+                    children: [
+                      BotonModulo(
+                        nombre: 'Registrar pedido',
+                        icono: Icons.assignment_add,
+                        onTap: _abrirNuevaFicha,
                       ),
-                    ),
+                      BotonModulo(
+                        nombre: 'Consultar y recibir pedidos',
+                        icono: Icons.fact_check_rounded,
+                        onTap: () => _abrirListadoFichas(),
+                      ),
+                      BotonModulo(
+                        nombre: 'Gestionar kits del área',
+                        icono: Icons.medical_services_outlined,
+                        onTap: () => context.push('/kits'),
+                      ),
+                      BotonModulo(
+                        nombre: 'Consultar existencias',
+                        icono: Icons.warehouse_outlined,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const StockUbicacionesView(
+                              puedeSolicitar: false,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 24),
@@ -446,72 +385,6 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildModuleTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.surfaceVariant),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 24),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16,
-                color: AppColors.textSecondary,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

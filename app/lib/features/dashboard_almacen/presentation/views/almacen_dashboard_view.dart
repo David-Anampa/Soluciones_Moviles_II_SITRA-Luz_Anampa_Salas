@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'gestion_inventario_almacen_view.dart';
-import '../widgets/acciones_rapidas_almacen.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
+import '../../../../core/widgets/menu_modulos.dart';
 import '../../../almacen/presentation/views/diferencias_abastecimiento_view.dart';
 import '../../../almacen/presentation/views/ingresos_correcciones_view.dart';
 import 'package:provider/provider.dart';
@@ -51,117 +51,10 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
     ).push(MaterialPageRoute(builder: (_) => const RegistroMedicamentoView()));
   }
 
-  void _mostrarOpcionesRegistro() {
-    showModalBottomSheet(
-      isScrollControlled: true,
-      useSafeArea: true,
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return HojaAdaptable(
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Recepción e Ingreso de Medicamento',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Elige el método de captura para registrar el medicamento:',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.almacenColor.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.qr_code_scanner_rounded,
-                      color: AppColors.almacenColor,
-                    ),
-                  ),
-                  title: const Text(
-                    'Escanear con Cámara (ML Kit + IA)',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: const Text(
-                    'Lectura instantánea de GTIN + foto opcional de caja para extracción asistida',
-                  ),
-                  trailing: const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                  ),
-                  onTap: () {
-                    Navigator.of(ctx).pop();
-                    _abrirEscanerCamara();
-                  },
-                ),
-                const Divider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceVariant,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.edit_note_rounded,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  title: const Text(
-                    'Ingreso Manual',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: const Text(
-                    'Completar formulario técnico de medicamento y lote paso a paso',
-                  ),
-                  trailing: const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                  ),
-                  onTap: () {
-                    Navigator.of(ctx).pop();
-                    _abrirRegistroMedicamento();
-                  },
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   void _abrirIngresoLote(AlmacenLoaded loaded) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => IngresoLoteView(catalogo: loaded.catalogo),
-      ),
-    );
-  }
-
-  /// El traslado se atiende desde su solicitud y conserva el ciclo de recepción.
-  void _abrirAbastecimiento() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            const SolicitudesAbastecimientoView(esModoFarmacia: false),
       ),
     );
   }
@@ -196,46 +89,6 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
         alto: DisenoAdaptable.altoCabecera(context),
         title: 'Almacén General',
         subtitle: 'Recepción, Lotes y Cadena de Frío',
-        actions: [
-          IconButton(
-            tooltip: 'Solicitudes de Farmacia',
-            icon: Badge(
-              isLabelVisible:
-                  state is AlmacenLoaded && state.solicitudesPendientes > 0,
-              label: Text(
-                '${state is AlmacenLoaded ? state.solicitudesPendientes : 0}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 10,
-                ),
-              ),
-              backgroundColor: AppColors.error,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceVariant,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.assignment_rounded,
-                  size: 18,
-                  color: AppColors.almacenColor,
-                ),
-              ),
-            ),
-            onPressed: _abrirSolicitudesAbastecimiento,
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.almacenColor,
-        foregroundColor: Colors.white,
-        onPressed: _mostrarOpcionesRegistro,
-        icon: const Icon(Icons.qr_code_scanner_rounded),
-        label: const Text(
-          'Ingresar Medicamento',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
       ),
       body: ContenidoAdaptable(
         anchoMaximo: 1100,
@@ -418,9 +271,9 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                   const SizedBox(height: 12),
 
                   if (state is AlmacenLoaded) ...[
-                    AccionesAdaptables(
-                      anchoMinimo: 150,
-                      acciones: [
+                    CuadriculaPanel(
+                      esResumen: true,
+                      children: [
                         _buildMetricCard(
                           title: 'Total Unidades',
                           value: '${state.totalUnidades}',
@@ -438,9 +291,9 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    AccionesAdaptables(
-                      anchoMinimo: 150,
-                      acciones: [
+                    CuadriculaPanel(
+                      esResumen: true,
+                      children: [
                         _buildMetricCard(
                           title: 'Alertas FEFO',
                           value: '${state.lotesCriticos}',
@@ -476,7 +329,7 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
 
                   // 3. ACCIONES RÁPIDAS
                   const Text(
-                    'Acciones Rápidas',
+                    'Operaciones de Almacén',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -485,47 +338,42 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                   ),
                   const SizedBox(height: 12),
 
-                  AccionesRapidasAlmacen(
-                    acciones: [
-                      AccionRapidaAlmacen(
-                        titulo: 'Nuevo medicamento',
-                        descripcion: 'Registrar un producto y su primer lote.',
+                  CuadriculaPanel(
+                    children: [
+                      BotonModulo(
+                        nombre: 'Registrar medicamento',
                         icono: Icons.medication_outlined,
                         onTap: _abrirRegistroMedicamento,
                       ),
-                      AccionRapidaAlmacen(
-                        titulo: 'Ingresar lote',
-                        descripcion:
-                            'Añadir existencias de un producto registrado.',
+                      BotonModulo(
+                        nombre: 'Escanear medicamento',
+                        icono: Icons.qr_code_scanner_rounded,
+                        onTap: _abrirEscanerCamara,
+                      ),
+                      BotonModulo(
+                        nombre: 'Ingresar lote',
                         icono: Icons.playlist_add_rounded,
                         onTap: state is AlmacenLoaded
                             ? () => _abrirIngresoLote(state)
                             : null,
                       ),
-                      AccionRapidaAlmacen(
-                        titulo: 'Despachar pedidos',
-                        descripcion: 'Atender las solicitudes de Farmacia.',
+                      BotonModulo(
+                        nombre: 'Atender solicitudes de Farmacia',
                         icono: Icons.inventory_2_outlined,
-                        onTap: state is AlmacenLoaded
-                            ? _abrirAbastecimiento
-                            : null,
+                        onTap: _abrirSolicitudesAbastecimiento,
                       ),
-                      AccionRapidaAlmacen(
-                        titulo: 'Enviar a Farmacia',
-                        descripcion: 'Iniciar un envío desde Almacén.',
+                      BotonModulo(
+                        nombre: 'Enviar a Farmacia',
                         icono: Icons.local_shipping_outlined,
                         onTap: _abrirEnvioFarmacia,
                       ),
-                      AccionRapidaAlmacen(
-                        titulo: 'Stock por ubicación',
-                        descripcion: 'Consultar Almacén y Farmacia.',
+                      BotonModulo(
+                        nombre: 'Consultar existencias',
                         icono: Icons.warehouse_outlined,
                         onTap: _abrirStockUbicaciones,
                       ),
-                      AccionRapidaAlmacen(
-                        titulo: 'Ingresos y correcciones',
-                        descripcion:
-                            'Revisar entradas y registrar correcciones.',
+                      BotonModulo(
+                        nombre: 'Ingresos y correcciones',
                         icono: Icons.receipt_long_outlined,
                         onTap: () async {
                           final vm = context.read<AlmacenViewModel>();
@@ -537,9 +385,8 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                           if (mounted) await vm.cargarInventario();
                         },
                       ),
-                      AccionRapidaAlmacen(
-                        titulo: 'Diferencias e historial',
-                        descripcion: 'Revisar discrepancias de abastecimiento.',
+                      BotonModulo(
+                        nombre: 'Resolver diferencias',
                         icono: Icons.fact_check_outlined,
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -548,10 +395,8 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                           ),
                         ),
                       ),
-                      AccionRapidaAlmacen(
-                        titulo: 'Gestión de inventario',
-                        descripcion:
-                            'Consultar lotes, buscar, filtrar y editar productos.',
+                      BotonModulo(
+                        nombre: 'Gestionar inventario',
                         icono: Icons.inventory_outlined,
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -563,9 +408,6 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  const SizedBox(
-                    height: 60,
-                  ), // Espacio para el botón de registro
                 ],
               ),
             ),
