@@ -105,12 +105,33 @@ descargarla fuera del repositorio e indicar solo su ruta. No pedir que publique 
 contenido. Verificar su project_id y guardar la credencial únicamente como secreto
 de Supabase para el remitente FCM HTTP v1. El JSON Android no sustituye esa clave.
 
-El usuario eligió continuar con la credencial de servidor después: no volver a
-pedírsela sin retomar esa etapa. Verificaciones del SDK: `flutter analyze --no-pub`
+El usuario pausó inicialmente la credencial de servidor y posteriormente retomó
+esa etapa y proporcionó el JSON de cuenta de servicio. Verificaciones del SDK: `flutter analyze --no-pub`
 sin observaciones y `flutter build apk --debug --no-pub` correcto con el plugin
 habilitado y el JSON instalado. No se enviaron notificaciones de prueba ni se
 activó el flujo incompleto. Para cargar cambios nativos, detener la ejecución
 actual y usar `flutter run -d emulator-5556 --no-pub --no-dds` desde `app`.
+
+## Credencial del servidor preparada — 23/11/2026
+
+Validada la cuenta de servicio proporcionada para el proyecto `sitra-luz`.
+Guardados en los secretos de Edge Functions de Supabase `nedeqnvpkalrchswrapr`:
+
+- `FIREBASE_SERVICE_ACCOUNT_JSON`: cuenta de servicio completa, solo en servidor.
+- `FIREBASE_PROJECT_ID`: `sitra-luz`.
+
+Guardado verificado comparando SHA-256 en memoria con las huellas remotas, sin
+publicar valores ni claves. La CLI actual llama `value` al campo de huella de
+`secrets list`; no confundirlo con la credencial descifrada. Archivo original
+preservado en Descargas fuera del repositorio; archivo `.env` de carga temporal
+eliminado. `.gitignore` también excluye archivos `*-firebase-adminsdk-*.json` y
+`serviceAccountKey.json` para impedir su inclusión accidental.
+
+No se ha enviado ningún push ni desplegado aún un remitente FCM. No hay prueba de
+entrega ni de permisos efectivos de envío. El siguiente trabajo es implementar
+remitente HTTP v1 con estos secretos, registro seguro de dispositivos, eventos e
+historial con RLS, bandeja y navegación con login. `enablePushNotifications`
+continúa en false hasta completar ese flujo. No pedir de nuevo la credencial.
 
 Fuentes: [FCM](https://firebase.google.com/products/cloud-messaging),
 [precios](https://firebase.google.com/pricing),

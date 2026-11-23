@@ -6,6 +6,8 @@
 .env
 .env.*
 google-services.json
+*-firebase-adminsdk-*.json
+serviceAccountKey.json
 GoogleService-Info.plist
 secrets.properties
 local.properties
