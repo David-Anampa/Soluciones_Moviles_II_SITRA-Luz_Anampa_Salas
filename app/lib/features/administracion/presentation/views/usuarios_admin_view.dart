@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/widgets/mensajes_app.dart';
@@ -26,6 +28,9 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
   String _estado = 'TODOS', _rol = 'TODOS', _area = 'TODAS', _orden = 'NOMBRE';
   String? _error;
   int _revision = 0;
+  String? _aviso;
+  bool _avisoError = false;
+  Timer? _temporizadorAviso;
 
   /// Id del usuario cuyo cambio de estado está en curso; bloquea pulsaciones repetidas.
   String? _cambiandoEstadoId;
@@ -40,6 +45,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
   /// Libera el controlador del buscador al abandonar la vista.
   @override
   void dispose() {
+    _temporizadorAviso?.cancel();
     _buscador.dispose();
     super.dispose();
   }
@@ -178,11 +184,17 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
   );
 
   /// Muestra resultados con icono semántico, independientemente del tema visual.
-  void _mensaje(String texto, {bool error = false}) => MensajesApp.mostrar(
-    context,
-    texto,
-    tipo: error ? TipoMensaje.error : TipoMensaje.exito,
-  );
+  void _mensaje(String texto, {bool error = false}) {
+    if (!mounted) return;
+    _temporizadorAviso?.cancel();
+    setState(() {
+      _aviso = texto;
+      _avisoError = error;
+    });
+    _temporizadorAviso = Timer(Duration(seconds: error ? 7 : 4), () {
+      if (mounted) setState(() => _aviso = null);
+    });
+  }
 
   /// Combina estado, rol, área y todas las palabras del buscador, y ordena el resultado.
   /// Todo se realiza en memoria: escribir o cambiar filtros no envía consultas nuevas.
@@ -260,208 +272,259 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
             ),
           ),
         ),
-        body: ContenidoAdaptable(
-          anchoMaximo: 1100,
-          padding: EdgeInsets.zero,
-          child: SafeArea(
-            child: _cargando
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: CatalogoEstilo.rojo,
-                    ),
-                  )
-                : _error != null
-                ? _pantallaError()
-                : RefreshIndicator(
-                    color: CatalogoEstilo.rojo,
-                    onRefresh: _cargar,
-                    child: CustomScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      slivers: [
-                        SliverToBoxAdapter(
-                          child: _centrado(
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Equipo y accesos',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700,
-                                      color: CatalogoEstilo.texto,
-                                    ),
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            ContenidoAdaptable(
+              anchoMaximo: 1100,
+              padding: EdgeInsets.zero,
+              child: SafeArea(
+                child: _cargando
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: CatalogoEstilo.rojo,
+                        ),
+                      )
+                    : _error != null
+                    ? _pantallaError()
+                    : RefreshIndicator(
+                        color: CatalogoEstilo.rojo,
+                        onRefresh: _cargar,
+                        child: CustomScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          slivers: [
+                            SliverToBoxAdapter(
+                              child: _centrado(
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    20,
+                                    16,
+                                    0,
                                   ),
-                                  const SizedBox(height: 6),
-                                  const Text(
-                                    'Consulta al personal, sus roles y áreas asignadas.',
-                                    style: TextStyle(fontSize: 13, height: 1.5),
-                                  ),
-                                  const SizedBox(height: 18),
-                                  IntrinsicHeight(
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        Expanded(
-                                          child: _contador(
-                                            'Todos',
-                                            _usuarios.length,
-                                            'TODOS',
-                                            Icons.groups_outlined,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: _contador(
-                                            'Habilitados',
-                                            _usuarios
-                                                .where((u) => u.activo)
-                                                .length,
-                                            'ACTIVOS',
-                                            Icons.person_outline_rounded,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: _contador(
-                                            'Deshabilitados',
-                                            _usuarios
-                                                .where((u) => !u.activo)
-                                                .length,
-                                            'INACTIVOS',
-                                            Icons.person_off_outlined,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 18),
-                                  TextField(
-                                    controller: _buscador,
-                                    onChanged: (_) => setState(() {}),
-                                    decoration: InputDecoration(
-                                      hintText:
-                                          'Buscar nombre, usuario o correo',
-                                      prefixIcon: const Icon(
-                                        Icons.search_rounded,
-                                      ),
-                                      suffixIcon: _buscador.text.isEmpty
-                                          ? null
-                                          : IconButton(
-                                              tooltip: 'Limpiar búsqueda',
-                                              onPressed: () => setState(
-                                                () => _buscador.clear(),
-                                              ),
-                                              icon: const Icon(
-                                                Icons.close_rounded,
-                                              ),
-                                            ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
+                                  child: Column(
                                     crossAxisAlignment:
-                                        WrapCrossAlignment.center,
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        '${lista.length} de ${_usuarios.length} usuarios',
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
+                                      const Text(
+                                        'Equipo y accesos',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w700,
+                                          color: CatalogoEstilo.texto,
                                         ),
                                       ),
-                                      if (_numeroFiltros > 0 ||
-                                          _buscador.text.isNotEmpty)
-                                        TextButton(
-                                          onPressed: _limpiar,
-                                          child: const Text('Limpiar'),
+                                      const SizedBox(height: 6),
+                                      const Text(
+                                        'Consulta al personal, sus roles y áreas asignadas.',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          height: 1.5,
                                         ),
-                                      Tooltip(
-                                        message: _filtrosAbiertos
-                                            ? 'Ocultar filtros'
-                                            : 'Filtrar por rol, área y orden',
-                                        child: OutlinedButton.icon(
-                                          onPressed: () => setState(
-                                            () => _filtrosAbiertos =
-                                                !_filtrosAbiertos,
-                                          ),
-                                          style: OutlinedButton.styleFrom(
-                                            foregroundColor:
-                                                CatalogoEstilo.rojo,
-                                            side: const BorderSide(
-                                              color: Color(0xFFEBCBCB),
+                                      ),
+                                      const SizedBox(height: 18),
+                                      IntrinsicHeight(
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            Expanded(
+                                              child: _contador(
+                                                'Todos',
+                                                _usuarios.length,
+                                                'TODOS',
+                                                Icons.groups_outlined,
+                                              ),
                                             ),
-                                            minimumSize: const Size(44, 48),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: _contador(
+                                                'Habilitados',
+                                                _usuarios
+                                                    .where((u) => u.activo)
+                                                    .length,
+                                                'ACTIVOS',
+                                                Icons.person_outline_rounded,
+                                              ),
                                             ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: _contador(
+                                                'Deshabilitados',
+                                                _usuarios
+                                                    .where((u) => !u.activo)
+                                                    .length,
+                                                'INACTIVOS',
+                                                Icons.person_off_outlined,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 18),
+                                      TextField(
+                                        controller: _buscador,
+                                        onChanged: (_) => setState(() {}),
+                                        decoration: InputDecoration(
+                                          hintText:
+                                              'Buscar nombre, usuario o correo',
+                                          prefixIcon: const Icon(
+                                            Icons.search_rounded,
                                           ),
-                                          icon: Icon(
-                                            _filtrosAbiertos
-                                                ? Icons.expand_less_rounded
-                                                : Icons.tune_rounded,
-                                            size: 19,
-                                          ),
-                                          label: Text(
-                                            _numeroFiltros > 0
-                                                ? 'Filtros ($_numeroFiltros)'
-                                                : 'Filtros',
+                                          suffixIcon: _buscador.text.isEmpty
+                                              ? null
+                                              : IconButton(
+                                                  tooltip: 'Limpiar búsqueda',
+                                                  onPressed: () => setState(
+                                                    () => _buscador.clear(),
+                                                  ),
+                                                  icon: const Icon(
+                                                    Icons.close_rounded,
+                                                  ),
+                                                ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Wrap(
+                                        spacing: 8,
+                                        runSpacing: 8,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        children: [
+                                          Text(
+                                            '${lista.length} de ${_usuarios.length} usuarios',
                                             style: const TextStyle(
                                               fontSize: 13,
+                                              fontWeight: FontWeight.w600,
                                             ),
                                           ),
-                                        ),
+                                          if (_numeroFiltros > 0 ||
+                                              _buscador.text.isNotEmpty)
+                                            TextButton(
+                                              onPressed: _limpiar,
+                                              child: const Text('Limpiar'),
+                                            ),
+                                          Tooltip(
+                                            message: _filtrosAbiertos
+                                                ? 'Ocultar filtros'
+                                                : 'Filtrar por rol, área y orden',
+                                            child: OutlinedButton.icon(
+                                              onPressed: () => setState(
+                                                () => _filtrosAbiertos =
+                                                    !_filtrosAbiertos,
+                                              ),
+                                              style: OutlinedButton.styleFrom(
+                                                foregroundColor:
+                                                    CatalogoEstilo.rojo,
+                                                side: const BorderSide(
+                                                  color: Color(0xFFEBCBCB),
+                                                ),
+                                                minimumSize: const Size(44, 48),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                              ),
+                                              icon: Icon(
+                                                _filtrosAbiertos
+                                                    ? Icons.expand_less_rounded
+                                                    : Icons.tune_rounded,
+                                                size: 19,
+                                              ),
+                                              label: Text(
+                                                _numeroFiltros > 0
+                                                    ? 'Filtros ($_numeroFiltros)'
+                                                    : 'Filtros',
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
+                                      AnimatedSize(
+                                        duration: const Duration(
+                                          milliseconds: 200,
+                                        ),
+                                        alignment: Alignment.topCenter,
+                                        child: _filtrosAbiertos
+                                            ? _panelFiltros()
+                                            : const SizedBox.shrink(),
+                                      ),
+                                      if (_estructuraPendiente) ...[
+                                        const SizedBox(height: 12),
+                                        CatalogoEstilo.nota(
+                                          'Los perfiles actuales están disponibles. Aplica la actualización de estructura de usuarios para disponer de usuario, nombres y apellidos separados.',
+                                        ),
+                                      ],
+                                      const SizedBox(height: 16),
+                                      if (lista.isEmpty) _sinResultados(),
                                     ],
                                   ),
-                                  AnimatedSize(
-                                    duration: const Duration(milliseconds: 200),
-                                    alignment: Alignment.topCenter,
-                                    child: _filtrosAbiertos
-                                        ? _panelFiltros()
-                                        : const SizedBox.shrink(),
-                                  ),
-                                  if (_estructuraPendiente) ...[
-                                    const SizedBox(height: 12),
-                                    CatalogoEstilo.nota(
-                                      'Los perfiles actuales están disponibles. Aplica la actualización de estructura de usuarios para disponer de usuario, nombres y apellidos separados.',
-                                    ),
-                                  ],
-                                  const SizedBox(height: 16),
-                                  if (lista.isEmpty) _sinResultados(),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) => _centrado(
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  0,
-                                  16,
-                                  14,
                                 ),
-                                child: _tarjeta(lista[index]),
                               ),
                             ),
-                            childCount: lista.length,
-                          ),
+                            SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) => _centrado(
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      16,
+                                      0,
+                                      16,
+                                      14,
+                                    ),
+                                    child: _tarjeta(lista[index]),
+                                  ),
+                                ),
+                                childCount: lista.length,
+                              ),
+                            ),
+                            const SliverToBoxAdapter(
+                              child: SizedBox(height: 90),
+                            ),
+                          ],
                         ),
-                        const SliverToBoxAdapter(child: SizedBox(height: 90)),
-                      ],
-                    ),
+                      ),
+              ),
+            ),
+            Positioned(
+              left: 16,
+              right:
+                  88, // Botón de 56 px, margen de 16 px y separación de 16 px.
+              bottom: MediaQuery.paddingOf(context).bottom + 16,
+              child: IgnorePointer(
+                child: Align(
+                  alignment: Alignment.bottomLeft,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    child: _aviso == null
+                        ? const SizedBox.shrink()
+                        : ConstrainedBox(
+                            key: ValueKey((_aviso, _avisoError)),
+                            constraints: const BoxConstraints(maxWidth: 420),
+                            child: Semantics(
+                              liveRegion: true,
+                              child: Material(
+                                elevation: 4,
+                                borderRadius: BorderRadius.circular(12),
+                                child: MensajesApp.nota(
+                                  _aviso!,
+                                  tipo: _avisoError
+                                      ? TipoMensaje.error
+                                      : TipoMensaje.exito,
+                                ),
+                              ),
+                            ),
+                          ),
                   ),
-          ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
