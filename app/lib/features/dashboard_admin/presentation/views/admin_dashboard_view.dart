@@ -186,7 +186,7 @@ class _ModuleCard extends StatelessWidget {
                   ),
                   child: Icon(
                     module.icon,
-                    size: 32,
+                    size: 40,
                     color: AdminDashboardView._red,
                   ),
                 ),
@@ -195,7 +195,7 @@ class _ModuleCard extends StatelessWidget {
                   module.name,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 14.45,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
