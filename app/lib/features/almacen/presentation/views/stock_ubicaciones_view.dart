@@ -1,3 +1,4 @@
+import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../data/repositories/stock_ubicaciones_repository.dart';
@@ -96,7 +97,7 @@ class _StockUbicacionesViewState extends State<StockUbicacionesView> {
             base: kToolbarHeight,
           ),
           title: const Text(
-            'Stock por ubicación',
+            'Consultar existencias',
             style: TextStyle(fontSize: 18),
           ),
         ),
@@ -105,17 +106,18 @@ class _StockUbicacionesViewState extends State<StockUbicacionesView> {
           padding: EdgeInsets.zero,
           child: SafeArea(
             child: _cargando
-                ? const Center(
-                    child: CircularProgressIndicator(color: stockRojo),
-                  )
+                ? const Center(child: CircularProgressIndicator())
                 : RefreshIndicator(
                     onRefresh: _cargar,
-                    color: stockRojo,
+                    color: TemaPedidos.colorRol(TemaPedidos.rolActual(context)),
                     child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.all(16),
                       children: [
                         StockSeccion(
+                          color: TemaPedidos.colorRol(
+                            TemaPedidos.rolActual(context),
+                          ),
                           titulo: 'Disponibilidad real',
                           icono: Icons.inventory_2_outlined,
                           children: [
@@ -126,11 +128,13 @@ class _StockUbicacionesViewState extends State<StockUbicacionesView> {
                             TextField(
                               controller: _buscar,
                               onChanged: (_) => setState(() {}),
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: 'Buscar producto o código',
                                 prefixIcon: Icon(
                                   Icons.search_rounded,
-                                  color: stockRojo,
+                                  color: TemaPedidos.colorRol(
+                                    TemaPedidos.rolActual(context),
+                                  ),
                                 ),
                               ),
                             ),
@@ -156,6 +160,9 @@ class _StockUbicacionesViewState extends State<StockUbicacionesView> {
                         ),
                         if (_error != null)
                           StockSeccion(
+                            color: TemaPedidos.colorRol(
+                              TemaPedidos.rolActual(context),
+                            ),
                             titulo: 'Consulta no disponible',
                             icono: Icons.error_outline,
                             children: [
@@ -175,6 +182,9 @@ class _StockUbicacionesViewState extends State<StockUbicacionesView> {
                         if (_error == null)
                           for (final p in visibles)
                             StockSeccion(
+                              color: TemaPedidos.colorRol(
+                                TemaPedidos.rolActual(context),
+                              ),
                               titulo: p.nombre,
                               icono: Icons.medication_outlined,
                               children: [
@@ -184,7 +194,12 @@ class _StockUbicacionesViewState extends State<StockUbicacionesView> {
                                     color: Color(0xFF64646D),
                                   ),
                                 ),
-                                StockContadores(item: p),
+                                StockContadores(
+                                  item: p,
+                                  color: TemaPedidos.colorRol(
+                                    TemaPedidos.rolActual(context),
+                                  ),
+                                ),
                                 OutlinedButton.icon(
                                   onPressed: () => Navigator.of(context).push(
                                     MaterialPageRoute(

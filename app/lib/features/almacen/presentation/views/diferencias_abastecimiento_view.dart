@@ -1,3 +1,4 @@
+import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:flutter/services.dart';
@@ -85,9 +86,7 @@ class _DiferenciasState extends State<DiferenciasAbastecimientoView> {
             context,
             base: kToolbarHeight,
           ),
-          title: Text(
-            widget.esFarmacia ? 'Mis reportes' : 'Diferencias e historial',
-          ),
+          title: Text('Reportes y diferencias'),
           actions: [
             IconButton(
               onPressed: _cargando ? null : _cargar,
@@ -108,6 +107,9 @@ class _DiferenciasState extends State<DiferenciasAbastecimientoView> {
                       padding: const EdgeInsets.all(16),
                       children: [
                         StockSeccion(
+                          color: TemaPedidos.colorRol(
+                            TemaPedidos.rolActual(context),
+                          ),
                           titulo: 'Cada diferencia tiene seguimiento',
                           icono: Icons.fact_check_outlined,
                           children: [
@@ -145,20 +147,28 @@ class _DiferenciasState extends State<DiferenciasAbastecimientoView> {
                         ),
                         if (_error != null) _aviso(_error!),
                         if (lista.isEmpty && _error == null)
-                          const StockSeccion(
+                          StockSeccion(
+                            color: TemaPedidos.colorRol(
+                              TemaPedidos.rolActual(context),
+                            ),
                             titulo: 'Todo al día',
                             icono: Icons.task_alt_rounded,
                             children: [Text('No hay reportes en esta vista.')],
                           ),
                         for (final r in lista)
                           StockSeccion(
+                            color: TemaPedidos.colorRol(
+                              TemaPedidos.rolActual(context),
+                            ),
                             titulo: r['codigo'] as String,
                             icono: Icons.assignment_outlined,
                             children: [
                               Text(
                                 _estado(r['estado']),
-                                style: const TextStyle(
-                                  color: stockRojo,
+                                style: TextStyle(
+                                  color: TemaPedidos.colorRol(
+                                    TemaPedidos.rolActual(context),
+                                  ),
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -280,6 +290,9 @@ class _DiferenciasState extends State<DiferenciasAbastecimientoView> {
                   padding: const EdgeInsets.all(16),
                   children: [
                     StockSeccion(
+                      color: TemaPedidos.colorRol(
+                        TemaPedidos.rolActual(context),
+                      ),
                       titulo: r['codigo'],
                       icono: Icons.receipt_long_outlined,
                       children: [
@@ -294,6 +307,9 @@ class _DiferenciasState extends State<DiferenciasAbastecimientoView> {
                     ),
                     for (final h in r['historial'])
                       StockSeccion(
+                        color: TemaPedidos.colorRol(
+                          TemaPedidos.rolActual(context),
+                        ),
                         titulo: _accion(h['accion']),
                         icono: Icons.history_rounded,
                         children: [
@@ -406,6 +422,7 @@ class _SolucionState extends State<_SolucionView> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   StockSeccion(
+                    color: TemaPedidos.colorRol(TemaPedidos.rolActual(context)),
                     titulo: r['codigo'],
                     icono: Icons.assignment_outlined,
                     children: [
@@ -467,6 +484,9 @@ class _SolucionState extends State<_SolucionView> {
                   if (_resolver || _confirmar)
                     for (final i in r['items'])
                       StockSeccion(
+                        color: TemaPedidos.colorRol(
+                          TemaPedidos.rolActual(context),
+                        ),
                         titulo: i['nombre'],
                         icono: Icons.medication_outlined,
                         children: [
@@ -499,6 +519,7 @@ class _SolucionState extends State<_SolucionView> {
                         ],
                       ),
                   StockSeccion(
+                    color: TemaPedidos.colorRol(TemaPedidos.rolActual(context)),
                     titulo: 'Justificación obligatoria',
                     icono: Icons.edit_note_rounded,
                     children: [
@@ -730,7 +751,9 @@ class _ComparacionCantidades extends StatelessWidget {
         ),
         children: [
           TableRow(
-            decoration: const BoxDecoration(color: stockRojo),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+            ),
             children: [
               for (final titulo in ['Ubicación', 'Antes', 'Después'])
                 Padding(
@@ -761,7 +784,11 @@ class _ComparacionCantidades extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(f.icono, color: stockRojo, size: 16),
+                      Icon(
+                        f.icono,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 16,
+                      ),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
@@ -878,6 +905,7 @@ class _ReporteState extends State<_ReporteView> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   StockSeccion(
+                    color: TemaPedidos.colorRol(TemaPedidos.rolActual(context)),
                     titulo: widget.pedido.codigo,
                     icono: Icons.fact_check_outlined,
                     children: const [
@@ -889,6 +917,9 @@ class _ReporteState extends State<_ReporteView> {
                   ),
                   for (final i in widget.pedido.items)
                     StockSeccion(
+                      color: TemaPedidos.colorRol(
+                        TemaPedidos.rolActual(context),
+                      ),
                       titulo: i.nombreMedicamento,
                       icono: Icons.medication_outlined,
                       children: [
@@ -918,6 +949,7 @@ class _ReporteState extends State<_ReporteView> {
                       ],
                     ),
                   StockSeccion(
+                    color: TemaPedidos.colorRol(TemaPedidos.rolActual(context)),
                     titulo: 'Describe la diferencia',
                     icono: Icons.edit_note_rounded,
                     children: [

@@ -300,7 +300,7 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                     children: [
                       BotonModulo(
                         color: AppColors.farmaciaColor,
-                        nombre: 'Solicitar abastecimiento',
+                        nombre: 'Solicitar a Almacén',
                         icono: Icons.add_shopping_cart_rounded,
                         onTap: _abrirCrearSolicitud,
                       ),

@@ -1,3 +1,4 @@
+import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:go_router/go_router.dart';
@@ -36,6 +37,17 @@ class _KitsAdminViewState extends State<KitsAdminView> {
 
   /// Resuelve el tema desde el área, conservando Administración en rojo sin selección.
   TemaArea _temaDeArea(String? codigo) {
+    final rol = TemaPedidos.rolActual(context);
+    if (rol == 'FARMACIA') {
+      return const TemaArea(
+        'TURQUESA',
+        'Farmacia',
+        Color(0xFF00796B),
+        Color(0xFFEAF7F5),
+      );
+    }
+    if (rol == 'ENFERMERIA') return TemaArea.opciones.first;
+
     for (final area in _areas) {
       if (area.codigo == codigo) return TemaArea.desde(area.temaColor);
     }
@@ -238,8 +250,10 @@ class _KitsAdminViewState extends State<KitsAdminView> {
               );
             },
           ),
-          title: const Text(
-            'Gestión de kits',
+          title: Text(
+            TemaPedidos.rolActual(context) == 'FARMACIA'
+                ? 'Consultar kits por área'
+                : 'Gestión de kits',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,

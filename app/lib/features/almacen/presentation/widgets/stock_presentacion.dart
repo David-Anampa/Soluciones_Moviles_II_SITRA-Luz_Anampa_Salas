@@ -1,3 +1,4 @@
+import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../domain/entities/stock_ubicacion_entity.dart';
@@ -6,61 +7,65 @@ const stockRojo = Color(0xFFC62828);
 const stockPastel = Color(0xFFFFF0F0);
 const stockFondo = Color(0xFFF5F5F5);
 
-ThemeData temaStock(BuildContext context) => Theme.of(context).copyWith(
-  colorScheme: Theme.of(context).colorScheme.copyWith(
-    primary: stockRojo,
-    secondary: stockRojo,
-    onPrimary: Colors.white,
-    surface: Colors.white,
-    surfaceTint: Colors.transparent,
-  ),
-  filledButtonTheme: FilledButtonThemeData(
-    style: FilledButton.styleFrom(
+ThemeData temaStock(BuildContext context) => TemaPedidos.aplicar(
+  context,
+  TemaPedidos.rolActual(context),
+  base: Theme.of(context).copyWith(
+    colorScheme: Theme.of(context).colorScheme.copyWith(
+      primary: stockRojo,
+      secondary: stockRojo,
+      onPrimary: Colors.white,
+      surface: Colors.white,
+      surfaceTint: Colors.transparent,
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: stockRojo,
+        foregroundColor: Colors.white,
+        minimumSize: const Size(0, 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(foregroundColor: stockRojo),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(foregroundColor: stockRojo),
+    ),
+    chipTheme: Theme.of(context).chipTheme.copyWith(
+      selectedColor: stockPastel,
+      backgroundColor: Colors.white,
+      checkmarkColor: stockRojo,
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      titleTextStyle: Theme.of(context).textTheme.titleLarge,
+      contentTextStyle: Theme.of(context).textTheme.bodyMedium,
+    ),
+    appBarTheme: AppBarTheme(
       backgroundColor: stockRojo,
       foregroundColor: Colors.white,
-      minimumSize: const Size(0, 48),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      iconTheme: const IconThemeData(color: Colors.white),
+      actionsIconTheme: const IconThemeData(color: Colors.white),
+      titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
+        color: Colors.white,
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+      ),
     ),
-  ),
-  textButtonTheme: TextButtonThemeData(
-    style: TextButton.styleFrom(foregroundColor: stockRojo),
-  ),
-  outlinedButtonTheme: OutlinedButtonThemeData(
-    style: OutlinedButton.styleFrom(foregroundColor: stockRojo),
-  ),
-  chipTheme: Theme.of(context).chipTheme.copyWith(
-    selectedColor: stockPastel,
-    backgroundColor: Colors.white,
-    checkmarkColor: stockRojo,
-  ),
-  dialogTheme: DialogThemeData(
-    backgroundColor: Colors.white,
-    surfaceTintColor: Colors.transparent,
-    titleTextStyle: Theme.of(context).textTheme.titleLarge,
-    contentTextStyle: Theme.of(context).textTheme.bodyMedium,
-  ),
-  appBarTheme: AppBarTheme(
-    backgroundColor: stockRojo,
-    foregroundColor: Colors.white,
-    iconTheme: const IconThemeData(color: Colors.white),
-    actionsIconTheme: const IconThemeData(color: Colors.white),
-    titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
-      color: Colors.white,
-      fontSize: 18,
-      fontWeight: FontWeight.w600,
-    ),
-  ),
-  inputDecorationTheme: InputDecorationTheme(
-    filled: true,
-    fillColor: const Color(0xFFF7F7F7),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide.none,
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: stockRojo, width: 1.5),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: const Color(0xFFF7F7F7),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: stockRojo, width: 1.5),
+      ),
     ),
   ),
 );

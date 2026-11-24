@@ -139,7 +139,7 @@ aceptación funcional pendientes del usuario. No se ejecutaron pedidos de prueba
   búsqueda por nombre/principio activo/código. El repositorio obtiene `id` y
   `laboratorio` con paginación, solo cuando se solicita este dato; sin migración
   SQL ni cambios en existencias. Se muestra el laboratorio bajo cada resultado.
-- Los botones para agregar y aumentar cantidad son rojos con icono blanco.
+- Los botones para agregar y aumentar cantidad usan el color del rol con icono blanco (verde en Farmacia), por la corrección posterior del usuario.
 - El menú de Farmacia usa verde pastel e iconos verdes; solicitud y recepción
   comparten el color de Farmacia. Componentes de stock admiten color opcional.
 - Revisar pedido tiene más separación y nuevo icono. El detalle usa fondo suave
@@ -150,3 +150,16 @@ aceptación funcional pendientes del usuario. No se ejecutaron pedidos de prueba
 
 `flutter analyze --no-pub` correcto. Revisión visual y funcional por el usuario;
 no se enviaron pedidos ni se modificaron movimientos para probar estos ajustes.
+
+### Colores por usuario y títulos — 24/11/2026
+
+Los filtros de solicitudes usan fondo suave y check del rol, retirando el rojo
+fijo. El tema de existencias, Kardex y diferencias (incluidos sus modales) resuelve
+el rol de la sesión. Se colorearon también las secciones y los contadores de las
+vistas principales de existencias/diferencias. Kits se presenta verde para
+Farmacia y rojo para Enfermería, sin cambiar áreas, permisos ni contenido del kit.
+Los títulos principales de Farmacia coinciden con sus entradas de menú:
+Solicitar a Almacén, Solicitudes y recepción, Atender pedidos de áreas, Consultar
+existencias, Consultar kits por área y Reportes y diferencias. El detalle clínico
+conserva su fondo del área solicitante según lo acordado. Se mantiene rojo para
+errores y acciones de riesgo; no se cambió la lógica de pedidos ni stock.

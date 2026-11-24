@@ -1,9 +1,15 @@
+import 'package:provider/provider.dart';
+import '../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
+import '../../features/auth/domain/entities/user_entity.dart';
 import 'package:flutter/material.dart';
 import '../widgets/menu_modulos.dart';
 import 'app_theme.dart';
 
 /// Apariencia compartida; no contiene permisos ni acciones de los pedidos.
 class TemaPedidos {
+  static String rolActual(BuildContext context) =>
+      context.read<AuthViewModel>().currentUser?.rol.dbValue ?? '';
+
   static Color colorRol(String rol) => switch (rol.toUpperCase()) {
     'ALMACEN' => AppColors.almacenColor,
     'FARMACIA' => AppColors.farmaciaColor,
@@ -36,7 +42,14 @@ class TemaPedidos {
       ),
     );
     return theme.copyWith(
+      chipTheme: theme.chipTheme.copyWith(
+        selectedColor: color.withValues(alpha: .10),
+        checkmarkColor: color,
+      ),
       scaffoldBackgroundColor: AppColors.background,
+      progressIndicatorTheme: theme.progressIndicatorTheme.copyWith(
+        color: color,
+      ),
       inputDecorationTheme: theme.inputDecorationTheme.copyWith(
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -57,6 +70,9 @@ class TemaPedidos {
       ),
       colorScheme: theme.colorScheme.copyWith(
         primary: color,
+        secondary: color,
+        secondaryContainer: color.withValues(alpha: .10),
+        onSecondaryContainer: color,
         onPrimary: Colors.white,
         surfaceTint: Colors.transparent,
       ),

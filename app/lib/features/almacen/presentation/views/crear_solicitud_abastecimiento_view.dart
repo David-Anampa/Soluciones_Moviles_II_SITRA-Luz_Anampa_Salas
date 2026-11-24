@@ -641,7 +641,7 @@ class _CrearSolicitudAbastecimientoViewState
                     IconButton.filled(
                       tooltip: 'Aumentar cantidad',
                       style: IconButton.styleFrom(
-                        backgroundColor: stockRojo,
+                        backgroundColor: _color,
                         foregroundColor: Colors.white,
                       ),
                       onPressed: guardando || maximo < 1 || actual >= maximo
@@ -707,7 +707,7 @@ class _CrearSolicitudAbastecimientoViewState
                   ? null
                   : () => _agregar(p),
               style: FilledButton.styleFrom(
-                backgroundColor: stockRojo,
+                backgroundColor: _color,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(48, 48),
                 padding: const EdgeInsets.all(12),

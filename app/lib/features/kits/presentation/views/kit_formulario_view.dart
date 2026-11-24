@@ -1,3 +1,4 @@
+import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
@@ -58,6 +59,17 @@ class _KitFormularioViewState extends State<KitFormularioView> {
 
   /// Cambia la identidad del formulario cuando se elige otra área autorizada.
   TemaArea get _temaActual {
+    final rol = TemaPedidos.rolActual(context);
+    if (rol == 'FARMACIA') {
+      return const TemaArea(
+        'TURQUESA',
+        'Farmacia',
+        Color(0xFF00796B),
+        Color(0xFFEAF7F5),
+      );
+    }
+    if (rol == 'ENFERMERIA') return TemaArea.opciones.first;
+
     for (final area in _areas) {
       if (area.codigo == _areaSeleccionada) {
         return TemaArea.desde(area.temaColor);

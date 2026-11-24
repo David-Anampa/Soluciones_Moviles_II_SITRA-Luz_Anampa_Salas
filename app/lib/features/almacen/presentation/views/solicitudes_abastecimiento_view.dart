@@ -96,8 +96,8 @@ class _SolicitudesAbastecimientoViewState
         ),
         chipTheme: base.chipTheme.copyWith(
           backgroundColor: _blanco,
-          selectedColor: _rojoSuave,
-          checkmarkColor: _rojo,
+          selectedColor: _acento.withValues(alpha: .10),
+          checkmarkColor: _acento,
           side: const BorderSide(color: _grisBorde),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -171,7 +171,7 @@ class _SolicitudesAbastecimientoViewState
             children: [
               Text(
                 widget.esModoFarmacia
-                    ? 'Mis Solicitudes a Almacén'
+                    ? 'Solicitudes y recepción'
                     : 'Solicitudes de Farmacia',
                 style: const TextStyle(
                   fontSize: 18,
@@ -364,7 +364,8 @@ class _SolicitudesAbastecimientoViewState
       key: _filtroKeys[valor],
       label: Text(etiqueta),
       selected: activo,
-      selectedColor: _rojoSuave,
+      selectedColor: _acento.withValues(alpha: .10),
+      checkmarkColor: _acento,
       labelStyle: TextStyle(
         color: activo ? color : _textoSecundario,
         fontWeight: activo ? FontWeight.bold : FontWeight.normal,

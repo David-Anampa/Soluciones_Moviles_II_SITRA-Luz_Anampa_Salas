@@ -198,7 +198,7 @@ class _FichasListadoViewState extends State<FichasListadoView> {
           backgroundColor: TemaPedidos.colorRol(_rolUsuario),
           foregroundColor: Colors.white,
           title: const Text(
-            'Pedidos de áreas',
+            'Atender pedidos de áreas',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
           ),
           actions: [
