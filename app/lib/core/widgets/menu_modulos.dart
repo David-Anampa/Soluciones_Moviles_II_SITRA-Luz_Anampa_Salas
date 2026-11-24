@@ -50,11 +50,13 @@ class CuadriculaPanel extends StatelessWidget {
 /// Acceso uniforme para los menús de todos los roles, sin alterar su navegación.
 class BotonModulo extends StatelessWidget {
   final String nombre;
+  final Color color;
   final IconData icono;
   final VoidCallback? onTap;
   const BotonModulo({
     super.key,
     required this.nombre,
+    this.color = const Color(0xFFC62828),
     required this.icono,
     required this.onTap,
   });
@@ -62,12 +64,14 @@ class BotonModulo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final activo = onTap != null;
-    final acento = activo ? const Color(0xFFC62828) : const Color(0xFF777780);
+    final acento = activo ? color : const Color(0xFF777780);
     return Semantics(
       button: true,
       enabled: activo,
       child: Material(
-        color: activo ? const Color(0xFFFFF1F1) : const Color(0xFFF2F2F5),
+        color: activo
+            ? Color.lerp(color, Colors.white, .93)!
+            : const Color(0xFFF2F2F5),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
           side: const BorderSide(color: Colors.white, width: 2),

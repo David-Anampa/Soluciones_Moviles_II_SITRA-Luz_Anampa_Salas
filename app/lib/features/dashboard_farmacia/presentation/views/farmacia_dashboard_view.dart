@@ -299,21 +299,25 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                   CuadriculaPanel(
                     children: [
                       BotonModulo(
+                        color: AppColors.farmaciaColor,
                         nombre: 'Solicitar abastecimiento',
                         icono: Icons.add_shopping_cart_rounded,
                         onTap: _abrirCrearSolicitud,
                       ),
                       BotonModulo(
+                        color: AppColors.farmaciaColor,
                         nombre: 'Solicitudes y recepción',
                         icono: Icons.download_done_rounded,
                         onTap: _abrirMisSolicitudes,
                       ),
                       BotonModulo(
+                        color: AppColors.farmaciaColor,
                         nombre: 'Atender pedidos de áreas',
                         icono: Icons.fact_check_rounded,
                         onTap: () => _abrirAtencionFichas(),
                       ),
                       BotonModulo(
+                        color: AppColors.farmaciaColor,
                         nombre: 'Consultar existencias',
                         icono: Icons.warehouse_outlined,
                         onTap: () => Navigator.of(context).push(
@@ -325,11 +329,13 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                         ),
                       ),
                       BotonModulo(
+                        color: AppColors.farmaciaColor,
                         nombre: 'Consultar kits por área',
                         icono: Icons.medical_services_outlined,
                         onTap: () => context.push('/kits'),
                       ),
                       BotonModulo(
+                        color: AppColors.farmaciaColor,
                         nombre: 'Reportes y diferencias',
                         icono: Icons.rule_folder_outlined,
                         onTap: () => Navigator.of(context).push(

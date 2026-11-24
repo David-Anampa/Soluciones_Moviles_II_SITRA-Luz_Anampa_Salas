@@ -66,12 +66,14 @@ ThemeData temaStock(BuildContext context) => Theme.of(context).copyWith(
 );
 
 class StockSeccion extends StatelessWidget {
+  final Color color;
   final String titulo;
   final IconData icono;
   final List<Widget> children;
   final bool compacta;
   const StockSeccion({
     super.key,
+    this.color = stockRojo,
     required this.titulo,
     required this.icono,
     required this.children,
@@ -94,10 +96,10 @@ class StockSeccion extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(9),
               decoration: BoxDecoration(
-                color: stockPastel,
+                color: color.withValues(alpha: .08),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icono, color: stockRojo, size: 22),
+              child: Icon(icono, color: color, size: 22),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -122,9 +124,15 @@ class StockSeccion extends StatelessWidget {
 }
 
 class StockContadores extends StatelessWidget {
+  final Color color;
   final StockUbicacionEntity item;
   final bool compacto;
-  const StockContadores({super.key, required this.item, this.compacto = false});
+  const StockContadores({
+    super.key,
+    required this.item,
+    this.compacto = false,
+    this.color = stockRojo,
+  });
   @override
   Widget build(BuildContext context) => AccionesAdaptables(
     anchoMinimo: 80,
@@ -138,19 +146,19 @@ class StockContadores extends StatelessWidget {
   Widget _dato(IconData icono, String nombre, int cantidad) => Container(
     padding: EdgeInsets.symmetric(horizontal: 6, vertical: compacto ? 7 : 12),
     decoration: BoxDecoration(
-      color: stockPastel,
+      color: color.withValues(alpha: .08),
       borderRadius: BorderRadius.circular(12),
     ),
     child: Column(
       children: [
-        Icon(icono, color: stockRojo, size: compacto ? 18 : 21),
+        Icon(icono, color: color, size: compacto ? 18 : 21),
         SizedBox(height: compacto ? 3 : 8),
         Text(
           '$cantidad',
           style: TextStyle(
             fontSize: compacto ? 16 : 19,
             fontWeight: FontWeight.w700,
-            color: stockRojo,
+            color: color,
           ),
         ),
         const SizedBox(height: 4),

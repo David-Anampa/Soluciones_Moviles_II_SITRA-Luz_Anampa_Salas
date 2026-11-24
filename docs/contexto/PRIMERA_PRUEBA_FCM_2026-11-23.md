@@ -129,3 +129,24 @@ Sin cambios en SQL, consultas, permisos, acciones de stock o auditoría. Los
 contadores y la conexión pendiente de avisos operativos conservan su alcance
 anterior. `flutter analyze --no-pub` correcto; revisión visual en el emulador y
 aceptación funcional pendientes del usuario. No se ejecutaron pedidos de prueba.
+
+### Ajustes posteriores de Farmacia — 24/11/2026
+
+- Solicitar a Almacén muestra tres resultados por página, con anterior/siguiente.
+  La búsqueda filtra todos los productos cargados por la consulta paginada, no
+  únicamente los tres visibles. Los productos ya elegidos conservan sus cantidades.
+- Filtro de laboratorio editable con menú de sugerencias, combinado con la
+  búsqueda por nombre/principio activo/código. El repositorio obtiene `id` y
+  `laboratorio` con paginación, solo cuando se solicita este dato; sin migración
+  SQL ni cambios en existencias. Se muestra el laboratorio bajo cada resultado.
+- Los botones para agregar y aumentar cantidad son rojos con icono blanco.
+- El menú de Farmacia usa verde pastel e iconos verdes; solicitud y recepción
+  comparten el color de Farmacia. Componentes de stock admiten color opcional.
+- Revisar pedido tiene más separación y nuevo icono. El detalle usa fondo suave
+  y cabecera del área solicitante, con tarjetas blancas. Se envolvió su contenido
+  en desplazamiento vertical: la columna anterior excedía el alto del celular.
+- Registrar pedido se trasladó de la cabecera al botón flotante, con los mismos
+  permisos existentes y espacio inferior para no tapar el listado.
+
+`flutter analyze --no-pub` correcto. Revisión visual y funcional por el usuario;
+no se enviaron pedidos ni se modificaron movimientos para probar estos ajustes.

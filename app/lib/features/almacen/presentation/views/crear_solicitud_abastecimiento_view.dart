@@ -1,3 +1,4 @@
+import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:flutter/services.dart';
@@ -28,6 +29,13 @@ class _CrearSolicitudAbastecimientoViewState
     extends State<CrearSolicitudAbastecimientoView> {
   final _form = GlobalKey<FormState>();
   final _buscar = TextEditingController(), _notas = TextEditingController();
+  final _laboratorio = TextEditingController();
+  int _pagina = 0;
+  Color get _color => TemaPedidos.colorRol(_envio ? 'ALMACEN' : 'FARMACIA');
+  void _filtrarLaboratorio() {
+    if (mounted) setState(() => _pagina = 0);
+  }
+
   final _cantidades = <String, TextEditingController>{};
   List<StockUbicacionEntity> _productos = [];
   bool _cargando = true;
@@ -40,11 +48,13 @@ class _CrearSolicitudAbastecimientoViewState
   @override
   void initState() {
     super.initState();
+    _laboratorio.addListener(_filtrarLaboratorio);
     _cargar();
   }
 
   @override
   void dispose() {
+    _laboratorio.dispose();
     _buscar.dispose();
     _notas.dispose();
     for (final c in _cantidades.values) {
@@ -59,10 +69,11 @@ class _CrearSolicitudAbastecimientoViewState
       _error = null;
     });
     try {
-      final datos = await widget.repositorio.cargar();
+      final datos = await widget.repositorio.cargar(incluirLaboratorio: true);
       if (!mounted) return;
       setState(() {
         _productos = datos;
+        _pagina = 0;
         final inicial = widget.productoInicial;
         if (inicial != null &&
             _cantidades.isEmpty &&
@@ -162,24 +173,41 @@ class _CrearSolicitudAbastecimientoViewState
   Widget build(BuildContext context) {
     final guardando = context.watch<AlmacenViewModel>().isSaving;
     final q = _buscar.text.trim().toLowerCase();
-    final resultados = _productos
+    final laboratorio = _laboratorio.text.trim().toLowerCase();
+    final laboratorios =
+        _productos
+            .where((p) => p.activo && p.laboratorio.isNotEmpty)
+            .map((p) => p.laboratorio)
+            .toSet()
+            .toList()
+          ..sort();
+    final coincidencias = _productos
         .where(
           (p) =>
               p.activo &&
               ('${p.nombre} ${p.principioActivo} ${p.gtin}'
                   .toLowerCase()
                   .contains(q)) &&
+              p.laboratorio.toLowerCase().contains(laboratorio) &&
               !_cantidades.containsKey(p.id),
         )
-        .take(15)
         .toList();
+    final pagina = _pagina.clamp(
+      0,
+      coincidencias.isEmpty ? 0 : (coincidencias.length - 1) ~/ 3,
+    );
+    final resultados = coincidencias.skip(pagina * 3).take(3).toList();
     final elegidos = _productos
         .where((p) => _cantidades.containsKey(p.id))
         .toList();
     return Theme(
-      data: temaStock(context),
+      data: TemaPedidos.aplicar(
+        context,
+        _envio ? 'ALMACEN' : 'FARMACIA',
+        base: temaStock(context),
+      ),
       child: Scaffold(
-        backgroundColor: stockFondo,
+        backgroundColor: const Color(0xFFF4F6FB),
         appBar: AppBar(
           toolbarHeight: DisenoAdaptable.altoCabecera(
             context,
@@ -195,9 +223,7 @@ class _CrearSolicitudAbastecimientoViewState
           padding: EdgeInsets.zero,
           child: SafeArea(
             child: _cargando
-                ? const Center(
-                    child: CircularProgressIndicator(color: stockRojo),
-                  )
+                ? const Center(child: CircularProgressIndicator())
                 : Form(
                     key: _form,
                     child: ListView(
@@ -206,6 +232,7 @@ class _CrearSolicitudAbastecimientoViewState
                           ScrollViewKeyboardDismissBehavior.onDrag,
                       children: [
                         StockSeccion(
+                          color: _color,
                           titulo: _envio
                               ? 'Envío desde Almacén'
                               : 'Reposición de Farmacia',
@@ -276,6 +303,7 @@ class _CrearSolicitudAbastecimientoViewState
                           ],
                         ),
                         StockSeccion(
+                          color: _color,
                           titulo:
                               'Productos seleccionados (${elegidos.length})',
                           icono: Icons.checklist_rounded,
@@ -291,6 +319,7 @@ class _CrearSolicitudAbastecimientoViewState
                           ],
                         ),
                         StockSeccion(
+                          color: _color,
                           titulo: 'Buscar productos',
                           icono: Icons.search_rounded,
                           compacta: true,
@@ -298,12 +327,12 @@ class _CrearSolicitudAbastecimientoViewState
                             TextField(
                               controller: _buscar,
                               enabled: !guardando,
-                              onChanged: (_) => setState(() {}),
+                              onChanged: (_) => setState(() => _pagina = 0),
                               decoration: InputDecoration(
                                 labelText: 'Nombre, principio activo o código',
-                                prefixIcon: const Icon(
+                                prefixIcon: Icon(
                                   Icons.search_rounded,
-                                  color: stockRojo,
+                                  color: _color,
                                 ),
                                 suffixIcon: _buscar.text.isEmpty
                                     ? null
@@ -311,12 +340,108 @@ class _CrearSolicitudAbastecimientoViewState
                                         tooltip: 'Limpiar búsqueda',
                                         onPressed: guardando
                                             ? null
-                                            : () => setState(
-                                                () => _buscar.clear(),
-                                              ),
+                                            : () => setState(() {
+                                                _buscar.clear();
+                                                _pagina = 0;
+                                              }),
                                         icon: const Icon(Icons.close_rounded),
                                       ),
                               ),
+                            ),
+                            LayoutBuilder(
+                              builder: (context, limits) =>
+                                  DropdownMenu<String>(
+                                    width: limits.maxWidth,
+                                    controller: _laboratorio,
+                                    enabled: !guardando,
+                                    enableFilter: true,
+                                    enableSearch: true,
+                                    requestFocusOnTap: true,
+                                    menuHeight: 260,
+                                    label: const Text('Laboratorio'),
+                                    leadingIcon: Icon(
+                                      Icons.science_outlined,
+                                      color: _color,
+                                    ),
+                                    inputDecorationTheme: InputDecorationTheme(
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 18,
+                                          ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    menuStyle: MenuStyle(
+                                      backgroundColor:
+                                          const WidgetStatePropertyAll(
+                                            Colors.white,
+                                          ),
+                                      shape: WidgetStatePropertyAll(
+                                        RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    dropdownMenuEntries: [
+                                      const DropdownMenuEntry(
+                                        value: '',
+                                        label: 'Todos los laboratorios',
+                                      ),
+                                      for (final nombre in laboratorios)
+                                        DropdownMenuEntry(
+                                          value: nombre,
+                                          label: nombre,
+                                        ),
+                                    ],
+                                    onSelected: (value) {
+                                      if (value == '') _laboratorio.clear();
+                                    },
+                                  ),
+                            ),
+                            if (_laboratorio.text.isNotEmpty)
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  onPressed: guardando
+                                      ? null
+                                      : _laboratorio.clear,
+                                  icon: const Icon(
+                                    Icons.filter_alt_off_outlined,
+                                  ),
+                                  label: const Text('Quitar laboratorio'),
+                                ),
+                              ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    '${coincidencias.length} coincidencias · ${resultados.length} visibles',
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: 'Anteriores',
+                                  onPressed: pagina > 0
+                                      ? () =>
+                                            setState(() => _pagina = pagina - 1)
+                                      : null,
+                                  icon: const Icon(Icons.chevron_left_rounded),
+                                ),
+                                IconButton(
+                                  tooltip: 'Siguientes',
+                                  onPressed:
+                                      (pagina + 1) * 3 < coincidencias.length
+                                      ? () =>
+                                            setState(() => _pagina = pagina + 1)
+                                      : null,
+                                  icon: const Icon(Icons.chevron_right_rounded),
+                                ),
+                              ],
                             ),
                             if (resultados.isEmpty)
                               const Text('No hay más coincidencias.'),
@@ -329,6 +454,7 @@ class _CrearSolicitudAbastecimientoViewState
                         ),
                         if (_error != null)
                           StockSeccion(
+                            color: _color,
                             titulo: 'Revisar operación',
                             icono: Icons.error_outline_rounded,
                             children: [
@@ -420,7 +546,7 @@ class _CrearSolicitudAbastecimientoViewState
             ],
           ),
           const SizedBox(height: 4),
-          StockContadores(item: p, compacto: true),
+          StockContadores(item: p, compacto: true, color: _color),
           const SizedBox(height: 10),
           _controlCantidad(p, guardando),
         ],
@@ -512,9 +638,12 @@ class _CrearSolicitudAbastecimientoViewState
                         ),
                       ),
                     ),
-                    IconButton(
+                    IconButton.filled(
                       tooltip: 'Aumentar cantidad',
-                      color: stockRojo,
+                      style: IconButton.styleFrom(
+                        backgroundColor: stockRojo,
+                        foregroundColor: Colors.white,
+                      ),
                       onPressed: guardando || maximo < 1 || actual >= maximo
                           ? null
                           : () => ajustar(1),
@@ -573,11 +702,13 @@ class _CrearSolicitudAbastecimientoViewState
           const SizedBox(width: 8),
           Tooltip(
             message: 'Agregar producto',
-            child: OutlinedButton(
+            child: FilledButton(
               onPressed: guardando || (_envio && p.almacen == 0)
                   ? null
                   : () => _agregar(p),
-              style: OutlinedButton.styleFrom(
+              style: FilledButton.styleFrom(
+                backgroundColor: stockRojo,
+                foregroundColor: Colors.white,
                 minimumSize: const Size(48, 48),
                 padding: const EdgeInsets.all(12),
               ),
@@ -591,7 +722,12 @@ class _CrearSolicitudAbastecimientoViewState
         ],
       ),
       const SizedBox(height: 6),
-      StockContadores(item: p, compacto: true),
+      if (p.laboratorio.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(p.laboratorio, style: const TextStyle(fontSize: 12)),
+        ),
+      StockContadores(item: p, compacto: true, color: _color),
     ],
   );
 
@@ -609,7 +745,7 @@ class _CrearSolicitudAbastecimientoViewState
     isExpanded: true,
     decoration: InputDecoration(
       labelText: etiqueta,
-      prefixIcon: Icon(icono, color: stockRojo),
+      prefixIcon: Icon(icono, color: _color),
     ),
     items: opciones.entries
         .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))

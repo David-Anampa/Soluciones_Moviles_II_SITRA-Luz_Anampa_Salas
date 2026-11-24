@@ -557,7 +557,12 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
     final ficha = _ficha;
 
     return Theme(
-      data: TemaPedidos.aplicar(context, _rolUsuario),
+      data: TemaPedidos.aplicar(context, _rolUsuario).copyWith(
+        colorScheme: Theme.of(context).colorScheme.copyWith(
+          primary: tema.principal,
+          onPrimary: Colors.white,
+        ),
+      ),
       child: PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, _) {
@@ -565,9 +570,9 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
           Navigator.of(context).pop(_huboCambios);
         },
         child: Scaffold(
-          backgroundColor: const Color(0xFFF6F7FB),
+          backgroundColor: tema.suave,
           appBar: AppBar(
-            backgroundColor: TemaPedidos.colorRol(_rolUsuario),
+            backgroundColor: tema.principal,
             foregroundColor: Colors.white,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_rounded),
@@ -612,41 +617,45 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                 )
               : ficha == null
               ? const SizedBox.shrink()
-              : ContenidoAdaptable(
-                  anchoMaximo: 1080,
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildBannerEstadoYFlujo(ficha, tema),
-                      const SizedBox(height: 14),
-                      _buildDatosClinicosYFinanciamiento(ficha, tema),
-                      const SizedBox(height: 14),
-                      if (ficha.puedeEditarDespacho(_rolUsuario)) ...[
-                        _buildNotaModoPreparacion(ficha),
+              : SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  child: ContenidoAdaptable(
+                    anchoMaximo: 1080,
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildBannerEstadoYFlujo(ficha, tema),
                         const SizedBox(height: 14),
+                        _buildDatosClinicosYFinanciamiento(ficha, tema),
+                        const SizedBox(height: 14),
+                        if (ficha.puedeEditarDespacho(_rolUsuario)) ...[
+                          _buildNotaModoPreparacion(ficha),
+                          const SizedBox(height: 14),
+                        ],
+                        _buildSeccionItemsCategoria(
+                          ficha: ficha,
+                          tema: tema,
+                          titulo: 'Medicamentos (${ficha.medicamentos.length})',
+                          icono: Icons.medication_rounded,
+                          items: ficha.medicamentos,
+                        ),
+                        const SizedBox(height: 14),
+                        _buildSeccionItemsCategoria(
+                          ficha: ficha,
+                          tema: tema,
+                          titulo:
+                              'Dispositivos Médicos e Insumos (${ficha.dispositivosMedicos.length})',
+                          icono: Icons.medical_services_rounded,
+                          items: ficha.dispositivosMedicos,
+                        ),
+                        const SizedBox(height: 14),
+                        _buildPanelOperacionAtencion(ficha, tema),
+                        const SizedBox(height: 14),
+                        _buildSeccionHistorialAuditoria(ficha, tema),
                       ],
-                      _buildSeccionItemsCategoria(
-                        ficha: ficha,
-                        tema: tema,
-                        titulo: 'Medicamentos (${ficha.medicamentos.length})',
-                        icono: Icons.medication_rounded,
-                        items: ficha.medicamentos,
-                      ),
-                      const SizedBox(height: 14),
-                      _buildSeccionItemsCategoria(
-                        ficha: ficha,
-                        tema: tema,
-                        titulo:
-                            'Dispositivos Médicos e Insumos (${ficha.dispositivosMedicos.length})',
-                        icono: Icons.medical_services_rounded,
-                        items: ficha.dispositivosMedicos,
-                      ),
-                      const SizedBox(height: 14),
-                      _buildPanelOperacionAtencion(ficha, tema),
-                      const SizedBox(height: 14),
-                      _buildSeccionHistorialAuditoria(ficha, tema),
-                    ],
+                    ),
                   ),
                 ),
         ),

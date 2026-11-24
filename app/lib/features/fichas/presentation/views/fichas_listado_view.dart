@@ -202,16 +202,6 @@ class _FichasListadoViewState extends State<FichasListadoView> {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
           ),
           actions: [
-            if (_puedeRegistrarNuevaFicha)
-              TextButton.icon(
-                style: TextButton.styleFrom(foregroundColor: Colors.white),
-                onPressed: _abrirRegistroNuevaFicha,
-                icon: const Icon(Icons.note_add_rounded, size: 19),
-                label: const Text(
-                  'Nueva ficha',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ),
             IconButton(
               tooltip: 'Actualizar listado',
               onPressed: _cargando ? null : () => _aplicarFiltros(_filtros),
@@ -219,13 +209,22 @@ class _FichasListadoViewState extends State<FichasListadoView> {
             ),
           ],
         ),
+        floatingActionButton: _puedeRegistrarNuevaFicha
+            ? FloatingActionButton.extended(
+                onPressed: _cargando ? null : _abrirRegistroNuevaFicha,
+                backgroundColor: TemaPedidos.colorRol(_rolUsuario),
+                foregroundColor: Colors.white,
+                icon: const Icon(Icons.post_add_rounded),
+                label: const Text('Registrar pedido'),
+              )
+            : null,
         body: RefreshIndicator(
           onRefresh: () => _aplicarFiltros(_filtros),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: ContenidoAdaptable(
               anchoMaximo: 1120,
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -923,10 +922,13 @@ class _TarjetaFichaItem extends StatelessWidget {
                       ),
                   ],
                 ),
-                FilledButton.icon(
-                  onPressed: onAbrirDetalle,
-                  icon: const Icon(Icons.open_in_new_rounded, size: 17),
-                  label: Text(etiquetaAccion),
+                Padding(
+                  padding: const EdgeInsets.only(top: 14),
+                  child: FilledButton.icon(
+                    onPressed: onAbrirDetalle,
+                    icon: const Icon(Icons.fact_check_outlined, size: 20),
+                    label: Text(etiquetaAccion),
+                  ),
                 ),
               ],
             ),

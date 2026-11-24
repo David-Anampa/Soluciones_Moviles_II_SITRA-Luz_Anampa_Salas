@@ -1,9 +1,11 @@
 /// Existencias reales por producto: tránsito y stock no utilizable se separan.
 class StockUbicacionEntity {
+  final String laboratorio;
   final String id, nombre, principioActivo, gtin, presentacion, unidad;
   final int almacen, farmacia, transito, almacenFisico, farmaciaFisico;
   final bool activo, pendienteConciliacion;
   const StockUbicacionEntity({
+    this.laboratorio = '',
     required this.id,
     required this.nombre,
     required this.principioActivo,
@@ -22,6 +24,7 @@ class StockUbicacionEntity {
   factory StockUbicacionEntity.fromMap(Map<String, dynamic> m) =>
       StockUbicacionEntity(
         id: m['medicamento_id'] as String,
+        laboratorio: m['laboratorio'] as String? ?? '',
         nombre: m['nombre'] as String,
         principioActivo: m['principio_activo'] as String? ?? '',
         gtin: m['gtin'] as String? ?? '',
