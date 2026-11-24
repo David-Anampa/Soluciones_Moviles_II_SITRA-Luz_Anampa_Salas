@@ -366,7 +366,15 @@ class _FichasListadoViewState extends State<FichasListadoView> {
   }
 
   Widget _buildPanelFiltros() {
-    final areas = _contexto?.areas ?? const [];
+    final areas = {
+      for (final area in _contexto?.areas ?? const <AreaFicha>[])
+        if (area.codigo != 'TODAS') area.codigo: area,
+    }.values.toList();
+    // El filtro inicial puede llegar desde un aviso antes de cargar el catálogo.
+    // Conservarlo para la consulta, pero mostrar solo valores existentes en el menú.
+    final areaVisible = areas.any((a) => a.codigo == _filtros.area)
+        ? _filtros.area
+        : 'TODAS';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -434,7 +442,8 @@ class _FichasListadoViewState extends State<FichasListadoView> {
               SizedBox(
                 width: 220,
                 child: DropdownButtonFormField<String>(
-                  initialValue: _filtros.area,
+                  key: ValueKey('filtro-area-$areaVisible'),
+                  initialValue: areaVisible,
                   isExpanded: true,
                   decoration: const InputDecoration(
                     isDense: true,
@@ -453,17 +462,20 @@ class _FichasListadoViewState extends State<FichasListadoView> {
                       ),
                     ),
                   ],
-                  onChanged: (val) {
-                    if (val != null) {
-                      _aplicarFiltros(_filtros.copyWith(area: val));
-                    }
-                  },
+                  onChanged: _contexto == null || _cargando
+                      ? null
+                      : (val) {
+                          if (val != null) {
+                            _aplicarFiltros(_filtros.copyWith(area: val));
+                          }
+                        },
                 ),
               ),
               SizedBox(
                 width: 195,
                 child: DropdownButtonFormField<String>(
                   initialValue: _filtros.estado,
+                  key: ValueKey('filtro-estado-${_filtros.estado}'),
                   isExpanded: true,
                   decoration: const InputDecoration(
                     isDense: true,
@@ -507,6 +519,7 @@ class _FichasListadoViewState extends State<FichasListadoView> {
                 width: 185,
                 child: DropdownButtonFormField<String>(
                   initialValue: _filtros.tipoFicha,
+                  key: ValueKey('filtro-tipo-${_filtros.tipoFicha}'),
                   isExpanded: true,
                   decoration: const InputDecoration(
                     isDense: true,
