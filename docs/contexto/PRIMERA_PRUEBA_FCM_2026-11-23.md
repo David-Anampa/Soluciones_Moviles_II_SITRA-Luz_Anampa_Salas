@@ -107,3 +107,25 @@ actualizado y abrir la aplicación; un hot reload no basta.
 La bandeja es una primera entrega para pruebas e historial. El flujo operativo
 de Almacén sigue siendo la fuente del estado de los pedidos de Farmacia: el
 futuro aviso debe dirigir al pedido autorizado, nunca atenderlo al leerlo.
+
+## Uniformidad de pedidos — 24/11/2026
+
+Aplicado `TemaPedidos` a solicitudes Almacén–Farmacia y registro, listado y
+detalle de pedidos clínicos: botones con medidas compartidas, tarjetas con
+espaciado coherente, franjas de sección con icono y texto blanco en color del
+rol mediante el mismo componente de los menús. Se retiraron referencias HU/RF
+de etiquetas visibles y descripciones decorativas; se conservaron instrucciones
+de cantidades, diferencias, cobertura y justificaciones. Los nombres y textos
+clínicos pueden crecer en varias líneas, respetando la escala del sistema.
+
+El registro ofrece Neonatología y Otras áreas. Las opciones se habilitan solo
+si existen áreas autorizadas de ese tipo en el catálogo. Otras áreas muestra
+un dropdown filtrado; Neonatología selecciona su área (permite elegir si hay
+varias). El cambio reutiliza `_cambiarArea`, que actualiza receptor y kit como
+antes, y al pasar a un área no neonatal fija el tipo GENERAL. No reasigna el
+área durante el despacho de una ficha existente. No se añadieron áreas ficticias.
+
+Sin cambios en SQL, consultas, permisos, acciones de stock o auditoría. Los
+contadores y la conexión pendiente de avisos operativos conservan su alcance
+anterior. `flutter analyze --no-pub` correcto; revisión visual en el emulador y
+aceptación funcional pendientes del usuario. No se ejecutaron pedidos de prueba.

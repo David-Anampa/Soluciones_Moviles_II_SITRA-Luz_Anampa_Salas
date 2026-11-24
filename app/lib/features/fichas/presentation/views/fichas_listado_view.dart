@@ -1,3 +1,4 @@
+import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/tema_area.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
@@ -13,11 +14,7 @@ class FichasListadoView extends StatefulWidget {
   final String? areaInicial;
   final String? estadoInicial;
 
-  const FichasListadoView({
-    super.key,
-    this.areaInicial,
-    this.estadoInicial,
-  });
+  const FichasListadoView({super.key, this.areaInicial, this.estadoInicial});
 
   @override
   State<FichasListadoView> createState() => _FichasListadoViewState();
@@ -39,11 +36,12 @@ class _FichasListadoViewState extends State<FichasListadoView> {
   void initState() {
     super.initState();
     _filtros = FiltrosListadoFichas(
-      area: (widget.areaInicial != null &&
-              widget.areaInicial!.trim().isNotEmpty)
+      area:
+          (widget.areaInicial != null && widget.areaInicial!.trim().isNotEmpty)
           ? widget.areaInicial!.trim().toUpperCase()
           : 'TODAS',
-      estado: (widget.estadoInicial != null &&
+      estado:
+          (widget.estadoInicial != null &&
               widget.estadoInicial!.trim().isNotEmpty)
           ? widget.estadoInicial!.trim().toUpperCase()
           : 'TODOS',
@@ -126,10 +124,7 @@ class _FichasListadoViewState extends State<FichasListadoView> {
           filtros: FiltrosListadoFichas(area: nuevosFiltros.area),
           limite: 120,
         ),
-        _repository.listarFichasConFiltros(
-          filtros: nuevosFiltros,
-          limite: 120,
-        ),
+        _repository.listarFichasConFiltros(filtros: nuevosFiltros, limite: 120),
       ]);
       if (!mounted) return;
       setState(() {
@@ -148,8 +143,8 @@ class _FichasListadoViewState extends State<FichasListadoView> {
 
   void _limpiarFiltros() {
     _busquedaCtrl.clear();
-    final areaInicial = (_rolUsuario == 'ENFERMERIA' &&
-            (_contexto?.areas.length ?? 0) == 1)
+    final areaInicial =
+        (_rolUsuario == 'ENFERMERIA' && (_contexto?.areas.length ?? 0) == 1)
         ? _contexto!.areas.first.codigo
         : 'TODAS';
     _aplicarFiltros(FiltrosListadoFichas(area: areaInicial));
@@ -158,10 +153,8 @@ class _FichasListadoViewState extends State<FichasListadoView> {
   Future<void> _abrirDetalleFicha(FichaRegistrada ficha) async {
     final huboCambios = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => FichaDetalleAtencionView(
-          fichaId: ficha.id,
-          fichaInicial: ficha,
-        ),
+        builder: (_) =>
+            FichaDetalleAtencionView(fichaId: ficha.id, fichaInicial: ficha),
       ),
     );
     if (huboCambios == true && mounted) {
@@ -170,8 +163,9 @@ class _FichasListadoViewState extends State<FichasListadoView> {
   }
 
   Future<void> _abrirRegistroNuevaFicha() async {
-    final areaSugerida =
-        _filtros.area != 'TODAS' ? _filtros.area : widget.areaInicial;
+    final areaSugerida = _filtros.area != 'TODAS'
+        ? _filtros.area
+        : widget.areaInicial;
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
         builder: (_) => RegistroFichaView(areaInicial: areaSugerida),
@@ -196,61 +190,69 @@ class _FichasListadoViewState extends State<FichasListadoView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0F4C81),
-        foregroundColor: Colors.white,
-        title: const Text(
-          'Fichas Clínicas · Atención y Trazabilidad (HU-006)',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-        ),
-        actions: [
-          if (_puedeRegistrarNuevaFicha)
-            TextButton.icon(
-              style: TextButton.styleFrom(foregroundColor: Colors.white),
-              onPressed: _abrirRegistroNuevaFicha,
-              icon: const Icon(Icons.note_add_rounded, size: 19),
-              label: const Text(
-                'Nueva ficha',
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ),
-          IconButton(
-            tooltip: 'Actualizar listado',
-            onPressed: _cargando ? null : () => _aplicarFiltros(_filtros),
-            icon: const Icon(Icons.refresh_rounded),
+    return Theme(
+      data: TemaPedidos.aplicar(context, _rolUsuario),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF6F7FB),
+        appBar: AppBar(
+          backgroundColor: TemaPedidos.colorRol(_rolUsuario),
+          foregroundColor: Colors.white,
+          title: const Text(
+            'Pedidos de áreas',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
           ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () => _aplicarFiltros(_filtros),
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: ContenidoAdaptable(
-            anchoMaximo: 1120,
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildResumenEstados(),
-                const SizedBox(height: 14),
-                _buildPanelFiltros(),
-                const SizedBox(height: 14),
-                if (_errorCarga != null) ...[
-                  MensajesApp.nota(_errorCarga!, tipo: TipoMensaje.error),
+          actions: [
+            if (_puedeRegistrarNuevaFicha)
+              TextButton.icon(
+                style: TextButton.styleFrom(foregroundColor: Colors.white),
+                onPressed: _abrirRegistroNuevaFicha,
+                icon: const Icon(Icons.note_add_rounded, size: 19),
+                label: const Text(
+                  'Nueva ficha',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            IconButton(
+              tooltip: 'Actualizar listado',
+              onPressed: _cargando ? null : () => _aplicarFiltros(_filtros),
+              icon: const Icon(Icons.refresh_rounded),
+            ),
+          ],
+        ),
+        body: RefreshIndicator(
+          onRefresh: () => _aplicarFiltros(_filtros),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ContenidoAdaptable(
+              anchoMaximo: 1120,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const FranjaPedidos(
+                    titulo: 'Estado de pedidos',
+                    icono: Icons.inbox_outlined,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildResumenEstados(),
                   const SizedBox(height: 14),
+                  _buildPanelFiltros(),
+                  const SizedBox(height: 14),
+                  if (_errorCarga != null) ...[
+                    MensajesApp.nota(_errorCarga!, tipo: TipoMensaje.error),
+                    const SizedBox(height: 14),
+                  ],
+                  if (_cargando)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 48),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (_fichasFiltradas.isEmpty)
+                    _buildEstadoVacio()
+                  else
+                    _buildListaTarjetasFichas(),
                 ],
-                if (_cargando)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 48),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (_fichasFiltradas.isEmpty)
-                  _buildEstadoVacio()
-                else
-                  _buildListaTarjetasFichas(),
-              ],
+              ),
             ),
           ),
         ),
@@ -270,7 +272,7 @@ class _FichasListadoViewState extends State<FichasListadoView> {
       ),
       (
         'SOLICITADO',
-        'Solicitadas',
+        'Pendientes',
         _contarPorEstado('SOLICITADO'),
         const Color(0xFF0D47A1),
         const Color(0xFFE3F2FD),
@@ -376,28 +378,19 @@ class _FichasListadoViewState extends State<FichasListadoView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.filter_alt_outlined,
-                color: Color(0xFF0F4C81),
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'Filtros de búsqueda y operación (HU-006)',
-                  style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800),
-                ),
-              ),
-              if (_filtros.tieneFiltrosActivos)
-                TextButton.icon(
-                  onPressed: _limpiarFiltros,
-                  icon: const Icon(Icons.filter_alt_off_rounded, size: 17),
-                  label: const Text('Limpiar filtros'),
-                ),
-            ],
+          const FranjaPedidos(
+            titulo: 'Buscar pedidos',
+            icono: Icons.filter_alt_outlined,
           ),
+          if (_filtros.tieneFiltrosActivos)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: _limpiarFiltros,
+                icon: const Icon(Icons.filter_alt_off_rounded),
+                label: const Text('Limpiar filtros'),
+              ),
+            ),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -456,10 +449,7 @@ class _FichasListadoViewState extends State<FichasListadoView> {
                     ...areas.map(
                       (a) => DropdownMenuItem(
                         value: a.codigo,
-                        child: Text(
-                          a.nombre,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        child: Text(a.nombre, overflow: TextOverflow.ellipsis),
                       ),
                     ),
                   ],
@@ -555,18 +545,9 @@ class _FichasListadoViewState extends State<FichasListadoView> {
                     border: OutlineInputBorder(),
                   ),
                   items: const [
-                    DropdownMenuItem(
-                      value: 'TODAS',
-                      child: Text('Todas'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'URGENTE',
-                      child: Text('Urgente'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'NORMAL',
-                      child: Text('Normal'),
-                    ),
+                    DropdownMenuItem(value: 'TODAS', child: Text('Todas')),
+                    DropdownMenuItem(value: 'URGENTE', child: Text('Urgente')),
+                    DropdownMenuItem(value: 'NORMAL', child: Text('Normal')),
                   ],
                   onChanged: (val) {
                     if (val != null) {
@@ -615,11 +596,7 @@ class _FichasListadoViewState extends State<FichasListadoView> {
       ),
       child: Column(
         children: [
-          const Icon(
-            Icons.inbox_outlined,
-            size: 46,
-            color: Color(0xFF94A3B8),
-          ),
+          const Icon(Icons.inbox_outlined, size: 46, color: Color(0xFF94A3B8)),
           const SizedBox(height: 10),
           const Text(
             'No se encontraron fichas con los filtros seleccionados.',
@@ -693,6 +670,27 @@ class _TarjetaFichaItem extends StatelessWidget {
     required this.onAbrirDetalle,
   });
 
+  Widget _datoPedido(IconData icono, String texto) => Padding(
+    padding: const EdgeInsets.only(top: 8),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icono, size: 18, color: const Color(0xFF64748B)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            texto,
+            style: const TextStyle(
+              fontSize: 14,
+              height: 1.4,
+              color: Color(0xFF475569),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final (colorEstado, fondoEstado) = switch (ficha.estado) {
@@ -705,12 +703,10 @@ class _TarjetaFichaItem extends StatelessWidget {
     };
 
     final etiquetaAccion = switch ((rolUsuario, ficha.estado)) {
-      ('FARMACIA' || 'ADMINISTRADOR', 'SOLICITADO') =>
-        'Preparar y despachar (HU-008)',
-      ('FARMACIA' || 'ADMINISTRADOR', 'EN_PREPARACION') =>
-        'Continuar despacho (HU-009)',
-      (_, 'LISTO_PARA_RECOJO') => 'Confirmar entrega FEFO (HU-010)',
-      _ => 'Ver detalle e historial (HU-007)',
+      ('FARMACIA' || 'ADMINISTRADOR', 'SOLICITADO') => 'Revisar pedido',
+      ('FARMACIA' || 'ADMINISTRADOR', 'EN_PREPARACION') => 'Continuar despacho',
+      (_, 'LISTO_PARA_RECOJO') => 'Confirmar entrega',
+      _ => 'Ver detalle e historial',
     };
 
     return InkWell(
@@ -797,12 +793,23 @@ class _TarjetaFichaItem extends StatelessWidget {
                           ),
                         ),
                       ),
-                    Text(
-                      '${ficha.esNeonatologia ? "Neonatología" : "General"} · Turno ${ficha.turno} · $fechaTexto',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF64748B),
-                      ),
+                    Wrap(
+                      spacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.schedule_rounded,
+                          size: 16,
+                          color: Color(0xFF64748B),
+                        ),
+                        Text(
+                          fechaTexto,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -838,16 +845,27 @@ class _TarjetaFichaItem extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              [
-                'Médico: ${ficha.doctorNombre ?? "-"}',
-                'Receptor: ${ficha.recibidoPor ?? "-"}',
-                'Financiamiento: ${ficha.financiamientoNombreAplicado ?? ficha.tipoAtencion}',
-                if (ficha.kitNombre != null && ficha.kitNombre!.isNotEmpty)
-                  'Kit: ${ficha.kitNombre}',
-              ].join(' · '),
-              style: const TextStyle(fontSize: 12.5, color: Color(0xFF475569)),
+            _datoPedido(
+              Icons.person_outline_rounded,
+              'Solicitante: ${ficha.solicitadoPorNombre ?? "-"}',
             ),
+            _datoPedido(
+              Icons.medical_services_outlined,
+              'Médico: ${ficha.doctorNombre ?? "-"}',
+            ),
+            _datoPedido(
+              Icons.badge_outlined,
+              'Receptor: ${ficha.recibidoPor ?? "-"}',
+            ),
+            _datoPedido(
+              Icons.account_balance_wallet_outlined,
+              'Financiamiento: ${ficha.financiamientoNombreAplicado ?? ficha.tipoAtencion}',
+            ),
+            if (ficha.kitNombre != null && ficha.kitNombre!.isNotEmpty)
+              _datoPedido(
+                Icons.inventory_2_outlined,
+                'Kit: ${ficha.kitNombre}',
+              ),
             if (ficha.estado == 'CANCELADO' &&
                 (ficha.motivoAnulacion ?? '').isNotEmpty) ...[
               const SizedBox(height: 6),
@@ -892,7 +910,7 @@ class _TarjetaFichaItem extends StatelessWidget {
                       ),
                   ],
                 ),
-                FilledButton.tonalIcon(
+                FilledButton.icon(
                   onPressed: onAbrirDetalle,
                   icon: const Icon(Icons.open_in_new_rounded, size: 17),
                   label: Text(etiquetaAccion),

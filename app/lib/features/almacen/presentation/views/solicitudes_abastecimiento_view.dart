@@ -1,3 +1,4 @@
+import '../../../../core/theme/tema_pedidos.dart';
 import 'dart:math';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,8 @@ class SolicitudesAbastecimientoView extends StatefulWidget {
 
 class _SolicitudesAbastecimientoViewState
     extends State<SolicitudesAbastecimientoView> {
+  Color get _acento =>
+      TemaPedidos.colorRol(widget.esModoFarmacia ? 'FARMACIA' : 'ALMACEN');
   static const _rojo = Color(0xFFC62828);
   static const _rojoSuave = Color(0xFFFFEBEE);
   static const _grisFondo = Color(0xFFF4F6FB);
@@ -55,77 +58,83 @@ class _SolicitudesAbastecimientoViewState
         RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
-    return base.copyWith(
-      colorScheme: base.colorScheme.copyWith(
-        primary: _rojo,
-        onPrimary: _blanco,
-        secondary: _rojo,
-        onSecondary: _blanco,
-        surface: _blanco,
-        surfaceTint: Colors.transparent,
-        onSurface: _texto,
-        error: _rojo,
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: botones.copyWith(
-          backgroundColor: WidgetStateProperty.resolveWith(
-            (states) =>
-                states.contains(WidgetState.disabled) ? _grisBorde : _rojo,
-          ),
-          foregroundColor: const WidgetStatePropertyAll(_blanco),
+    return TemaPedidos.aplicar(
+      context,
+      widget.esModoFarmacia ? 'FARMACIA' : 'ALMACEN',
+      base: base.copyWith(
+        colorScheme: base.colorScheme.copyWith(
+          primary: _rojo,
+          onPrimary: _blanco,
+          secondary: _rojo,
+          onSecondary: _blanco,
+          surface: _blanco,
+          surfaceTint: Colors.transparent,
+          onSurface: _texto,
+          error: _rojo,
         ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: botones.copyWith(
-          foregroundColor: const WidgetStatePropertyAll(_rojo),
-          side: const WidgetStatePropertyAll(
-            BorderSide(color: Color(0xFFEF9A9A)),
+        filledButtonTheme: FilledButtonThemeData(
+          style: botones.copyWith(
+            backgroundColor: WidgetStateProperty.resolveWith(
+              (states) =>
+                  states.contains(WidgetState.disabled) ? _grisBorde : _rojo,
+            ),
+            foregroundColor: const WidgetStatePropertyAll(_blanco),
           ),
         ),
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: botones.copyWith(
-          foregroundColor: const WidgetStatePropertyAll(_textoSecundario),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: botones.copyWith(
+            foregroundColor: const WidgetStatePropertyAll(_rojo),
+            side: const WidgetStatePropertyAll(
+              BorderSide(color: Color(0xFFEF9A9A)),
+            ),
+          ),
         ),
-      ),
-      chipTheme: base.chipTheme.copyWith(
-        backgroundColor: _blanco,
-        selectedColor: _rojoSuave,
-        checkmarkColor: _rojo,
-        side: const BorderSide(color: _grisBorde),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        labelStyle: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          color: _texto,
+        textButtonTheme: TextButtonThemeData(
+          style: botones.copyWith(
+            foregroundColor: const WidgetStatePropertyAll(_textoSecundario),
+          ),
         ),
-      ),
-      inputDecorationTheme: base.inputDecorationTheme.copyWith(
-        filled: true,
-        fillColor: _grisFondo,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
+        chipTheme: base.chipTheme.copyWith(
+          backgroundColor: _blanco,
+          selectedColor: _rojoSuave,
+          checkmarkColor: _rojo,
+          side: const BorderSide(color: _grisBorde),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          labelStyle: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: _texto,
+          ),
         ),
-        labelStyle: const TextStyle(fontSize: 13, color: _textoSecundario),
-        hintStyle: const TextStyle(fontSize: 13, color: _textoSecundario),
-        errorStyle: const TextStyle(fontSize: 12, color: _rojo),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _grisBorde),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _rojo, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _rojo),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _rojo, width: 1.5),
+        inputDecorationTheme: base.inputDecorationTheme.copyWith(
+          filled: true,
+          fillColor: _grisFondo,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+          labelStyle: const TextStyle(fontSize: 13, color: _textoSecundario),
+          hintStyle: const TextStyle(fontSize: 13, color: _textoSecundario),
+          errorStyle: const TextStyle(fontSize: 12, color: _rojo),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: _grisBorde),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: _rojo, width: 1.5),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: _rojo),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: _rojo, width: 1.5),
+          ),
         ),
       ),
     );
@@ -146,7 +155,7 @@ class _SolicitudesAbastecimientoViewState
     final vm = context.watch<AlmacenViewModel>();
     final state = vm.state;
 
-    const themeColor = _rojo;
+    final themeColor = _acento;
 
     return Theme(
       data: _temaPedidos(context),
@@ -169,12 +178,6 @@ class _SolicitudesAbastecimientoViewState
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
-              ),
-              Text(
-                widget.esModoFarmacia
-                    ? 'Seguimiento de reposición y recepción física'
-                    : 'Preparación, entrega y trazabilidad de pedidos',
-                style: const TextStyle(fontSize: 11, color: Colors.white70),
               ),
             ],
           ),
@@ -202,7 +205,7 @@ class _SolicitudesAbastecimientoViewState
         ),
         floatingActionButton: widget.esModoFarmacia
             ? FloatingActionButton.extended(
-                backgroundColor: _rojo,
+                backgroundColor: _acento,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -281,6 +284,11 @@ class _SolicitudesAbastecimientoViewState
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
         children: [
+          const FranjaPedidos(
+            titulo: 'Estado de solicitudes',
+            icono: Icons.filter_list_rounded,
+          ),
+          const SizedBox(height: 12),
           // 1. Selector de Filtros
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -290,9 +298,9 @@ class _SolicitudesAbastecimientoViewState
               spacing: 8,
               runSpacing: 8,
               children: [
-                _buildFilterChip('PENDIENTES', 'Pendientes', _rojo),
-                _buildFilterChip('EN CURSO', 'En curso', _rojo),
-                _buildFilterChip('COMPLETADOS', 'Completados', _rojo),
+                _buildFilterChip('PENDIENTES', 'Pendientes', _acento),
+                _buildFilterChip('EN CURSO', 'En curso', _acento),
+                _buildFilterChip('COMPLETADOS', 'Completados', _acento),
                 _buildFilterChip(
                   'ARCHIVADOS',
                   'Cancelados / Rechazados',
@@ -800,7 +808,7 @@ class _SolicitudesAbastecimientoViewState
                 width: double.infinity,
                 child: FilledButton.icon(
                   style: FilledButton.styleFrom(
-                    backgroundColor: _rojo,
+                    backgroundColor: _acento,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   onPressed: isSaving
@@ -965,16 +973,16 @@ class _SolicitudesAbastecimientoViewState
       if (exito && mounted) {
         _seleccionarFiltro('EN CURSO');
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pedido tomado en preparación.'),
-            backgroundColor: _rojo,
+          SnackBar(
+            content: const Text('Pedido tomado en preparación.'),
+            backgroundColor: _acento,
           ),
         );
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(vm.errorMessage ?? 'No se pudo tomar el pedido.'),
-            backgroundColor: _rojo,
+            backgroundColor: _acento,
           ),
         );
       }
@@ -1252,7 +1260,7 @@ class _SolicitudesAbastecimientoViewState
                 ? 'Solicitud cancelada. Puede crear una nueva.'
                 : 'Solicitud rechazada y archivada.',
           ),
-          backgroundColor: _rojo,
+          backgroundColor: _acento,
           action: cancelar
               ? SnackBarAction(
                   label: 'Crear nueva',
@@ -1622,7 +1630,7 @@ class _SolicitudesAbastecimientoViewState
                 ? 'Recepción completada con observación. Devolución registrada.'
                 : 'Recepción conforme. Pedido completado.',
           ),
-          backgroundColor: _rojo,
+          backgroundColor: _acento,
         ),
       );
     }
@@ -1956,11 +1964,11 @@ class _SolicitudesAbastecimientoViewState
     }
     if (resultado == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
+        SnackBar(
+          content: const Text(
             'Pedido listo. Stock transferido y modalidad informada a Farmacia.',
           ),
-          backgroundColor: _rojo,
+          backgroundColor: _acento,
         ),
       );
     }

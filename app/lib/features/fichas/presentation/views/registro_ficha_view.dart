@@ -1,3 +1,4 @@
+import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/tema_area.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
@@ -200,7 +201,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
         areaOrigen: nuevoCodigo,
         tipoFicha: areaObj != null && areaObj.esNeonatologia
             ? 'NEONATOLOGIA'
-            : _borrador.tipoFicha,
+            : 'GENERAL',
         receptorId: nuevoReceptor?.id,
         limpiarReceptorId: nuevoReceptor == null,
         recibidoPor: nuevoReceptor?.nombre ?? '',
@@ -437,7 +438,11 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
   Widget build(BuildContext context) {
     final tema = _temaActual;
     return Theme(
-      data: CatalogoEstilo.tema(context, area: tema),
+      data: TemaPedidos.aplicar(
+        context,
+        _contexto?.rol ?? '',
+        base: CatalogoEstilo.tema(context, area: tema),
+      ),
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
@@ -524,7 +529,6 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
   }
 
   Widget _buildCabeceraContexto(TemaArea tema) {
-    final area = _areaSeleccionada;
     return Container(
       padding: EdgeInsets.all(
         DisenoAdaptable.margen(MediaQuery.sizeOf(context).width),
@@ -537,49 +541,9 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: tema.suave,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  _borrador.esNeonatologia
-                      ? Icons.child_care_rounded
-                      : Icons.assignment_add,
-                  color: tema.principal,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _borrador.esNeonatologia
-                          ? 'Ficha de Pedido · Neonatología'
-                          : 'Ficha de Pedido · General',
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      area == null
-                          ? 'Selecciona un área clínica activa'
-                          : 'Área activa: ${area.nombre} (${area.codigoInterno}) · Tema ${tema.nombre}',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: Color(0xFF64646D),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          FranjaPedidos(
+            titulo: 'Tipo de pedido',
+            icono: Icons.assignment_outlined,
           ),
           const SizedBox(height: 16),
           LayoutBuilder(
@@ -589,23 +553,32 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
               return SegmentedButton<String>(
                 direction: vertical ? Axis.vertical : Axis.horizontal,
                 expandedInsets: vertical ? null : EdgeInsets.zero,
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: 'GENERAL',
+                    enabled:
+                        (_contexto?.areas.any((a) => !a.esNeonatologia) ??
+                        false),
                     icon: Icon(Icons.person_outline_rounded),
-                    label: Text('Ficha General'),
+                    label: Text('Otras áreas'),
                   ),
                   ButtonSegment(
                     value: 'NEONATOLOGIA',
+                    enabled:
+                        (_contexto?.areas.any((a) => a.esNeonatologia) ??
+                        false),
                     icon: Icon(Icons.child_friendly_rounded),
                     label: Text('Neonatología'),
                   ),
                 ],
                 selected: {_borrador.tipoFicha},
-                onSelectionChanged: (seleccion) => setState(() {
-                  _solicitudIdPendiente = null;
-                  _borrador = _borrador.copyWith(tipoFicha: seleccion.first);
-                }),
+                onSelectionChanged: (seleccion) {
+                  final neonatal = seleccion.first == 'NEONATOLOGIA';
+                  final destino = _contexto?.areas
+                      .where((a) => a.esNeonatologia == neonatal)
+                      .firstOrNull;
+                  if (destino != null) _cambiarArea(destino.codigo);
+                },
               );
             },
           ),
@@ -623,9 +596,11 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
   }
 
   Widget _buildSeccionAreaYModalidad(TemaArea tema) {
-    final areas = _contexto?.areas ?? const [];
+    final areas = (_contexto?.areas ?? const <AreaFicha>[])
+        .where((a) => a.esNeonatologia == _borrador.esNeonatologia)
+        .toList();
     return _SeccionTarjeta(
-      titulo: '1. Área clínica, turno y prioridad',
+      titulo: 'Área y prioridad',
       icono: Icons.local_hospital_rounded,
       tema: tema,
       child: LayoutBuilder(
@@ -642,35 +617,36 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
             spacing: 12,
             runSpacing: 12,
             children: [
-              SizedBox(
-                width: anchoCol,
-                child: DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  itemHeight: null,
-                  value: areas.any((a) => a.codigo == _borrador.areaOrigen)
-                      ? _borrador.areaOrigen
-                      : null,
+              if (!_borrador.esNeonatologia || areas.length > 1)
+                SizedBox(
+                  width: anchoCol,
+                  child: DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    itemHeight: null,
+                    value: areas.any((a) => a.codigo == _borrador.areaOrigen)
+                        ? _borrador.areaOrigen
+                        : null,
 
-                  decoration: const InputDecoration(
-                    labelText: 'Área clínica solicitante',
-                    prefixIcon: Icon(Icons.apartment_rounded),
-                  ),
-                  items: areas
-                      .map(
-                        (a) => DropdownMenuItem(
-                          value: a.codigo,
-                          child: Text(
-                            '${a.nombre} (${a.codigoInterno})',
-                            softWrap: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Área clínica solicitante',
+                      prefixIcon: Icon(Icons.apartment_rounded),
+                    ),
+                    items: areas
+                        .map(
+                          (a) => DropdownMenuItem(
+                            value: a.codigo,
+                            child: Text(
+                              '${a.nombre} (${a.codigoInterno})',
+                              softWrap: true,
+                            ),
                           ),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) {
-                    if (v != null) _cambiarArea(v);
-                  },
+                        )
+                        .toList(),
+                    onChanged: (v) {
+                      if (v != null) _cambiarArea(v);
+                    },
+                  ),
                 ),
-              ),
               SizedBox(
                 width: anchoCol,
                 child: DropdownButtonFormField<String>(
@@ -739,7 +715,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
   Widget _buildSeccionDatosClinicos(TemaArea tema) {
     if (_borrador.esNeonatologia) {
       return _SeccionTarjeta(
-        titulo: '2. Datos clínicos de Neonatología (Madre y Recién Nacido)',
+        titulo: 'Madre y recién nacido',
         icono: Icons.child_friendly_rounded,
         tema: tema,
         child: Column(
@@ -763,6 +739,9 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                       width: ancho,
                       child: TextField(
                         controller: _madreCtrl,
+                        minLines: 1,
+                        maxLines: 3,
+                        textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
                           labelText: 'Nombres y apellidos de la madre *',
                           prefixIcon: Icon(Icons.pregnant_woman_rounded),
@@ -773,6 +752,9 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                       width: ancho,
                       child: TextField(
                         controller: _rnApellidosCtrl,
+                        minLines: 1,
+                        maxLines: 3,
+                        textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
                           labelText: 'Apellidos del recién nacido (RN) *',
                           prefixIcon: Icon(Icons.baby_changing_station_rounded),
@@ -831,6 +813,8 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
             const SizedBox(height: 12),
             TextField(
               controller: _diagnosticoCtrl,
+              minLines: 2,
+              maxLines: 5,
               decoration: const InputDecoration(
                 labelText: 'Diagnóstico o motivo neonatal (opcional)',
                 prefixIcon: Icon(Icons.notes_rounded),
@@ -842,7 +826,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
     }
 
     return _SeccionTarjeta(
-      titulo: '2. Datos clínicos del paciente (Ficha General)',
+      titulo: 'Datos del paciente',
       icono: Icons.person_pin_rounded,
       tema: tema,
       child: Column(
@@ -866,6 +850,9 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                     width: ancho,
                     child: TextField(
                       controller: _pacienteCtrl,
+                      minLines: 1,
+                      maxLines: 3,
+                      textInputAction: TextInputAction.next,
                       decoration: const InputDecoration(
                         labelText: 'Nombres y apellidos del paciente *',
                         prefixIcon: Icon(Icons.person_rounded),
@@ -916,6 +903,9 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
             const SizedBox(height: 12),
             TextField(
               controller: _procedenciaDetalleCtrl,
+              minLines: 1,
+              maxLines: 3,
+              textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
                 labelText: 'Especificar detalle de procedencia *',
                 prefixIcon: Icon(Icons.edit_location_alt_rounded),
@@ -925,6 +915,8 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
           const SizedBox(height: 12),
           TextField(
             controller: _diagnosticoCtrl,
+            minLines: 2,
+            maxLines: 5,
             decoration: const InputDecoration(
               labelText: 'Diagnóstico o motivo del pedido *',
               prefixIcon: Icon(Icons.medical_information_rounded),
@@ -945,7 +937,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
     final finActual = _financiamientoSeleccionado;
 
     return _SeccionTarjeta(
-      titulo: '3. Financiamiento, médico a cargo y personal receptor',
+      titulo: 'Responsables y financiamiento',
       icono: Icons.verified_user_rounded,
       tema: tema,
       child: Column(
@@ -973,7 +965,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                       itemHeight: null,
                       value: _borrador.tipoAtencion,
                       decoration: const InputDecoration(
-                        labelText: 'Modalidad de financiamiento *',
+                        labelText: 'Financiamiento *',
                         prefixIcon: Icon(Icons.account_balance_wallet_rounded),
                       ),
                       items: const [
@@ -1131,7 +1123,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                           : null,
 
                       decoration: const InputDecoration(
-                        labelText: 'Personal receptor del área *',
+                        labelText: 'Receptor del área *',
                         prefixIcon: Icon(Icons.badge_rounded),
                       ),
                       items: receptores
@@ -1172,7 +1164,8 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
           ],
           TextField(
             controller: _observacionesCtrl,
-            maxLines: 2,
+            minLines: 2,
+            maxLines: 5,
             decoration: const InputDecoration(
               labelText: 'Observaciones adicionales para Farmacia (opcional)',
               prefixIcon: Icon(Icons.comment_rounded),
@@ -1189,8 +1182,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
     final dispositivos = _borrador.dispositivosMedicos;
 
     return _SeccionTarjeta(
-      titulo:
-          '4. Kit preestablecido (HU-005) y selección con stock en Farmacia (HU-004)',
+      titulo: 'Productos del pedido',
       icono: Icons.inventory_rounded,
       tema: tema,
       child: Column(
@@ -1267,7 +1259,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
           ],
           const SizedBox(height: 16),
           _buildSubseccionItems(
-            titulo: 'Sección A · Medicamentos (${meds.length})',
+            titulo: 'Medicamentos (${meds.length})',
             icono: Icons.medication_rounded,
             vacioTexto:
                 'No hay medicamentos en la ficha. Usa "Aplicar kit del área" o "Agregar medicamento".',
@@ -1307,21 +1299,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Icon(icono, size: 19, color: tema.principal),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  titulo,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          FranjaPedidos(titulo: titulo, icono: icono),
           const SizedBox(height: 10),
           if (items.isEmpty)
             Padding(
@@ -1517,8 +1495,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
 
   Widget _buildSeccionFichasRecientes(TemaArea tema) {
     return _SeccionTarjeta(
-      titulo:
-          'Fichas recientes del área (${_fichasRecientes.length}) · Edición en estado SOLICITADO (RF-003)',
+      titulo: 'Fichas recientes del área (${_fichasRecientes.length})',
       icono: Icons.history_rounded,
       tema: tema,
       child: ListView.separated(
@@ -1628,21 +1605,7 @@ class _SeccionTarjeta extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Icon(icono, color: tema.principal, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  titulo,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          FranjaPedidos(titulo: titulo, icono: icono),
           const SizedBox(height: 14),
           child,
         ],

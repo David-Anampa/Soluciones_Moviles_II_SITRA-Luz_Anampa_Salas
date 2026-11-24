@@ -1,3 +1,4 @@
+import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/tema_area.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
@@ -313,7 +314,7 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Confirmar entrega y descuento FEFO (HU-010)',
+                      'Confirmar entrega y descuento FEFO',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -382,7 +383,7 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                 ),
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF1B5E20),
+                    backgroundColor: TemaPedidos.colorRol(_rolUsuario),
                   ),
                   onPressed: () {
                     final nombreReceptor = receptoresArea
@@ -448,8 +449,8 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
               Expanded(
                 child: Text(
                   yaEntregada
-                      ? 'Anular ficha con contra-asiento (HU-011)'
-                      : 'Anular ficha de pedido (HU-011)',
+                      ? 'Anular ficha con contra-asiento'
+                      : 'Anular ficha de pedido',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
@@ -555,95 +556,100 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
     final tema = _temaFicha;
     final ficha = _ficha;
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (didPop) return;
-        Navigator.of(context).pop(_huboCambios);
-      },
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF6F7FB),
-        appBar: AppBar(
-          backgroundColor: tema.principal,
-          foregroundColor: Colors.white,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
-            tooltip: 'Volver al listado',
-            onPressed: () => Navigator.of(context).pop(_huboCambios),
-          ),
-          title: Text(
-            ficha == null
-                ? 'Detalle de Ficha (HU-007)'
-                : '${ficha.numeroFicha} · ${ficha.areaNombre}',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-          ),
-          actions: [
-            IconButton(
-              tooltip: 'Recargar detalle e historial',
-              onPressed: _cargando || _procesandoAccion ? null : _cargarDetalle,
-              icon: const Icon(Icons.refresh_rounded),
+    return Theme(
+      data: TemaPedidos.aplicar(context, _rolUsuario),
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) return;
+          Navigator.of(context).pop(_huboCambios);
+        },
+        child: Scaffold(
+          backgroundColor: const Color(0xFFF6F7FB),
+          appBar: AppBar(
+            backgroundColor: TemaPedidos.colorRol(_rolUsuario),
+            foregroundColor: Colors.white,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              tooltip: 'Volver al listado',
+              onPressed: () => Navigator.of(context).pop(_huboCambios),
             ),
-          ],
-        ),
-        body: _cargando && ficha == null
-            ? const Center(child: CircularProgressIndicator())
-            : _errorCarga != null && ficha == null
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
+            title: Text(
+              ficha == null
+                  ? 'Detalle del pedido'
+                  : '${ficha.numeroFicha} · ${ficha.areaNombre}',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+            ),
+            actions: [
+              IconButton(
+                tooltip: 'Recargar detalle e historial',
+                onPressed: _cargando || _procesandoAccion
+                    ? null
+                    : _cargarDetalle,
+                icon: const Icon(Icons.refresh_rounded),
+              ),
+            ],
+          ),
+          body: _cargando && ficha == null
+              ? const Center(child: CircularProgressIndicator())
+              : _errorCarga != null && ficha == null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        MensajesApp.nota(_errorCarga!, tipo: TipoMensaje.error),
+                        const SizedBox(height: 16),
+                        FilledButton.icon(
+                          onPressed: _cargarDetalle,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Reintentar'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : ficha == null
+              ? const SizedBox.shrink()
+              : ContenidoAdaptable(
+                  anchoMaximo: 1080,
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      MensajesApp.nota(_errorCarga!, tipo: TipoMensaje.error),
-                      const SizedBox(height: 16),
-                      FilledButton.icon(
-                        onPressed: _cargarDetalle,
-                        icon: const Icon(Icons.refresh_rounded),
-                        label: const Text('Reintentar'),
+                      _buildBannerEstadoYFlujo(ficha, tema),
+                      const SizedBox(height: 14),
+                      _buildDatosClinicosYFinanciamiento(ficha, tema),
+                      const SizedBox(height: 14),
+                      if (ficha.puedeEditarDespacho(_rolUsuario)) ...[
+                        _buildNotaModoPreparacion(ficha),
+                        const SizedBox(height: 14),
+                      ],
+                      _buildSeccionItemsCategoria(
+                        ficha: ficha,
+                        tema: tema,
+                        titulo: 'Medicamentos (${ficha.medicamentos.length})',
+                        icono: Icons.medication_rounded,
+                        items: ficha.medicamentos,
                       ),
+                      const SizedBox(height: 14),
+                      _buildSeccionItemsCategoria(
+                        ficha: ficha,
+                        tema: tema,
+                        titulo:
+                            'Dispositivos Médicos e Insumos (${ficha.dispositivosMedicos.length})',
+                        icono: Icons.medical_services_rounded,
+                        items: ficha.dispositivosMedicos,
+                      ),
+                      const SizedBox(height: 14),
+                      _buildPanelOperacionAtencion(ficha, tema),
+                      const SizedBox(height: 14),
+                      _buildSeccionHistorialAuditoria(ficha, tema),
                     ],
                   ),
                 ),
-              )
-            : ficha == null
-            ? const SizedBox.shrink()
-            : ContenidoAdaptable(
-                anchoMaximo: 1080,
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildBannerEstadoYFlujo(ficha, tema),
-                    const SizedBox(height: 14),
-                    _buildDatosClinicosYFinanciamiento(ficha, tema),
-                    const SizedBox(height: 14),
-                    if (ficha.puedeEditarDespacho(_rolUsuario)) ...[
-                      _buildNotaModoPreparacion(ficha),
-                      const SizedBox(height: 14),
-                    ],
-                    _buildSeccionItemsCategoria(
-                      ficha: ficha,
-                      tema: tema,
-                      titulo: 'Medicamentos (${ficha.medicamentos.length})',
-                      icono: Icons.medication_rounded,
-                      items: ficha.medicamentos,
-                    ),
-                    const SizedBox(height: 14),
-                    _buildSeccionItemsCategoria(
-                      ficha: ficha,
-                      tema: tema,
-                      titulo:
-                          'Dispositivos Médicos e Insumos (${ficha.dispositivosMedicos.length})',
-                      icono: Icons.medical_services_rounded,
-                      items: ficha.dispositivosMedicos,
-                    ),
-                    const SizedBox(height: 14),
-                    _buildPanelOperacionAtencion(ficha, tema),
-                    const SizedBox(height: 14),
-                    _buildSeccionHistorialAuditoria(ficha, tema),
-                  ],
-                ),
-              ),
+        ),
       ),
     );
   }
@@ -838,17 +844,9 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Icon(Icons.person_pin_rounded, color: tema.principal, size: 20),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'Datos clínicos, responsables y valorización (HU-007)',
-                  style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800),
-                ),
-              ),
-            ],
+          FranjaPedidos(
+            titulo: 'Datos del pedido',
+            icono: Icons.person_pin_rounded,
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -908,10 +906,7 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                 valor: ficha.financiamientoNombreAplicado ?? ficha.tipoAtencion,
               ),
               if (ficha.kitNombre != null && ficha.kitNombre!.isNotEmpty)
-                _DatoDetalle(
-                  etiqueta: 'Kit aplicado (HU-005)',
-                  valor: ficha.kitNombre!,
-                ),
+                _DatoDetalle(etiqueta: 'Kit', valor: ficha.kitNombre!),
               _DatoDetalle(
                 etiqueta: 'Solicitado el',
                 valor: _formatearFechaHora(ficha.fechaCreacion),
@@ -1010,7 +1005,7 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
 
   Widget _buildNotaModoPreparacion(FichaRegistrada ficha) {
     return MensajesApp.nota(
-      'Modo de atención de Farmacia activo (HU-008 / HU-009): Puedes ajustar la cantidad real a despachar en cada ítem según el stock vigente en Farmacia. Si entregas menos de lo solicitado (despacho parcial), ingresa la observación justificativa en el ítem.',
+      'Puedes ajustar la cantidad real a despachar en cada ítem según el stock vigente en Farmacia. Si entregas menos de lo solicitado (despacho parcial), ingresa la observación justificativa en el ítem.',
       tipo: TipoMensaje.informacion,
     );
   }
@@ -1034,21 +1029,7 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Icon(icono, color: tema.principal, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  titulo,
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          FranjaPedidos(titulo: titulo, icono: icono),
           const SizedBox(height: 12),
           if (items.isEmpty)
             const Padding(
@@ -1187,7 +1168,7 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           const Text(
-                            'Cantidad a despachar (HU-009):',
+                            'Cantidad a despachar:',
                             style: TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w700,
@@ -1334,7 +1315,7 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Lotes FEFO descontados de Farmacia (HU-010):',
+                              'Lotes FEFO descontados de Farmacia:',
                               style: TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w800,
@@ -1415,35 +1396,10 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Icon(
-                Icons.published_with_changes_rounded,
-                color: tema.principal,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'Operación y cambio de estado de la ficha (HU-008 / HU-009 / HU-010 / HU-011)',
-                  style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800),
-                ),
-              ),
-            ],
+          FranjaPedidos(
+            titulo: 'Atender pedido',
+            icono: Icons.published_with_changes_rounded,
           ),
-          if (puedeEditar) ...[
-            const SizedBox(height: 12),
-            TextField(
-              controller: _notasFarmaciaCtrl,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Nota general de preparación / despacho en Farmacia',
-                hintText:
-                    'Opcional: observaciones generales para el personal de piso',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
           const SizedBox(height: 14),
           AccionesAdaptables(
             anchoMinimo: 210,
@@ -1451,7 +1407,7 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
               if (puedeIniciar)
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFE65100),
+                    backgroundColor: TemaPedidos.colorRol(_rolUsuario),
                   ),
                   onPressed: _procesandoAccion
                       ? null
@@ -1461,7 +1417,7 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                               'Ficha ${ficha.numeroFicha} marcada EN PREPARACIÓN.',
                         ),
                   icon: const Icon(Icons.play_arrow_rounded),
-                  label: const Text('1. Iniciar preparación (HU-008)'),
+                  label: const Text('Iniciar preparación'),
                 ),
               if (puedeEditar)
                 OutlinedButton.icon(
@@ -1473,12 +1429,12 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                               'Cantidades y observaciones de despacho guardadas.',
                         ),
                   icon: const Icon(Icons.save_outlined),
-                  label: const Text('Guardar avance de despacho (HU-009)'),
+                  label: const Text('Guardar avance de despacho'),
                 ),
               if (puedeMarcarListo)
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF4A148C),
+                    backgroundColor: TemaPedidos.colorRol(_rolUsuario),
                   ),
                   onPressed: _procesandoAccion
                       ? null
@@ -1488,20 +1444,18 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                               'Ficha ${ficha.numeroFicha} marcada como LISTA PARA RECOJO.',
                         ),
                   icon: const Icon(Icons.fact_check_rounded),
-                  label: const Text('2. Marcar listo para recojo (HU-008)'),
+                  label: const Text('Marcar listo para recojo'),
                 ),
               if (puedeEntregar)
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF1B5E20),
+                    backgroundColor: TemaPedidos.colorRol(_rolUsuario),
                   ),
                   onPressed: _procesandoAccion
                       ? null
                       : _abrirDialogoConfirmarEntrega,
                   icon: const Icon(Icons.verified_rounded),
-                  label: const Text(
-                    '3. Confirmar entrega y descontar FEFO (HU-010)',
-                  ),
+                  label: const Text('Confirmar entrega'),
                 ),
               if (puedeAnular)
                 OutlinedButton.icon(
@@ -1515,8 +1469,8 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                   icon: const Icon(Icons.cancel_outlined),
                   label: Text(
                     ficha.estado == 'ENTREGADO'
-                        ? 'Anular con contra-asiento (HU-011)'
-                        : 'Anular ficha con motivo (HU-011)',
+                        ? 'Anular con contra-asiento'
+                        : 'Anular ficha con motivo',
                   ),
                 ),
             ],
@@ -1537,20 +1491,9 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Icon(Icons.timeline_rounded, color: tema.principal, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Historial y trazabilidad de la ficha (${ficha.historial.length}) · HU-007 / Kardex HU-025',
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ],
+          FranjaPedidos(
+            titulo: 'Historial (${ficha.historial.length})',
+            icono: Icons.timeline_rounded,
           ),
           const SizedBox(height: 12),
           if (ficha.historial.isEmpty)
