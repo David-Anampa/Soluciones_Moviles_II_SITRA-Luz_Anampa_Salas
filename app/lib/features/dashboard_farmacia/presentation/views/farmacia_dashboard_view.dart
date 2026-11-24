@@ -332,7 +332,7 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
                         color: AppColors.farmaciaColor,
                         nombre: 'Consultar kits por área',
                         icono: Icons.medical_services_outlined,
-                        onTap: () => context.push('/kits'),
+                        onTap: () => context.push('/kits?vista=FARMACIA'),
                       ),
                       BotonModulo(
                         color: AppColors.farmaciaColor,

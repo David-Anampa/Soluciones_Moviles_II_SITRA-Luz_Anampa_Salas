@@ -191,11 +191,11 @@ class _FichasListadoViewState extends State<FichasListadoView> {
   @override
   Widget build(BuildContext context) {
     return Theme(
-      data: TemaPedidos.aplicar(context, _rolUsuario),
+      data: TemaPedidos.aplicar(context, TemaPedidos.rolActual(context)),
       child: Scaffold(
         backgroundColor: const Color(0xFFF6F7FB),
         appBar: AppBar(
-          backgroundColor: TemaPedidos.colorRol(_rolUsuario),
+          backgroundColor: TemaPedidos.colorRol(TemaPedidos.rolActual(context)),
           foregroundColor: Colors.white,
           title: const Text(
             'Atender pedidos de áreas',
@@ -212,7 +212,9 @@ class _FichasListadoViewState extends State<FichasListadoView> {
         floatingActionButton: _puedeRegistrarNuevaFicha
             ? FloatingActionButton.extended(
                 onPressed: _cargando ? null : _abrirRegistroNuevaFicha,
-                backgroundColor: TemaPedidos.colorRol(_rolUsuario),
+                backgroundColor: TemaPedidos.colorRol(
+                  TemaPedidos.rolActual(context),
+                ),
                 foregroundColor: Colors.white,
                 icon: const Icon(Icons.post_add_rounded),
                 label: const Text('Registrar pedido'),
@@ -265,40 +267,50 @@ class _FichasListadoViewState extends State<FichasListadoView> {
         'TODOS',
         'Total en área',
         _todasDelContexto.length,
-        const Color(0xFF1E293B),
-        const Color(0xFFF1F5F9),
+        TemaPedidos.colorRol(TemaPedidos.rolActual(context)),
+        TemaPedidos.colorRol(
+          TemaPedidos.rolActual(context),
+        ).withValues(alpha: .10),
         Icons.folder_copy_outlined,
       ),
       (
         'SOLICITADO',
         'Pendientes',
         _contarPorEstado('SOLICITADO'),
-        const Color(0xFF0D47A1),
-        const Color(0xFFE3F2FD),
+        TemaPedidos.colorRol(TemaPedidos.rolActual(context)),
+        TemaPedidos.colorRol(
+          TemaPedidos.rolActual(context),
+        ).withValues(alpha: .10),
         Icons.mark_email_unread_outlined,
       ),
       (
         'EN_PREPARACION',
         'En preparación',
         _contarPorEstado('EN_PREPARACION'),
-        const Color(0xFFE65100),
-        const Color(0xFFFFF3E0),
+        TemaPedidos.colorRol(TemaPedidos.rolActual(context)),
+        TemaPedidos.colorRol(
+          TemaPedidos.rolActual(context),
+        ).withValues(alpha: .10),
         Icons.inventory_2_outlined,
       ),
       (
         'LISTO_PARA_RECOJO',
         'Listas recojo',
         _contarPorEstado('LISTO_PARA_RECOJO'),
-        const Color(0xFF4A148C),
-        const Color(0xFFF3E5F5),
+        TemaPedidos.colorRol(TemaPedidos.rolActual(context)),
+        TemaPedidos.colorRol(
+          TemaPedidos.rolActual(context),
+        ).withValues(alpha: .10),
         Icons.fact_check_outlined,
       ),
       (
         'ENTREGADO',
         'Entregadas',
         _contarPorEstado('ENTREGADO'),
-        const Color(0xFF1B5E20),
-        const Color(0xFFE8F5E9),
+        TemaPedidos.colorRol(TemaPedidos.rolActual(context)),
+        TemaPedidos.colorRol(
+          TemaPedidos.rolActual(context),
+        ).withValues(alpha: .10),
         Icons.verified_outlined,
       ),
       (
@@ -706,7 +718,10 @@ class _TarjetaFichaItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (colorEstado, fondoEstado) = switch (ficha.estado) {
-      'SOLICITADO' => (const Color(0xFF0D47A1), const Color(0xFFE3F2FD)),
+      'SOLICITADO' => (
+        Theme.of(context).colorScheme.primary,
+        Theme.of(context).colorScheme.primary.withValues(alpha: .10),
+      ),
       'EN_PREPARACION' => (const Color(0xFFE65100), const Color(0xFFFFF3E0)),
       'LISTO_PARA_RECOJO' => (const Color(0xFF4A148C), const Color(0xFFF3E5F5)),
       'ENTREGADO' => (const Color(0xFF1B5E20), const Color(0xFFE8F5E9)),

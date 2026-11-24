@@ -383,7 +383,9 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                 ),
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
-                    backgroundColor: TemaPedidos.colorRol(_rolUsuario),
+                    backgroundColor: TemaPedidos.colorRol(
+                      TemaPedidos.rolActual(context),
+                    ),
                   ),
                   onPressed: () {
                     final nombreReceptor = receptoresArea
@@ -1416,7 +1418,9 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
               if (puedeIniciar)
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
-                    backgroundColor: TemaPedidos.colorRol(_rolUsuario),
+                    backgroundColor: TemaPedidos.colorRol(
+                      TemaPedidos.rolActual(context),
+                    ),
                   ),
                   onPressed: _procesandoAccion
                       ? null
@@ -1443,7 +1447,9 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
               if (puedeMarcarListo)
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
-                    backgroundColor: TemaPedidos.colorRol(_rolUsuario),
+                    backgroundColor: TemaPedidos.colorRol(
+                      TemaPedidos.rolActual(context),
+                    ),
                   ),
                   onPressed: _procesandoAccion
                       ? null
@@ -1458,7 +1464,9 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
               if (puedeEntregar)
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
-                    backgroundColor: TemaPedidos.colorRol(_rolUsuario),
+                    backgroundColor: TemaPedidos.colorRol(
+                      TemaPedidos.rolActual(context),
+                    ),
                   ),
                   onPressed: _procesandoAccion
                       ? null

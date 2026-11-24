@@ -314,7 +314,7 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
                       BotonModulo(
                         nombre: 'Gestionar kits del área',
                         icono: Icons.medical_services_outlined,
-                        onTap: () => context.push('/kits'),
+                        onTap: () => context.push('/kits?vista=ENFERMERIA'),
                       ),
                       BotonModulo(
                         nombre: 'Consultar existencias',

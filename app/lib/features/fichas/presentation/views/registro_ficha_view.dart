@@ -440,7 +440,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
     return Theme(
       data: TemaPedidos.aplicar(
         context,
-        _contexto?.rol ?? '',
+        TemaPedidos.rolActual(context),
         base: CatalogoEstilo.tema(context, area: tema),
       ),
       child: Scaffold(

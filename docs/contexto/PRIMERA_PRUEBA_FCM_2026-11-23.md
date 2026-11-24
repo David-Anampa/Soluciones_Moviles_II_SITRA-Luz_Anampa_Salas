@@ -163,3 +163,10 @@ Solicitar a Almacén, Solicitudes y recepción, Atender pedidos de áreas, Consu
 existencias, Consultar kits por área y Reportes y diferencias. El detalle clínico
 conserva su fondo del área solicitante según lo acordado. Se mantiene rojo para
 errores y acciones de riesgo; no se cambió la lógica de pedidos ni stock.
+
+Corrección posterior: el color visual se resuelve por el módulo abierto y no
+solo por la identidad autenticada. Así, Administración entrando a Farmacia
+también ve verde. Kits conserva el ámbito visual de origen mediante el parámetro
+`vista` de navegación (solo presentación); Enfermería lo ve rojo. Se eliminaron
+los colores fijos del resumen general de pedidos y del estado solicitado. Los
+permisos siguen usando el rol del contexto del servidor y no este ámbito visual.

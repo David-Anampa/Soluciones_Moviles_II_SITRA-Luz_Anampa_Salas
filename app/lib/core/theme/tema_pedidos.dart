@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
@@ -7,8 +8,30 @@ import 'app_theme.dart';
 
 /// Apariencia compartida; no contiene permisos ni acciones de los pedidos.
 class TemaPedidos {
-  static String rolActual(BuildContext context) =>
-      context.read<AuthViewModel>().currentUser?.rol.dbValue ?? '';
+  /// Ámbito exclusivamente visual. Nunca usar este resultado para permisos.
+  static String rolActual(BuildContext context) {
+    try {
+      final uri = GoRouter.of(context).routeInformationProvider.value.uri;
+      // Los subflujos de Navigator conservan la ruta del módulo de origen.
+      for (final entry in const {
+        '/farmacia': 'FARMACIA',
+        '/enfermeria': 'ENFERMERIA',
+        '/almacen': 'ALMACEN',
+        '/jefatura': 'JEFATURA_FARMACIA',
+      }.entries) {
+        if (uri.path == entry.key || uri.path.startsWith('${entry.key}/')) {
+          return entry.value;
+        }
+      }
+      if (uri.path == '/kits') {
+        final vista = uri.queryParameters['vista'];
+        if (vista == 'FARMACIA' || vista == 'ENFERMERIA') return vista!;
+      }
+    } catch (_) {
+      /* Sin router: usar la identidad de la sesión. */
+    }
+    return context.read<AuthViewModel>().currentUser?.rol.dbValue ?? '';
+  }
 
   static Color colorRol(String rol) => switch (rol.toUpperCase()) {
     'ALMACEN' => AppColors.almacenColor,
