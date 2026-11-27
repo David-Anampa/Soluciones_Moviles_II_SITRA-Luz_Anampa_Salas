@@ -28,6 +28,13 @@ y áreas antes de P003-1. No crea usuarios ni habilita altas desde Enfermería.
 Ver [guía y preparación](../supabase/GUIA_PROFESIONALES_ADMIN_2026_11_27.md).
 La aceptación manual de esta ampliación y de HU-003 sigue pendiente.
 
+**Selectores y procedencias HU-003 del 27/11:** los ocho selectores de Nueva
+ficha comparten estilos del módulo; más de cuatro opciones abre buscador. Otro
+permite registrar una procedencia compartida, sin duplicarla por tildes,
+mayúsculas o espacios. Migración aplicada; no cambia áreas ni stock.
+Ver [guía y pruebas manuales pendientes](../supabase/GUIA_PROCEDENCIAS_COMPARTIDAS_2026_11_27.md).
+No se marca HU-003 aceptada por esta ampliación.
+
 ## 1. Alcance y forma de interpretar este documento
 
 Revisión estática del código y SQL de `Sprint-08`, commit base `40d65bb`.

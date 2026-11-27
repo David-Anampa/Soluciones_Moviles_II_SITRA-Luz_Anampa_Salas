@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/tema_area.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/widgets/mensajes_app.dart';
+import '../../../../core/widgets/selector_catalogo.dart';
 import '../../../administracion/presentation/widgets/catalogo_estilo.dart';
 import '../../../almacen/domain/solicitud_id.dart';
 import '../../data/repositories/fichas_repository.dart';
@@ -44,6 +45,8 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
   FichaBorrador _borrador = FichaBorrador();
   bool _cargando = true;
   bool _guardando = false;
+  bool _guardandoProcedencia = false;
+  List<ProcedenciaFicha> _procedencias = List.of(ProcedenciaFicha.iniciales);
   String? _errorCarga;
   String? _solicitudIdPendiente;
 
@@ -100,6 +103,72 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
     for (final m in _catalogoStock) m.id: m.farmaciaDisponible,
   };
 
+  String get _procedenciaSeleccionada {
+    if (_borrador.procedencia != 'OTRO') return _borrador.procedencia;
+    final normalizado = normalizarEtiquetaCatalogo(
+      _borrador.procedenciaDetalle,
+    );
+    return _procedencias
+            .where((p) => normalizarEtiquetaCatalogo(p.nombre) == normalizado)
+            .firstOrNull
+            ?.codigo ??
+        'OTRO';
+  }
+
+  void _elegirProcedencia(ProcedenciaFicha? p) {
+    final base =
+        p != null &&
+        (p.codigo == 'EMERGENCIA' || p.codigo == 'HOSPITALIZACION');
+    final detalle = p != null && !base ? p.nombre : '';
+    _procedenciaDetalleCtrl.text = detalle;
+    _solicitudIdPendiente = null;
+    _borrador = _borrador.copyWith(
+      procedencia: base ? p.codigo : 'OTRO',
+      procedenciaDetalle: detalle,
+    );
+  }
+
+  Future<void> _guardarProcedencia() async {
+    if (_guardandoProcedencia || _guardando) return;
+    final error = FichaValidadores.validarProcedenciaDetalle(
+      'OTRO',
+      _procedenciaDetalleCtrl.text,
+    );
+    if (error != null) {
+      MensajesApp.mostrar(context, error, tipo: TipoMensaje.advertencia);
+      return;
+    }
+    final borradorAnterior = _borrador;
+    setState(() => _guardandoProcedencia = true);
+    try {
+      final p = await _repository.registrarProcedencia(
+        _procedenciaDetalleCtrl.text,
+      );
+      if (!mounted) return;
+      setState(() {
+        if (!_procedencias.any((o) => o.codigo == p.codigo)) {
+          _procedencias.add(p);
+          _procedencias.sort((a, b) => a.nombre.compareTo(b.nombre));
+        }
+        if (identical(_borrador, borradorAnterior)) _elegirProcedencia(p);
+      });
+      MensajesApp.mostrar(
+        context,
+        'Procedencia disponible para todos los usuarios.',
+      );
+    } catch (e) {
+      if (mounted) {
+        MensajesApp.mostrar(
+          context,
+          'No se pudo guardar la procedencia: $e',
+          tipo: TipoMensaje.error,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _guardandoProcedencia = false);
+    }
+  }
+
   Future<void> _cargarDatosIniciales({String? areaPreferida}) async {
     setState(() {
       _cargando = true;
@@ -151,6 +220,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
       if (!mounted) return;
       setState(() {
         _contexto = ctx;
+        _procedencias = List.of(ctx.procedencias);
         _catalogoStock = stock;
         _fichasRecientes = recientes;
         if (_borrador.id == null && _borrador.items.isEmpty) {
@@ -377,7 +447,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
   }
 
   Future<void> _guardarFicha() async {
-    if (_guardando) return;
+    if (_guardando || _guardandoProcedencia) return;
     final sincronizado = _borrador.copyWith(
       pacienteNombre: _pacienteCtrl.text,
       procedenciaDetalle: _procedenciaDetalleCtrl.text,
@@ -472,7 +542,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
           actions: [
             IconButton(
               tooltip: 'Actualizar catálogo y stock en tiempo real',
-              onPressed: _cargando || _guardando
+              onPressed: _cargando || _guardando || _guardandoProcedencia
                   ? null
                   : () => _cargarDatosIniciales(
                       areaPreferida: _borrador.areaOrigen,
@@ -649,9 +719,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
               if (!_borrador.esNeonatologia || areas.length > 1)
                 SizedBox(
                   width: anchoCol,
-                  child: DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    itemHeight: null,
+                  child: SelectorCatalogo(
                     value: areas.any((a) => a.codigo == _borrador.areaOrigen)
                         ? _borrador.areaOrigen
                         : null,
@@ -678,9 +746,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                 ),
               SizedBox(
                 width: anchoCol,
-                child: DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  itemHeight: null,
+                child: SelectorCatalogo(
                   value: _borrador.turno,
                   decoration: const InputDecoration(
                     labelText: 'Turno asistencial',
@@ -709,9 +775,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
               ),
               SizedBox(
                 width: anchoCol,
-                child: DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  itemHeight: null,
+                child: SelectorCatalogo(
                   value: _borrador.prioridad,
                   decoration: const InputDecoration(
                     labelText: 'Prioridad del pedido',
@@ -792,9 +856,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                     ),
                     SizedBox(
                       width: ancho,
-                      child: DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        itemHeight: null,
+                      child: SelectorCatalogo(
                         value: _borrador.tipoParto,
                         decoration: const InputDecoration(
                           labelText: 'Tipo de parto *',
@@ -890,54 +952,67 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                   ),
                   SizedBox(
                     width: ancho,
-                    child: DropdownButtonFormField<String>(
-                      isExpanded: true,
-                      itemHeight: null,
-                      value: _borrador.procedencia,
+                    child: SelectorCatalogo(
+                      value: _procedenciaSeleccionada,
                       decoration: const InputDecoration(
                         labelText: 'Procedencia del paciente *',
                         prefixIcon: Icon(
                           Icons.transfer_within_a_station_rounded,
                         ),
                       ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'EMERGENCIA',
-                          child: Text('Emergencia'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'HOSPITALIZACION',
-                          child: Text('Hospitalización'),
-                        ),
-                        DropdownMenuItem(
+                      items: [
+                        for (final p in _procedencias)
+                          DropdownMenuItem(
+                            value: p.codigo,
+                            child: Text(p.nombre),
+                          ),
+                        const DropdownMenuItem(
                           value: 'OTRO',
-                          child: Text('Otro (Especificar)'),
+                          child: Text('Otra procedencia…'),
                         ),
                       ],
-                      onChanged: (v) {
-                        if (v != null) {
-                          setState(() {
-                            _solicitudIdPendiente = null;
-                            _borrador = _borrador.copyWith(procedencia: v);
-                          });
-                        }
-                      },
+                      onChanged: _guardandoProcedencia
+                          ? null
+                          : (v) {
+                              if (v == null) return;
+                              final p = _procedencias
+                                  .where((p) => p.codigo == v)
+                                  .firstOrNull;
+                              setState(() => _elegirProcedencia(p));
+                            },
                     ),
                   ),
                 ],
               );
             },
           ),
-          if (_borrador.procedencia == 'OTRO') ...[
+          if (_procedenciaSeleccionada == 'OTRO') ...[
             const SizedBox(height: 12),
             TextField(
               controller: _procedenciaDetalleCtrl,
+              enabled: !_guardandoProcedencia,
+              maxLength: 120,
               minLines: 1,
               maxLines: 3,
               textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
-                labelText: 'Especificar detalle de procedencia *',
+                labelText: 'Nombre de la procedencia *',
                 prefixIcon: Icon(Icons.edit_location_alt_rounded),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.icon(
+                onPressed: _guardandoProcedencia ? null : _guardarProcedencia,
+                icon: _guardandoProcedencia
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.add_location_alt_rounded),
+                label: const Text('Guardar procedencia'),
               ),
             ),
           ],
@@ -990,9 +1065,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                 children: [
                   SizedBox(
                     width: ancho,
-                    child: DropdownButtonFormField<String>(
-                      isExpanded: true,
-                      itemHeight: null,
+                    child: SelectorCatalogo(
                       value: _borrador.tipoAtencion,
                       decoration: const InputDecoration(
                         labelText: 'Financiamiento *',
@@ -1020,9 +1093,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                   if (_borrador.tipoAtencion != 'PARTICULAR')
                     SizedBox(
                       width: ancho,
-                      child: DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        itemHeight: null,
+                      child: SelectorCatalogo(
                         value:
                             financiamientosTipo.any(
                               (f) => f.id == _borrador.financiamientoId,
@@ -1151,9 +1222,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                   ),
                   SizedBox(
                     width: ancho,
-                    child: DropdownButtonFormField<String>(
-                      isExpanded: true,
-                      itemHeight: null,
+                    child: SelectorCatalogo(
                       key: ValueKey(
                         'receptor-${_borrador.areaOrigen}-${_borrador.receptorId}',
                       ),
@@ -1504,14 +1573,16 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
       anchoMinimo: 220,
       acciones: [
         OutlinedButton.icon(
-          onPressed: _guardando ? null : _limpiarFormulario,
+          onPressed: _guardando || _guardandoProcedencia
+              ? null
+              : _limpiarFormulario,
           icon: const Icon(Icons.cleaning_services_rounded),
           label: Text(
             _borrador.id == null ? 'Limpiar formulario' : 'Cancelar edición',
           ),
         ),
         FilledButton.icon(
-          onPressed: _guardando ? null : _guardarFicha,
+          onPressed: _guardando || _guardandoProcedencia ? null : _guardarFicha,
           icon: _guardando
               ? const SizedBox(
                   width: 18,

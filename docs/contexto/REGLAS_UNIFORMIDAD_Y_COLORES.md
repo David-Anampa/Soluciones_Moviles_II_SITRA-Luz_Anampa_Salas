@@ -139,3 +139,12 @@ no implementa ni cierra reportes de consumo, aprobaciones especiales o indicador
 reales de HU-028: siguen pendientes de su desarrollo y validación respectivos.
 Comprobación de esta entrega: `flutter analyze --no-pub`; pruebas funcionales y
 aceptación visual a cargo del usuario.
+
+
+## Selectores de Nueva ficha — acuerdo del 27/11/2026
+
+- Todos los selectores conservan tema, iconos y borde del módulo abierto.
+- Hasta cuatro opciones: menú blanco, esquinas redondeadas y selección del color del módulo.
+- Más de cuatro: diálogo con buscador por nombre, sin distinguir tildes, mayúsculas ni espacios; texto multilínea, desplazamiento y teclado adaptables. Profesional a cargo mantiene su buscador por nombre.
+- Reutilizar `SelectorCatalogo`; mantener las opciones autorizadas y los identificadores reales.
+- Procedencia del paciente es un catálogo compartido, independiente de las áreas clínicas y sus permisos. «Otra procedencia…» permite guardarla para siguientes usuarios; Supabase reutiliza el nombre canónico y audita las nuevas altas. No prometer detección de sinónimos ni errores ortográficos.

@@ -51,6 +51,16 @@ class FichasRepository {
     return ContextoRegistroFicha.fromMap(Map<String, dynamic>.from(respuesta));
   }
 
+  Future<ProcedenciaFicha> registrarProcedencia(String nombre) async {
+    final respuesta = await _supabase
+        .rpc('registrar_procedencia_ficha', params: {'p_nombre': nombre.trim()})
+        .timeout(const Duration(seconds: 20));
+    if (respuesta is! Map) {
+      throw Exception('No se pudo guardar la procedencia.');
+    }
+    return ProcedenciaFicha.fromMap(Map<String, dynamic>.from(respuesta));
+  }
+
   /// Consulta el catálogo con stock disponible en Farmacia en tiempo real (HU-004).
   Future<List<MedicamentoStockFicha>> buscarCatalogoConStock({
     String busqueda = '',

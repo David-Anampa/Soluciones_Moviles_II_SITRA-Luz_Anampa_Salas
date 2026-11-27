@@ -330,6 +330,20 @@ class KitDisponibleFicha {
   }
 }
 
+class ProcedenciaFicha {
+  final String codigo;
+  final String nombre;
+  const ProcedenciaFicha({required this.codigo, required this.nombre});
+  factory ProcedenciaFicha.fromMap(Map<String, dynamic> map) => ProcedenciaFicha(
+    codigo: map['codigo'].toString(),
+    nombre: map['nombre'].toString(),
+  );
+  static const iniciales = [
+    ProcedenciaFicha(codigo: 'EMERGENCIA', nombre: 'Emergencia'),
+    ProcedenciaFicha(codigo: 'HOSPITALIZACION', nombre: 'Hospitalización'),
+  ];
+}
+
 class ContextoRegistroFicha {
   final String rol;
   final String usuarioId;
@@ -339,6 +353,7 @@ class ContextoRegistroFicha {
   final List<DoctorFicha> doctores;
   final List<ReceptorFicha> receptores;
   final List<KitDisponibleFicha> kits;
+  final List<ProcedenciaFicha> procedencias;
 
   const ContextoRegistroFicha({
     required this.rol,
@@ -349,6 +364,7 @@ class ContextoRegistroFicha {
     required this.doctores,
     required this.receptores,
     required this.kits,
+    this.procedencias = ProcedenciaFicha.iniciales,
   });
 
   List<FinanciamientoFicha> financiamientosPorTipo(String tipoAtencion) =>
@@ -395,6 +411,9 @@ class ContextoRegistroFicha {
       doctores: parseList(map['doctores'], DoctorFicha.fromMap),
       receptores: parseList(map['receptores'], ReceptorFicha.fromMap),
       kits: parseList(map['kits'], KitDisponibleFicha.fromMap),
+      procedencias: map['procedencias'] is List
+          ? parseList(map['procedencias'], ProcedenciaFicha.fromMap)
+          : ProcedenciaFicha.iniciales,
     );
   }
 }
