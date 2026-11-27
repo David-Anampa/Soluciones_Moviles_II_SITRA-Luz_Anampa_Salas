@@ -106,6 +106,14 @@ por verde solo para teñir toda la pantalla. Urgencia debe seguir siendo visible
 
 ## Verificación de cada cambio
 
+Acuerdo de profesionales (27/11): solo Administración crea, edita y activa o
+desactiva desde **Gestionar profesionales**, con la paleta roja administrativa.
+Nombre completo, colegio/institución, número único dentro de ese colegio y áreas
+múltiples. El UUID es interno; Enfermería/Farmacia buscan por nombre, seleccionan
+los activos del área y no dan altas desde la ficha. Las siglas compartidas COP
+no identifican por sí solas a una institución. Ver
+[guía del catálogo](../supabase/GUIA_PROFESIONALES_ADMIN_2026_11_27.md).
+
 Revisar consistencia entre inicio, destino, filtros seleccionados/no seleccionados,
 modales, carga y error; considerar Farmacia abierta desde Administración y kits
 desde Enfermería. Ejecutar `flutter analyze --no-pub` desde `app`. No afirmar

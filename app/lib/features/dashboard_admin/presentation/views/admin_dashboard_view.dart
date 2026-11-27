@@ -21,6 +21,11 @@ class AdminDashboardView extends StatelessWidget {
       Icons.settings_applications_rounded,
       '/admin/catalogos',
     ),
+    _Module(
+      'Gestionar profesionales',
+      Icons.badge_outlined,
+      '/admin/profesionales',
+    ),
     _Module('Gestionar kits', Icons.medical_services_rounded, '/admin/kits'),
     _Module('Registrar pedido', Icons.assignment_add, '/fichas/nueva'),
     _Module('Gestionar pedidos', Icons.fact_check_rounded, '/fichas'),

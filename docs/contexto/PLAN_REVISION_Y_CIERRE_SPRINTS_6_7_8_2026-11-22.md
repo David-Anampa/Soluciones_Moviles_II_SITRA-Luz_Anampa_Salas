@@ -20,6 +20,14 @@ Enfermería/Técnico rojo, Farmacia verde; no toma el azul del área seleccionad
 Se conservan las áreas autorizadas y la lógica de registro. `flutter analyze`
 aprobado; P003-1 y las demás pruebas manuales siguen pendientes de confirmación.
 
+**Catálogo de profesionales HU-003 del 27/11:** Administración dispone de
+Gestionar profesionales: colegio, número único por institución, nombre y múltiples
+áreas. Nueva ficha busca por nombre y filtra por área. Migración aplicada sin
+borrar los cuatro registros previos; Administración debe completarles colegiatura
+y áreas antes de P003-1. No crea usuarios ni habilita altas desde Enfermería.
+Ver [guía y preparación](../supabase/GUIA_PROFESIONALES_ADMIN_2026_11_27.md).
+La aceptación manual de esta ampliación y de HU-003 sigue pendiente.
+
 ## 1. Alcance y forma de interpretar este documento
 
 Revisión estática del código y SQL de `Sprint-08`, commit base `40d65bb`.
@@ -151,7 +159,7 @@ SOLICITADO y auditoría. [Formulario](../../app/lib/features/fichas/presentation
 
 - [ ] P003-1: **Ejecuta:** Enfermería/Técnico del área solicitante.
   **Recibe / consulta:** Farmacia consulta la ficha recibida; Jefatura comprueba datos e historial.
-  **Partida:** Crear primero General y luego Neonatología. Cuenta activa autorizada para cada área, médico de catálogo, receptor válido y productos de prueba. Si la cuenta de Enfermería no tiene Neonatología, revisar la asignación antes; no sustituir silenciosamente al solicitante por Farmacia.
+  **Partida:** Crear primero General y luego Neonatología. Cuenta activa autorizada para cada área, profesional de catálogo con colegio/número y áreas completados por Administración, receptor válido y productos de prueba. Si la cuenta de Enfermería no tiene Neonatología, revisar la asignación antes; no sustituir silenciosamente al solicitante por Farmacia.
   **Comprobar:** registrar una General y una Neonatología con datos de prueba; comprobar valores guardados y visualizados en Farmacia/Jefatura.
 - [ ] P003-2: **Ejecuta:** Enfermería/Técnico registra; Administración prepara perfiles exclusivamente de prueba.
   **Recibe / consulta:** Farmacia y Jefatura comprueban que no apareció una ficha incompleta.
@@ -162,7 +170,7 @@ SOLICITADO y auditoría. [Formulario](../../app/lib/features/fichas/presentation
   **Partida:** Ficha propia SOLICITADO. Probar edición/reintento en ese estado; después Farmacia pasa a EN_PREPARACION y el solicitante vuelve a intentar editar. Anotar número e identificador de reintento.
   **Comprobar:** editar SOLICITADO; después de preparación debe bloquearse. Reintentar un guardado con el mismo identificador: una sola ficha.
 
-**Decisión pendiente:** excepción de médico manual, solo si el usuario la necesita.
+**Definido el 27/11:** gestión del catálogo exclusivamente por Administración; selección por nombre, colegio/número únicos y múltiples áreas. No se admite nombre libre ni alta desde la ficha por el técnico.
 
 ### HU-004 — Seleccionar medicamentos e insumos con stock
 
@@ -694,7 +702,7 @@ separados: una pantalla nueva no acredita por sí sola toda la HU.
 
 ## 8. Decisiones que revisaremos cuando toque, sin repetir lo ya acordado
 
-1. ¿Se necesita realmente médico manual? Por defecto, catálogo según el acuerdo.
+1. Catálogo profesional ya definido: altas/edición solo Administración y selección por nombre desde la ficha; no reabrir entrada manual sin una nueva instrucción.
 2. ¿Quién puede recibir por delegación del área y cómo se acredita? Por defecto,
    el área confirma la recepción física; no confirma Farmacia silenciosamente.
 3. ¿Observación individual obligatoria o nota global suficiente para varios faltantes?

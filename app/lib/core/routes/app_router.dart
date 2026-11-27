@@ -1,3 +1,4 @@
+import '../../features/administracion/presentation/views/profesionales_admin_view.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/notification_service.dart';
@@ -79,6 +80,10 @@ GoRouter createRouter(AuthViewModel authViewModel) {
       NotificationService.instance,
     ]),
     routes: [
+      GoRoute(
+        path: '/admin/profesionales',
+        builder: (context, state) => const ProfesionalesAdminView(),
+      ),
       GoRoute(
         path: AppRoutes.notificaciones,
         builder: (context, state) =>

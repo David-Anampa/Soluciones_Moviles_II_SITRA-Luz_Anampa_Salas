@@ -84,12 +84,17 @@ class FinanciamientoFicha {
 }
 
 class DoctorFicha {
+  final List<String> areas;
+  final String? colegioCodigo, colegioSigla;
   final String id;
   final String nombre;
   final String? colegiatura;
   final String? especialidad;
 
   const DoctorFicha({
+    this.areas = const [],
+    this.colegioCodigo,
+    this.colegioSigla,
     required this.id,
     required this.nombre,
     this.colegiatura,
@@ -99,7 +104,7 @@ class DoctorFicha {
   String get etiquetaCompleta {
     final partes = <String>[nombre];
     if (colegiatura != null && colegiatura!.trim().isNotEmpty) {
-      partes.add('CMP ${colegiatura!.trim()}');
+      partes.add('${colegioSigla ?? ''} ${colegiatura!.trim()}'.trim());
     }
     if (especialidad != null && especialidad!.trim().isNotEmpty) {
       partes.add(especialidad!.trim());
@@ -110,6 +115,9 @@ class DoctorFicha {
   factory DoctorFicha.fromMap(Map<String, dynamic> map) {
     return DoctorFicha(
       id: map['id']?.toString() ?? '',
+      colegioCodigo: map['colegio_codigo'] as String?,
+      colegioSigla: map['colegio_sigla'] as String?,
+      areas: (map['areas'] as List? ?? []).map((a) => a.toString()).toList(),
       nombre: (map['nombre'] as String? ?? '').trim(),
       colegiatura: map['colegiatura'] as String?,
       especialidad: map['especialidad'] as String?,
@@ -347,6 +355,9 @@ class ContextoRegistroFicha {
       financiamientos
           .where((f) => f.tipo == tipoAtencion.toUpperCase())
           .toList(growable: false);
+
+  List<DoctorFicha> doctoresParaArea(String area) =>
+      doctores.where((d) => d.areas.contains(area)).toList(growable: false);
 
   List<ReceptorFicha> receptoresParaArea(String codigoArea) {
     final filtrados = receptores

@@ -142,7 +142,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
       }
       receptorDefecto ??= receptoresArea.firstOrNull;
 
-      final doctorDefecto = ctx.doctores.firstOrNull;
+      final doctorDefecto = ctx.doctoresParaArea(areaCodigo).firstOrNull;
 
       final recientes = areaCodigo.isEmpty
           ? const <FichaRegistrada>[]
@@ -202,6 +202,21 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
     setState(() {
       _solicitudIdPendiente = null;
       _borrador = _borrador.copyWith(
+        doctorId:
+            ctx
+                .doctoresParaArea(nuevoCodigo)
+                .any((d) => d.id == _borrador.doctorId)
+            ? _borrador.doctorId
+            : null,
+        limpiarDoctorId: !ctx
+            .doctoresParaArea(nuevoCodigo)
+            .any((d) => d.id == _borrador.doctorId),
+        doctorNombre:
+            ctx
+                .doctoresParaArea(nuevoCodigo)
+                .any((d) => d.id == _borrador.doctorId)
+            ? _borrador.doctorNombre
+            : '',
         areaOrigen: nuevoCodigo,
         tipoFicha: areaObj != null && areaObj.esNeonatologia
             ? 'NEONATOLOGIA'
@@ -340,7 +355,7 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
     final receptorDefecto =
         receptoresArea.where((r) => r.id == ctx.usuarioId).firstOrNull ??
         receptoresArea.firstOrNull;
-    final doctorDefecto = ctx.doctores.firstOrNull;
+    final doctorDefecto = ctx.doctoresParaArea(areaCodigo).firstOrNull;
 
     setState(() {
       _solicitudIdPendiente = null;
@@ -382,7 +397,9 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
 
     final ctx = _contexto;
     if (ctx == null ||
-        !ctx.doctores.any((d) => d.id == sincronizado.doctorId) ||
+        !ctx
+            .doctoresParaArea(sincronizado.areaOrigen)
+            .any((d) => d.id == sincronizado.doctorId) ||
         !ctx
             .receptoresParaArea(sincronizado.areaOrigen)
             .any((r) => r.id == sincronizado.receptorId)) {
@@ -941,7 +958,8 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
 
   Widget _buildSeccionResponsablesYFinanciamiento(TemaArea tema) {
     final ctx = _contexto;
-    final doctores = ctx?.doctores ?? const [];
+    final doctores =
+        ctx?.doctoresParaArea(_borrador.areaOrigen) ?? const <DoctorFicha>[];
     final receptores =
         ctx?.receptoresParaArea(_borrador.areaOrigen) ?? const [];
     final financiamientosTipo =
@@ -1071,38 +1089,20 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        DropdownButtonFormField<String>(
-                          isExpanded: true,
-                          itemHeight: null,
-                          key: ValueKey(
-                            'doctor-${_borrador.id}-${_borrador.doctorId}',
-                          ),
-                          value: doctores.any((d) => d.id == _borrador.doctorId)
-                              ? _borrador.doctorId
-                              : null,
-
-                          decoration: const InputDecoration(
-                            labelText: 'Médico a cargo *',
-                            prefixIcon: Icon(Icons.medical_services_rounded),
-                          ),
-                          items: doctores
-                              .map(
-                                (d) => DropdownMenuItem(
-                                  value: d.id,
-                                  child: Text(
-                                    d.etiquetaCompleta,
-                                    softWrap: true,
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: doctores.isEmpty
+                        InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: doctores.isEmpty
                               ? null
-                              : (id) {
-                                  if (id == null) return;
-                                  final doc = doctores.firstWhere(
-                                    (d) => d.id == id,
+                              : () async {
+                                  final doc = await showDialog<DoctorFicha>(
+                                    context: context,
+                                    builder: (_) => _SelectorProfesionalFicha(
+                                      profesionales: doctores,
+                                      seleccionado: _borrador.doctorId,
+                                      tema: _temaActual,
+                                    ),
                                   );
+                                  if (doc == null || !mounted) return;
                                   setState(() {
                                     _solicitudIdPendiente = null;
                                     _borrador = _borrador.copyWith(
@@ -1111,11 +1111,38 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
                                     );
                                   });
                                 },
+                          child: InputDecorator(
+                            decoration: const InputDecoration(
+                              labelText: 'Profesional a cargo *',
+                              prefixIcon: Icon(Icons.medical_services_rounded),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    doctores
+                                            .where(
+                                              (d) => d.id == _borrador.doctorId,
+                                            )
+                                            .firstOrNull
+                                            ?.etiquetaCompleta ??
+                                        'Buscar por nombre',
+                                    softWrap: true,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.search_rounded,
+                                  color: _temaActual.principal,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                         if (doctores.isEmpty) ...[
                           const SizedBox(height: 8),
                           MensajesApp.nota(
-                            'No hay médicos activos. Solicita su registro en el catálogo antes de enviar la ficha.',
+                            'No hay profesionales disponibles para esta área. Administración debe completar su colegiatura y asignación antes de enviar la ficha.',
                             tipo: TipoMensaje.advertencia,
                           ),
                         ],
@@ -1708,5 +1735,95 @@ class _PestanaTipoFicha extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _SelectorProfesionalFicha extends StatefulWidget {
+  final List<DoctorFicha> profesionales;
+  final String? seleccionado;
+  final TemaArea tema;
+  const _SelectorProfesionalFicha({
+    required this.profesionales,
+    this.seleccionado,
+    required this.tema,
+  });
+  @override
+  State<_SelectorProfesionalFicha> createState() =>
+      _SelectorProfesionalFichaState();
+}
+
+class _SelectorProfesionalFichaState extends State<_SelectorProfesionalFicha> {
+  final _buscar = TextEditingController();
+  int _limite = 30;
+  @override
+  Widget build(BuildContext context) {
+    final q = _buscar.text.trim().toLowerCase();
+    final lista = widget.profesionales
+        .where((p) => p.etiquetaCompleta.toLowerCase().contains(q))
+        .toList();
+    return Theme(
+      data: CatalogoEstilo.tema(context, area: widget.tema),
+      child: DialogoAdaptable(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const FranjaPedidos(
+                titulo: 'Seleccionar profesional',
+                icono: Icons.medical_services_outlined,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _buscar,
+                onChanged: (_) => setState(() => _limite = 30),
+                decoration: const InputDecoration(
+                  labelText: 'Buscar por nombre',
+                  prefixIcon: Icon(Icons.search_rounded),
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (lista.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('No hay coincidencias.'),
+                ),
+              for (final p in lista.take(_limite))
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                  leading: Icon(
+                    Icons.person_outline_rounded,
+                    color: widget.tema.principal,
+                  ),
+                  title: Text(p.nombre, softWrap: true),
+                  subtitle: Text(p.etiquetaCompleta, softWrap: true),
+                  trailing: p.id == widget.seleccionado
+                      ? Icon(
+                          Icons.check_circle_rounded,
+                          color: widget.tema.principal,
+                        )
+                      : null,
+                  onTap: () => Navigator.pop(context, p),
+                ),
+              if (lista.length > _limite)
+                TextButton(
+                  onPressed: () => setState(() => _limite += 30),
+                  child: const Text('Ver más'),
+                ),
+              OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _buscar.dispose();
+    super.dispose();
   }
 }
