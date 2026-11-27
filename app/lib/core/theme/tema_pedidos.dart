@@ -70,6 +70,30 @@ class TemaPedidos {
       ),
     );
     return theme.copyWith(
+      checkboxTheme: theme.checkboxTheme.copyWith(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+        materialTapTargetSize: MaterialTapTargetSize.padded,
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return const Color(0xFFE5E7EB);
+          }
+          if (states.contains(WidgetState.error)) {
+            return theme.colorScheme.error;
+          }
+          return states.contains(WidgetState.selected) ? color : Colors.white;
+        }),
+        checkColor: const WidgetStatePropertyAll(Colors.white),
+        side: WidgetStateBorderSide.resolveWith(
+          (states) => BorderSide(
+            color: states.contains(WidgetState.disabled)
+                ? const Color(0xFFBDBDC5)
+                : states.contains(WidgetState.error)
+                ? theme.colorScheme.error
+                : color.withValues(alpha: .65),
+            width: 1.5,
+          ),
+        ),
+      ),
       chipTheme: theme.chipTheme.copyWith(
         selectedColor: color.withValues(alpha: .10),
         checkmarkColor: color,

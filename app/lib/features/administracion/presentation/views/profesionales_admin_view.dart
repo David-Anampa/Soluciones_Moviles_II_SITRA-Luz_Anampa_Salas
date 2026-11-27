@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/tema_pedidos.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/widgets/mensajes_app.dart';
+import '../../../../core/widgets/selector_catalogo.dart';
+import '../../../../core/widgets/opcion_multiple.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../../almacen/domain/solicitud_id.dart';
@@ -178,9 +180,8 @@ class _ProfesionalesAdminViewState extends State<ProfesionalesAdminView> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      initialValue: _filtro,
-                      isExpanded: true,
+                    SelectorCatalogo(
+                      value: _filtro,
                       decoration: const InputDecoration(
                         labelText: 'Estado',
                         prefixIcon: Icon(Icons.filter_alt_outlined),
@@ -358,6 +359,14 @@ class _EditorProfesional extends StatefulWidget {
 }
 
 class _EditorProfesionalState extends State<_EditorProfesional> {
+  // Áreas asistenciales acordadas; excluir dependencias logísticas del formulario.
+  static const _areasAtencion = {
+    'HOSPITALIZACION',
+    'SOP',
+    'EMERGENCIA',
+    'NEONATOLOGIA',
+    'COCHE_PAROS',
+  };
   final _form = GlobalKey<FormState>();
   late final TextEditingController _nombre, _numero;
   late final String _id;
@@ -377,7 +386,10 @@ class _EditorProfesionalState extends State<_EditorProfesional> {
           .replaceFirst(RegExp(r'^CMP[\s-]*', caseSensitive: false), ''),
     );
     _colegio = p?['colegio_codigo'] as String?;
-    _areas = (p?['areas'] as List? ?? []).cast<String>().toSet();
+    _areas = (p?['areas'] as List? ?? [])
+        .cast<String>()
+        .where(_areasAtencion.contains)
+        .toSet();
     _colegios = List.of(widget.colegios);
   }
 
@@ -466,13 +478,11 @@ class _EditorProfesionalState extends State<_EditorProfesional> {
                       : null,
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
+                SelectorCatalogo(
                   key: ValueKey(_colegio),
-                  initialValue: _colegios.any((c) => c['codigo'] == _colegio)
+                  value: _colegios.any((c) => c['codigo'] == _colegio)
                       ? _colegio
                       : null,
-                  isExpanded: true,
-                  itemHeight: null,
                   decoration: const InputDecoration(
                     labelText: 'Colegio profesional',
                     prefixIcon: Icon(Icons.account_balance_outlined),
@@ -524,15 +534,14 @@ class _EditorProfesionalState extends State<_EditorProfesional> {
                 ),
                 const SizedBox(height: 12),
                 for (final a in widget.areas.where(
-                  (a) => a['activo'] == true || _areas.contains(a['codigo']),
+                  (a) =>
+                      _areasAtencion.contains(a['codigo']) &&
+                      (a['activo'] == true || _areas.contains(a['codigo'])),
                 ))
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    title: Text(
-                      '${a['nombre']}${a['activo'] == true ? '' : ' · Inactiva'}',
-                    ),
-                    value: _areas.contains(a['codigo']),
+                  OpcionMultiple(
+                    titulo:
+                        '${a['nombre']}${a['activo'] == true ? '' : ' · Inactiva'}',
+                    seleccionada: _areas.contains(a['codigo']),
                     onChanged: _guardando
                         ? null
                         : (v) => setState(() {

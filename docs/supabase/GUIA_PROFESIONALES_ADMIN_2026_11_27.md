@@ -80,3 +80,25 @@ Pruebas manuales pendientes del usuario:
 
 Esto amplía el criterio de catálogo de HU-003; no crea otra HU ni acredita por sí
 solo el cierre de la historia. La revisión visual y funcional sigue con el usuario.
+
+
+## Ajuste de áreas del formulario (27/11/2026)
+
+En alta y edición solo se ofrecen Hospitalización, Sala de Operaciones,
+Emergencias, Neonatología y Coche de Paros. Almacén y Farmacia no son opciones
+de atención del profesional. Se conservan nombres/códigos del catálogo,
+estilos rojos de Administración y selección múltiple.
+El filtro se aplica al formulario, incluidas sus selecciones iniciales: guardar
+una edición conserva únicamente las áreas asistenciales seleccionadas.
+No hay limpieza masiva de asignaciones, cambios al catálogo general ni migración
+necesaria para este ajuste de presentación. Las pruebas manuales siguen pendientes.
+
+
+## Uniformidad de controles (27/11/2026)
+
+Filtro Estado y colegio usan `SelectorCatalogo`: menú hasta cuatro opciones,
+buscador con más de cuatro; conserva la validación obligatoria del colegio.
+Áreas usa `OpcionMultiple`: tarjetas pulsables con casillas redondeadas, marca
+blanca y rojo/pastel administrativos. El tema compartido define los estados.
+La instrucción general se guarda en AGENTS.md y reglas de uniformidad.
+Análisis estático requerido; aceptación visual y pruebas manuales con el usuario.

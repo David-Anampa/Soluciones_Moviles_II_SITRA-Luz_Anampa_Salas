@@ -148,3 +148,23 @@ aceptación visual a cargo del usuario.
 - Más de cuatro: diálogo con buscador por nombre, sin distinguir tildes, mayúsculas ni espacios; texto multilínea, desplazamiento y teclado adaptables. Profesional a cargo mantiene su buscador por nombre.
 - Reutilizar `SelectorCatalogo`; mantener las opciones autorizadas y los identificadores reales.
 - Procedencia del paciente es un catálogo compartido, independiente de las áreas clínicas y sus permisos. «Otra procedencia…» permite guardarla para siguientes usuarios; Supabase reutiliza el nombre canónico y audita las nuevas altas. No prometer detección de sinónimos ni errores ortográficos.
+
+
+## Regla general: combobox y checkbox — 27/11/2026
+
+Se aplica a todas las interfaces nuevas o modificadas, incluidos crear/editar y
+sus modales; amplía el acuerdo previo de selectores de Nueva ficha.
+
+- Combobox: reutilizar `SelectorCatalogo`, campos blancos con borde redondeado,
+  iconos y selección del color del módulo; nombres largos sin recortar.
+  Más de cuatro opciones abre búsqueda. Conservar validadores y estado del formulario.
+- Checkbox: reutilizar `OpcionMultiple` para listas de opciones. Tarjeta blanca,
+  borde suave, separación de 10 px; seleccionada con fondo pastel del módulo.
+  Casilla redondeada del color del módulo y marca blanca; toda la fila pulsable,
+  texto de 14 px con varias líneas, objetivo táctil mínimo de 48 px.
+  El tema compartido `TemaPedidos` define estados marcado, deshabilitado y error.
+- En Profesionales se aplica al filtro Estado, colegio y áreas de atención.
+  Revisión de código: quedan controles heredados en Usuarios, sus formularios y
+  editores de catálogos, además de módulos operativos; migrarlos al intervenir cada
+  vista sin sustituir masivamente lógica de negocio. No se certifica uniformidad
+  de toda la aplicación hasta revisar esas pantallas con el usuario.

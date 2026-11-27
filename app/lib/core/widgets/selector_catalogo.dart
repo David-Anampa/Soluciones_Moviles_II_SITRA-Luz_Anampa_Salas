@@ -20,12 +20,14 @@ class SelectorCatalogo extends StatelessWidget {
   final List<DropdownMenuItem<String>>? items;
   final ValueChanged<String?>? onChanged;
   final InputDecoration decoration;
+  final FormFieldValidator<String>? validator;
   const SelectorCatalogo({
     super.key,
     this.value,
     this.items,
     this.onChanged,
     required this.decoration,
+    this.validator,
   });
 
   String _texto(DropdownMenuItem<String> item) => item.child is Text
@@ -34,13 +36,37 @@ class SelectorCatalogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (validator == null) return _construir(context, onChanged, null);
+    return FormField<String>(
+      initialValue: (items ?? []).any((o) => o.value == value) ? value : null,
+      enabled: onChanged != null,
+      validator: validator,
+      builder: (campo) => _construir(
+        context,
+        onChanged == null
+            ? null
+            : (v) {
+                campo.didChange(v);
+                onChanged?.call(v);
+              },
+        campo.errorText,
+      ),
+    );
+  }
+
+  Widget _construir(
+    BuildContext context,
+    ValueChanged<String?>? cambiar,
+    String? error,
+  ) {
     final opciones = items ?? const [];
     final seleccion = opciones.where((o) => o.value == value).firstOrNull;
-    final activo = onChanged != null && opciones.isNotEmpty;
+    final activo = cambiar != null && opciones.isNotEmpty;
     final color = Theme.of(context).colorScheme.primary;
     final campo = InputDecorator(
       decoration: decoration.copyWith(
         enabled: activo,
+        errorText: error ?? decoration.errorText,
         floatingLabelBehavior: FloatingLabelBehavior.always,
       ),
       child: Row(
@@ -88,7 +114,7 @@ class SelectorCatalogo extends StatelessWidget {
               MediaQuery.sizeOf(context).width - 32,
             ),
           ),
-          onSelected: onChanged,
+          onSelected: cambiar,
           itemBuilder: (_) => [
             for (final o in opciones)
               PopupMenuItem<String>(
@@ -149,7 +175,7 @@ class SelectorCatalogo extends StatelessWidget {
                   ),
                 );
                 if (elegido != null && context.mounted) {
-                  onChanged?.call(elegido);
+                  cambiar(elegido);
                 }
               },
         child: campo,

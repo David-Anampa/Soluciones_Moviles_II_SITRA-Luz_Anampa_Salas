@@ -12,6 +12,9 @@ formularios, filtros, modales y vistas compartidas.
   rojos/azules en controles que deben seguir el color del módulo.
 - Conservar datos, validaciones, estados, stock, justificaciones y auditoría
   durante cambios visuales. Documentar cualquier cambio de alcance necesario.
+- Uniformar combobox y checkbox con los componentes compartidos y el color del
+  módulo: `SelectorCatalogo` y `OpcionMultiple`. Más de cuatro opciones en un
+  combobox deben permitir búsqueda. Revisar también formularios y modales.
 - Mantener espacio suficiente, texto legible y desplazamiento en celulares.
 - Ejecutar `flutter analyze --no-pub` desde `app` para cambios de Flutter. Las
   pruebas funcionales las realiza el usuario salvo que autorice otras pruebas.
