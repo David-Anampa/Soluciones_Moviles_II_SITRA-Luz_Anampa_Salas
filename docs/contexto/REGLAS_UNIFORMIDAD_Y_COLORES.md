@@ -45,6 +45,15 @@ Al abrir **Revisar pedido**, el fondo suave y la cabecera identifican el área
 solicitante, manteniendo las tarjetas blancas. No extender el color de esa área
 al listado general de Farmacia.
 
+**Nueva ficha (27/11):** el formulario completo, sus iconos de campos y los
+selectores de productos/kits usan el color del módulo que registra, nunca el
+tema del área seleccionada. Técnico/Enfermería lo ve rojo; Farmacia verde. El
+selector Otras áreas / Neonatología son dos pestañas anchas con icono, nombre y
+selección marcada; solo se apilan con ancho muy reducido o texto ampliado. Las
+opciones sin área autorizada siguen deshabilitadas. No usar un control vertical
+estrecho ni reducir la letra para hacerlas caber. El helper de pedidos resuelve
+Administración explícitamente en rojo; el fallback azul no define ese módulo.
+
 Rojo de error, anulación y advertencia justificada es semántico: no sustituirlo
 por verde solo para teñir toda la pantalla. Urgencia debe seguir siendo visible.
 

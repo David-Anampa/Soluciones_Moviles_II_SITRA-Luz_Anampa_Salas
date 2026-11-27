@@ -14,6 +14,12 @@ base: no interpretar estos tres defectos como aún presentes en la versión corr
 texto ampliado y teclado. Se conservan tema y tamaños tipográficos existentes.
 Ver [alcance y emulador de trabajo](HU003_DISENO_ADAPTABLE_Y_EMULADOR_2026-11-22.md).
 
+**Ajuste visual HU-003 del 27/11:** Nueva ficha usa dos pestañas anchas para
+Otras áreas / Neonatología y colores del módulo en todo el formulario y selectores.
+Enfermería/Técnico rojo, Farmacia verde; no toma el azul del área seleccionada.
+Se conservan las áreas autorizadas y la lógica de registro. `flutter analyze`
+aprobado; P003-1 y las demás pruebas manuales siguen pendientes de confirmación.
+
 ## 1. Alcance y forma de interpretar este documento
 
 Revisión estática del código y SQL de `Sprint-08`, commit base `40d65bb`.

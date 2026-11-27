@@ -67,13 +67,17 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
   }
 
   TemaArea get _temaActual {
-    final areas = _contexto?.areas ?? const [];
-    for (final a in areas) {
-      if (a.codigo == _borrador.areaOrigen) {
-        return TemaArea.desde(a.temaColor);
-      }
-    }
-    return TemaArea.opciones.first;
+    final rol = TemaPedidos.rolActual(context);
+    final color = TemaPedidos.colorRol(rol);
+    // La identidad visual del formulario no depende del área que solicita.
+    return TemaArea(rol, rol, color, Color.lerp(color, Colors.white, .93)!);
+  }
+
+  void _seleccionarTipoFicha(bool neonatal) {
+    final destino = _contexto?.areas
+        .where((a) => a.esNeonatologia == neonatal)
+        .firstOrNull;
+    if (destino != null) _cambiarArea(destino.codigo);
   }
 
   AreaFicha? get _areaSeleccionada {
@@ -549,36 +553,44 @@ class _RegistroFichaViewState extends State<RegistroFichaView> {
           LayoutBuilder(
             builder: (context, limites) {
               final escala = MediaQuery.textScalerOf(context).scale(14) / 14;
-              final vertical = limites.maxWidth < 400 * escala;
-              return SegmentedButton<String>(
-                direction: vertical ? Axis.vertical : Axis.horizontal,
-                expandedInsets: vertical ? null : EdgeInsets.zero,
-                segments: [
-                  ButtonSegment(
-                    value: 'GENERAL',
-                    enabled:
-                        (_contexto?.areas.any((a) => !a.esNeonatologia) ??
-                        false),
-                    icon: Icon(Icons.person_outline_rounded),
-                    label: Text('Otras áreas'),
-                  ),
-                  ButtonSegment(
-                    value: 'NEONATOLOGIA',
-                    enabled:
-                        (_contexto?.areas.any((a) => a.esNeonatologia) ??
-                        false),
-                    icon: Icon(Icons.child_friendly_rounded),
-                    label: Text('Neonatología'),
-                  ),
-                ],
-                selected: {_borrador.tipoFicha},
-                onSelectionChanged: (seleccion) {
-                  final neonatal = seleccion.first == 'NEONATOLOGIA';
-                  final destino = _contexto?.areas
-                      .where((a) => a.esNeonatologia == neonatal)
-                      .firstOrNull;
-                  if (destino != null) _cambiarArea(destino.codigo);
-                },
+              final vertical = limites.maxWidth < 240 * escala;
+              final opciones = [
+                _PestanaTipoFicha(
+                  nombre: 'Otras áreas',
+                  icono: Icons.apartment_rounded,
+                  seleccionada: !_borrador.esNeonatologia,
+                  habilitada:
+                      _contexto?.areas.any((a) => !a.esNeonatologia) ?? false,
+                  onTap: () => _seleccionarTipoFicha(false),
+                ),
+                _PestanaTipoFicha(
+                  nombre: 'Neonatología',
+                  icono: Icons.child_friendly_rounded,
+                  seleccionada: _borrador.esNeonatologia,
+                  habilitada:
+                      _contexto?.areas.any((a) => a.esNeonatologia) ?? false,
+                  onTap: () => _seleccionarTipoFicha(true),
+                ),
+              ];
+              if (vertical) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    opciones[0],
+                    const SizedBox(height: 12),
+                    opciones[1],
+                  ],
+                );
+              }
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: opciones[0]),
+                    const SizedBox(width: 12),
+                    Expanded(child: opciones[1]),
+                  ],
+                ),
               );
             },
           ),
@@ -1609,6 +1621,91 @@ class _SeccionTarjeta extends StatelessWidget {
           const SizedBox(height: 14),
           child,
         ],
+      ),
+    );
+  }
+}
+
+/// Opciones anchas con estado seleccionado visible, sin comprimir la etiqueta.
+class _PestanaTipoFicha extends StatelessWidget {
+  final String nombre;
+  final IconData icono;
+  final bool seleccionada, habilitada;
+  final VoidCallback onTap;
+  const _PestanaTipoFicha({
+    required this.nombre,
+    required this.icono,
+    required this.seleccionada,
+    required this.habilitada,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final principal = Theme.of(context).colorScheme.primary;
+    final color = !habilitada
+        ? const Color(0xFF85858F)
+        : seleccionada
+        ? Colors.white
+        : principal;
+    return Semantics(
+      button: true,
+      selected: seleccionada,
+      enabled: habilitada,
+      child: Material(
+        color: !habilitada
+            ? const Color(0xFFF2F2F5)
+            : seleccionada
+            ? principal
+            : principal.withValues(alpha: .06),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(
+            color: habilitada
+                ? principal.withValues(alpha: .25)
+                : const Color(0xFFE0E0E6),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: habilitada ? onTap : null,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 84),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icono, color: color, size: 24),
+                      if (seleccionada && habilitada) ...[
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.check_circle_rounded,
+                          color: color,
+                          size: 18,
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    nombre,
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

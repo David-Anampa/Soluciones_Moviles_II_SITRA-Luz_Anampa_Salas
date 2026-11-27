@@ -38,6 +38,7 @@ class TemaPedidos {
   }
 
   static Color colorRol(String rol) => switch (rol.toUpperCase()) {
+    'ADMINISTRADOR' => const Color(0xFFC62828),
     'ALMACEN' => AppColors.almacenColor,
     'FARMACIA' => AppColors.farmaciaColor,
     'JEFATURA_FARMACIA' => AppColors.jefaturaColor,
@@ -78,6 +79,16 @@ class TemaPedidos {
         color: color,
       ),
       inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+        prefixIconColor: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.disabled)
+              ? const Color(0xFF85858F)
+              : color,
+        ),
+        suffixIconColor: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.disabled)
+              ? const Color(0xFF85858F)
+              : color,
+        ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 18,
