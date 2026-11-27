@@ -23,9 +23,13 @@ class TemaPedidos {
           return entry.value;
         }
       }
-      if (uri.path == '/kits') {
+      if (uri.path == '/kits' || uri.path == '/fichas') {
         final vista = uri.queryParameters['vista'];
-        if (vista == 'FARMACIA' || vista == 'ENFERMERIA') return vista!;
+        if (vista == 'FARMACIA' ||
+            vista == 'ENFERMERIA' ||
+            vista == 'JEFATURA_FARMACIA') {
+          return vista!;
+        }
       }
     } catch (_) {
       /* Sin router: usar la identidad de la sesión. */

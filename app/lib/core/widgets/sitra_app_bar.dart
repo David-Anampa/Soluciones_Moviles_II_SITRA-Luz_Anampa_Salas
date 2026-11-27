@@ -10,6 +10,7 @@ import 'mensajes_app.dart';
 /// Barra superior corporativa estandarizada para todos los módulos de SITRA-Luz
 class SitraAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+  final Color? colorModulo;
   final double alto;
   final String? subtitle;
   final List<Widget>? actions;
@@ -17,6 +18,7 @@ class SitraAppBar extends StatelessWidget implements PreferredSizeWidget {
   const SitraAppBar({
     super.key,
     required this.title,
+    this.colorModulo,
     this.subtitle,
     this.actions,
     this.alto = 72,
@@ -61,7 +63,7 @@ class SitraAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthViewModel>();
     final user = auth.currentUser;
-    final roleColor = _getRoleColor(user?.rol);
+    final roleColor = colorModulo ?? _getRoleColor(user?.rol);
     final showMenu =
         user?.rol == UserRole.administrador &&
         GoRouterState.of(context).uri.path != '/admin';

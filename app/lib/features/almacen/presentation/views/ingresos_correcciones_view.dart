@@ -1,3 +1,4 @@
+import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:flutter/services.dart';
@@ -91,6 +92,9 @@ class _IngresosState extends State<IngresosCorreccionesView> {
                       padding: const EdgeInsets.all(16),
                       children: [
                         StockSeccion(
+                          color: TemaPedidos.colorRol(
+                            TemaPedidos.rolActual(context),
+                          ),
                           titulo: 'El ingreso conserva su historia',
                           icono: Icons.receipt_long_outlined,
                           children: [
@@ -114,7 +118,10 @@ class _IngresosState extends State<IngresosCorreccionesView> {
                             style: const TextStyle(color: stockRojo),
                           ),
                         if (lista.isEmpty && _error == null)
-                          const StockSeccion(
+                          StockSeccion(
+                            color: TemaPedidos.colorRol(
+                              TemaPedidos.rolActual(context),
+                            ),
                             titulo: 'Sin ingresos en esta vista',
                             icono: Icons.inventory_2_outlined,
                             children: [
@@ -125,6 +132,9 @@ class _IngresosState extends State<IngresosCorreccionesView> {
                           ),
                         for (final r in lista)
                           StockSeccion(
+                            color: TemaPedidos.colorRol(
+                              TemaPedidos.rolActual(context),
+                            ),
                             titulo: r['nombre'],
                             icono: Icons.medication_outlined,
                             children: [
@@ -209,6 +219,7 @@ class _IngresosState extends State<IngresosCorreccionesView> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   StockSeccion(
+                    color: TemaPedidos.colorRol(TemaPedidos.rolActual(context)),
                     titulo: r['nombre'],
                     icono: Icons.inventory_2_outlined,
                     children: [
@@ -220,6 +231,9 @@ class _IngresosState extends State<IngresosCorreccionesView> {
                   ),
                   for (final h in r['historial'])
                     StockSeccion(
+                      color: TemaPedidos.colorRol(
+                        TemaPedidos.rolActual(context),
+                      ),
                       titulo: h['evento'] == 'INGRESO_ALMACEN'
                           ? 'Ingreso original'
                           : 'Corrección justificada',
@@ -313,6 +327,9 @@ class _CorreccionState extends State<_CorreccionIngreso> {
                   padding: const EdgeInsets.all(16),
                   children: [
                     StockSeccion(
+                      color: TemaPedidos.colorRol(
+                        TemaPedidos.rolActual(context),
+                      ),
                       titulo: r['nombre'],
                       icono: Icons.edit_note_rounded,
                       children: [
@@ -381,6 +398,9 @@ class _CorreccionState extends State<_CorreccionIngreso> {
                       ],
                     ),
                     StockSeccion(
+                      color: TemaPedidos.colorRol(
+                        TemaPedidos.rolActual(context),
+                      ),
                       titulo: 'Justificación de la corrección',
                       icono: Icons.description_outlined,
                       children: [

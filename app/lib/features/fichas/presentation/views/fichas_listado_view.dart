@@ -197,8 +197,10 @@ class _FichasListadoViewState extends State<FichasListadoView> {
         appBar: AppBar(
           backgroundColor: TemaPedidos.colorRol(TemaPedidos.rolActual(context)),
           foregroundColor: Colors.white,
-          title: const Text(
-            'Atender pedidos de áreas',
+          title: Text(
+            TemaPedidos.rolActual(context) == 'JEFATURA_FARMACIA'
+                ? 'Supervisar pedidos'
+                : 'Atender pedidos de áreas',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
           ),
           actions: [

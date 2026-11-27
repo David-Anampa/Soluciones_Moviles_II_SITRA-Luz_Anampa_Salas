@@ -47,6 +47,14 @@ class _KitsAdminViewState extends State<KitsAdminView> {
       );
     }
     if (rol == 'ENFERMERIA') return TemaArea.opciones.first;
+    if (rol == 'JEFATURA_FARMACIA') {
+      return const TemaArea(
+        'AZUL',
+        'Jefatura de Farmacia',
+        Color(0xFF1A3A6B),
+        Color(0xFFEDF2F8),
+      );
+    }
 
     for (final area in _areas) {
       if (area.codigo == codigo) return TemaArea.desde(area.temaColor);
@@ -251,7 +259,10 @@ class _KitsAdminViewState extends State<KitsAdminView> {
             },
           ),
           title: Text(
-            TemaPedidos.rolActual(context) == 'FARMACIA'
+            const {
+                  'FARMACIA',
+                  'JEFATURA_FARMACIA',
+                }.contains(TemaPedidos.rolActual(context))
                 ? 'Consultar kits por área'
                 : 'Gestión de kits',
             style: TextStyle(

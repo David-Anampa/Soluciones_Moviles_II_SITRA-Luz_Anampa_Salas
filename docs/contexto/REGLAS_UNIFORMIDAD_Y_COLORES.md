@@ -103,3 +103,22 @@ desde Enfermería. Ejecutar `flutter analyze --no-pub` desde `app`. No afirmar
 aceptación visual o funcional si no se observó: el usuario realiza esas pruebas.
 No modificar stock, auditoría ni permisos como parte de un retoque visual.
 Agrupar cambios importantes en commits y mantener este acuerdo actualizado.
+
+## Menú de Jefatura aplicado — 27/11/2026
+
+Se reutilizan las tarjetas en dos columnas, azul pastel, círculo blanco e icono
+azul oscuro. Dos franjas azules con texto blanco separan Consultas de supervisión
+y Historial y auditoría. Accesos reales: Supervisar pedidos, Consultar existencias,
+Consultar kits por área, Reportes y diferencias e Ingresos y correcciones.
+Se conservan los parámetros `soloLectura` de las vistas de auditoría.
+
+La navegación compartida a `/fichas` y `/kits` conserva el ámbito visual mediante
+`vista=JEFATURA_FARMACIA`, también si Administración abre el módulo. No otorga
+permisos. La cabecera principal permite color de módulo explícito.
+
+Se retiraron del inicio los indicadores numéricos fijos, la alerta de un lote de
+ejemplo y los accesos que solo mostraban un snackbar, sin una pantalla real. Eso
+no implementa ni cierra reportes de consumo, aprobaciones especiales o indicadores
+reales de HU-028: siguen pendientes de su desarrollo y validación respectivos.
+Comprobación de esta entrega: `flutter analyze --no-pub`; pruebas funcionales y
+aceptación visual a cargo del usuario.
