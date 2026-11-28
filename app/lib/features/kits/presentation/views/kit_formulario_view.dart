@@ -1,3 +1,4 @@
+import '../../../../core/widgets/selector_catalogo.dart';
 import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -368,10 +369,7 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                     child: CircularProgressIndicator(),
                                   ),
                                 )
-                              : DropdownButtonFormField<String>(
-                                  itemHeight: null,
-                                  isDense: false,
-                                  isExpanded: true,
+                              : SelectorCatalogo(
                                   // También evita el valor histórico inválido si
                                   // falla la carga o durante una reconstrucción.
                                   value:
@@ -381,7 +379,6 @@ class _KitFormularioViewState extends State<KitFormularioView> {
                                       )
                                       ? _areaSeleccionada
                                       : null,
-                                  hint: const Text('Selecciona un área'),
                                   decoration: InputDecoration(
                                     labelText: 'Área de Destino *',
                                     filled: true,

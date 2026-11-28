@@ -1,3 +1,4 @@
+import '../../../../core/widgets/selector_catalogo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/theme/tema_area.dart';
@@ -322,9 +323,7 @@ class _SelectorItemFichaDialogState extends State<SelectorItemFichaDialog> {
                                 'Máximo ${_seleccionado!.farmaciaDisponible}',
                           ),
                         ),
-                        DropdownButtonFormField<String>(
-                          isExpanded: true,
-                          itemHeight: null,
+                        SelectorCatalogo(
                           value: _categoriaSeccion,
                           decoration: const InputDecoration(
                             labelText: 'Sección en la ficha (RF-003)',

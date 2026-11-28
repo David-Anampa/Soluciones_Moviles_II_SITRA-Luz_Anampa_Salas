@@ -1,3 +1,4 @@
+import '../../../../core/widgets/selector_catalogo.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:provider/provider.dart';
@@ -574,11 +575,8 @@ class _EditarMedicamentoViewState extends State<EditarMedicamentoView> {
                         AccionesAdaptables(
                           anchoMinimo: 150,
                           acciones: [
-                            DropdownButtonFormField<String>(
-                              itemHeight: null,
-                              isDense: false,
+                            SelectorCatalogo(
                               value: _presentacion,
-                              isExpanded: true,
                               decoration: const InputDecoration(
                                 labelText: 'Presentación *',
                                 prefixIcon: Icon(

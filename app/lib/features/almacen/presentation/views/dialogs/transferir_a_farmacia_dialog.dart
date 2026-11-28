@@ -1,3 +1,4 @@
+import '../../../../../core/widgets/selector_catalogo.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/widgets/diseno_adaptable.dart';
 import 'package:provider/provider.dart';
@@ -260,11 +261,8 @@ class _TransferirAFarmaciaDialogState extends State<TransferirAFarmaciaDialog> {
                   ),
                 )
               else
-                DropdownButtonFormField<String>(
-                  itemHeight: null,
-                  isDense: false,
+                SelectorCatalogo(
                   value: _selectedStock?.id,
-                  isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: 'Medicamento y Lote *',
                     prefixIcon: Icon(Icons.medication_rounded),

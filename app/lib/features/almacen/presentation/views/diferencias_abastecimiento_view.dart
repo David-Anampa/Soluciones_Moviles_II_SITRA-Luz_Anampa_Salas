@@ -1,3 +1,4 @@
+import '../../../../core/widgets/selector_catalogo.dart';
 import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
@@ -431,11 +432,8 @@ class _SolucionState extends State<_SolucionView> {
                         style: const TextStyle(height: 1.5),
                       ),
                       if (_resolver)
-                        DropdownButtonFormField<String>(
-                          itemHeight: null,
-                          isDense: false,
-                          initialValue: _destino,
-                          isExpanded: true,
+                        SelectorCatalogo(
+                          value: _destino,
                           decoration: const InputDecoration(
                             labelText: '¿Qué se comprobó?',
                             prefixIcon: Icon(Icons.rule_folder_outlined),

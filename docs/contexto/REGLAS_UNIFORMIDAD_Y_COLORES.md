@@ -164,7 +164,33 @@ sus modales; amplía el acuerdo previo de selectores de Nueva ficha.
   texto de 14 px con varias líneas, objetivo táctil mínimo de 48 px.
   El tema compartido `TemaPedidos` define estados marcado, deshabilitado y error.
 - En Profesionales se aplica al filtro Estado, colegio y áreas de atención.
-  Revisión de código: quedan controles heredados en Usuarios, sus formularios y
-  editores de catálogos, además de módulos operativos; migrarlos al intervenir cada
-  vista sin sustituir masivamente lógica de negocio. No se certifica uniformidad
-  de toda la aplicación hasta revisar esas pantallas con el usuario.
+  La ampliación aprobada a continuación migra también los controles heredados
+  identificados. La aceptación visual sigue a cargo del usuario.
+
+
+## Unificación aprobada y aplicada — 27/11/2026
+
+El usuario confirmó extender los estilos a los controles existentes, con pastel
+según módulo, manteniendo fluidez, datos y comportamiento.
+
+- Todos los `DropdownButtonFormField<String>` identificados pasan a
+  `SelectorCatalogo`: Usuarios, catálogos administrativos, formularios de medicamentos,
+  ingresos/correcciones, diferencias, transferencias, Kardex, listados/detalle de
+  fichas y selectores/formularios de kits. Profesionales y Nueva ficha ya lo usaban.
+- Hasta cuatro opciones: menú blanco redondeado. Más de cuatro: modal con franja,
+  búsqueda por nombre, selección pastel y marca. Buscar filtra todas las opciones
+  recibidas; se presentan hasta 30 filas, ampliables. No equivale a búsqueda remota
+  en tablas que la pantalla original no hubiera cargado.
+- Laboratorio en Solicitar a Almacén conserva búsqueda y sugerencias en el propio
+  campo, fondo blanco, bordes redondeados y color del módulo: es un filtro editable.
+- Checkbox de permisos y áreas de usuarios, cobertura de medicamentos y copias de
+  kits usan `OpcionMultiple`. Selecciones: tarjeta blanca/pastel. Confirmaciones de
+  kits: recuadro suave incluso sin marcar, manteniendo la advertencia y el texto.
+- Áreas de Profesionales siguen visibles (cinco); áreas de Usuarios conservan su
+  modal con búsqueda, contador y confirmación. Filtrar no borra selecciones.
+- Ambos componentes resuelven el módulo visual con `TemaPedidos`; el pastel no
+  depende de colores rojos/azules fijos ni cambia el rol que concede permisos.
+- Conservar opciones nulas como «Todos los lotes», validación obligatoria,
+  callbacks originales y estados deshabilitados. No hay migración SQL para esto.
+- Verificación: análisis estático Flutter; revisión visual y funcional con el
+  usuario pendiente. No cerrar historias por la unificación visual.

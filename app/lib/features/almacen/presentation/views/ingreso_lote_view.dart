@@ -1,3 +1,4 @@
+import '../../../../core/widgets/selector_catalogo.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
@@ -795,11 +796,8 @@ class _IngresoLoteViewState extends State<IngresoLoteView> {
                                 ),
                               ),
                               const SizedBox(height: 18),
-                              DropdownButtonFormField<String>(
-                                itemHeight: null,
-                                isDense: false,
+                              SelectorCatalogo(
                                 value: _justificacion,
-                                isExpanded: true,
                                 decoration: const InputDecoration(
                                   labelText: 'Justificación',
                                   prefixIcon: Icon(Icons.fact_check_outlined),

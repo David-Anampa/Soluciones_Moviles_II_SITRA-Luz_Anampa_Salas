@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'diseno_adaptable.dart';
 import 'menu_modulos.dart';
+import '../theme/tema_pedidos.dart';
 
 /// Búsqueda/identidad textual de etiquetas: ignora tildes y separadores.
 String normalizarEtiquetaCatalogo(String valor) {
@@ -35,9 +36,15 @@ class SelectorCatalogo extends StatelessWidget {
       : item.value ?? '';
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Theme(
+    data: TemaPedidos.aplicar(context, TemaPedidos.rolActual(context)),
+    child: Builder(builder: _formulario),
+  );
+
+  Widget _formulario(BuildContext context) {
     if (validator == null) return _construir(context, onChanged, null);
     return FormField<String>(
+      key: ValueKey(value),
       initialValue: (items ?? []).any((o) => o.value == value) ? value : null,
       enabled: onChanged != null,
       validator: validator,
@@ -66,6 +73,13 @@ class SelectorCatalogo extends StatelessWidget {
     final campo = InputDecorator(
       decoration: decoration.copyWith(
         enabled: activo,
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 18,
+        ),
         errorText: error ?? decoration.errorText,
         floatingLabelBehavior: FloatingLabelBehavior.always,
       ),
@@ -96,7 +110,7 @@ class SelectorCatalogo extends StatelessWidget {
     );
     if (opciones.length <= 4) {
       return LayoutBuilder(
-        builder: (context, limits) => PopupMenuButton<String>(
+        builder: (context, limits) => PopupMenuButton<int>(
           enabled: activo,
           tooltip: decoration.labelText ?? 'Seleccionar',
           color: Colors.white,
@@ -114,30 +128,36 @@ class SelectorCatalogo extends StatelessWidget {
               MediaQuery.sizeOf(context).width - 32,
             ),
           ),
-          onSelected: cambiar,
+          onSelected: (index) => cambiar?.call(opciones[index].value),
           itemBuilder: (_) => [
-            for (final o in opciones)
-              PopupMenuItem<String>(
-                value: o.value,
-                enabled: o.enabled,
-                child: Padding(
+            for (var i = 0; i < opciones.length; i++)
+              PopupMenuItem<int>(
+                value: i,
+                enabled: opciones[i].enabled,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: opciones[i].value == value
+                        ? color.withValues(alpha: .08)
+                        : null,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
                     children: [
                       Expanded(
                         child: Text(
-                          _texto(o),
+                          _texto(opciones[i]),
                           softWrap: true,
                           style: TextStyle(
                             fontSize: 14,
-                            color: o.value == value ? color : null,
-                            fontWeight: o.value == value
+                            color: opciones[i].value == value ? color : null,
+                            fontWeight: opciones[i].value == value
                                 ? FontWeight.w700
                                 : FontWeight.w400,
                           ),
                         ),
                       ),
-                      if (o.value == value) ...[
+                      if (opciones[i].value == value) ...[
                         const SizedBox(width: 10),
                         Icon(
                           Icons.check_circle_rounded,
@@ -162,7 +182,7 @@ class SelectorCatalogo extends StatelessWidget {
         onTap: !activo
             ? null
             : () async {
-                final elegido = await showDialog<String>(
+                final elegido = await showDialog<_EleccionCatalogo>(
                   context: context,
                   builder: (_) => Theme(
                     data: Theme.of(context),
@@ -175,13 +195,18 @@ class SelectorCatalogo extends StatelessWidget {
                   ),
                 );
                 if (elegido != null && context.mounted) {
-                  cambiar(elegido);
+                  cambiar(elegido.valor);
                 }
               },
         child: campo,
       ),
     );
   }
+}
+
+class _EleccionCatalogo {
+  final String? valor;
+  const _EleccionCatalogo(this.valor);
 }
 
 class _BuscadorCatalogo extends StatefulWidget {
@@ -240,6 +265,12 @@ class _BuscadorCatalogoState extends State<_BuscadorCatalogo> {
               ),
             for (final o in lista.take(_limite))
               ListTile(
+                selected: o.value == widget.seleccionado,
+                selectedTileColor: color.withValues(alpha: .08),
+                selectedColor: color,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 enabled: o.enabled,
                 contentPadding: const EdgeInsets.symmetric(vertical: 8),
                 title: Text(
@@ -250,7 +281,7 @@ class _BuscadorCatalogoState extends State<_BuscadorCatalogo> {
                 trailing: o.value == widget.seleccionado
                     ? Icon(Icons.check_circle_rounded, color: color)
                     : null,
-                onTap: () => Navigator.pop(context, o.value),
+                onTap: () => Navigator.pop(context, _EleccionCatalogo(o.value)),
               ),
             if (lista.length > _limite)
               TextButton(

@@ -1,3 +1,4 @@
+import '../../../../core/widgets/selector_catalogo.dart';
 import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/tema_area.dart';
@@ -454,10 +455,9 @@ class _FichasListadoViewState extends State<FichasListadoView> {
             children: [
               SizedBox(
                 width: 220,
-                child: DropdownButtonFormField<String>(
+                child: SelectorCatalogo(
                   key: ValueKey('filtro-area-$areaVisible'),
-                  initialValue: areaVisible,
-                  isExpanded: true,
+                  value: areaVisible,
                   decoration: const InputDecoration(
                     isDense: true,
                     labelText: 'Área clínica',
@@ -486,10 +486,9 @@ class _FichasListadoViewState extends State<FichasListadoView> {
               ),
               SizedBox(
                 width: 195,
-                child: DropdownButtonFormField<String>(
-                  initialValue: _filtros.estado,
+                child: SelectorCatalogo(
+                  value: _filtros.estado,
                   key: ValueKey('filtro-estado-${_filtros.estado}'),
-                  isExpanded: true,
                   decoration: const InputDecoration(
                     isDense: true,
                     labelText: 'Estado',
@@ -530,10 +529,9 @@ class _FichasListadoViewState extends State<FichasListadoView> {
               ),
               SizedBox(
                 width: 185,
-                child: DropdownButtonFormField<String>(
-                  initialValue: _filtros.tipoFicha,
+                child: SelectorCatalogo(
+                  value: _filtros.tipoFicha,
                   key: ValueKey('filtro-tipo-${_filtros.tipoFicha}'),
-                  isExpanded: true,
                   decoration: const InputDecoration(
                     isDense: true,
                     labelText: 'Formato de ficha',
@@ -562,9 +560,8 @@ class _FichasListadoViewState extends State<FichasListadoView> {
               ),
               SizedBox(
                 width: 165,
-                child: DropdownButtonFormField<String>(
-                  initialValue: _filtros.prioridad,
-                  isExpanded: true,
+                child: SelectorCatalogo(
+                  value: _filtros.prioridad,
                   decoration: const InputDecoration(
                     isDense: true,
                     labelText: 'Prioridad',
@@ -584,9 +581,8 @@ class _FichasListadoViewState extends State<FichasListadoView> {
               ),
               SizedBox(
                 width: 155,
-                child: DropdownButtonFormField<String>(
-                  initialValue: _filtros.turno,
-                  isExpanded: true,
+                child: SelectorCatalogo(
+                  value: _filtros.turno,
                   decoration: const InputDecoration(
                     isDense: true,
                     labelText: 'Turno',

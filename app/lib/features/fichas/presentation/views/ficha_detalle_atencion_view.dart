@@ -1,3 +1,4 @@
+import '../../../../core/widgets/selector_catalogo.dart';
 import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/tema_area.dart';
@@ -335,9 +336,8 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
                         tipo: TipoMensaje.informacion,
                       ),
                       const SizedBox(height: 14),
-                      DropdownButtonFormField<String>(
-                        initialValue: receptorIdSel,
-                        isExpanded: true,
+                      SelectorCatalogo(
+                        value: receptorIdSel,
                         decoration: const InputDecoration(
                           labelText: 'Personal receptor del área *',
                           border: OutlineInputBorder(),

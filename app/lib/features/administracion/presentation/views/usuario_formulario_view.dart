@@ -1,3 +1,5 @@
+import '../../../../core/widgets/opcion_multiple.dart';
+import '../../../../core/widgets/selector_catalogo.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../../core/widgets/mensajes_app.dart';
@@ -357,21 +359,18 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
                     if (_rol == 'ENFERMERIA')
                       Material(
                         color: Colors.transparent,
-                        child: CheckboxListTile(
-                          contentPadding: EdgeInsets.zero,
-                          controlAffinity: ListTileControlAffinity.leading,
-                          activeColor: CatalogoEstilo.rojo,
-                          title: const Text(
+                        child: OpcionMultiple(
+                          tituloWidget: const Text(
                             'Puede gestionar kits',
                             style: TextStyle(fontSize: 14),
                           ),
-                          subtitle: Text(
+                          subtitulo: Text(
                             _cargoConKits
                                 ? 'Solo en sus áreas asignadas. Requiere al menos un área.'
                                 : 'Completa Cargo / ocupación como Técnica, Técnico, Enfermera o Enfermero para habilitar este permiso.',
                             style: const TextStyle(fontSize: 12),
                           ),
-                          value: _cargoConKits && _puedeGestionarKits,
+                          seleccionada: _cargoConKits && _puedeGestionarKits,
                           onChanged: _guardando || !_cargoConKits
                               ? null
                               : (valor) => setState(
@@ -441,16 +440,20 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
         'Completa estos datos cuando correspondan a su ocupación.',
         style: TextStyle(fontSize: 13, height: 1.5, color: Color(0xFF64646D)),
       ),
-      _selectorProfesional('Colegio profesional', _colegioCodigo, colegios, (
-        valor,
-      ) {
-        if (valor == _colegioCodigo) return;
-        setState(() {
-          _colegioCodigo = valor;
-          _especialidadCodigo = '';
-          _colegiatura.clear();
-        });
-      }, icono: Icons.account_balance_outlined),
+      _selectorProfesional(
+        'Colegio profesional',
+        _colegioCodigo,
+        colegios,
+        (valor) {
+          if (valor == _colegioCodigo) return;
+          setState(() {
+            _colegioCodigo = valor;
+            _especialidadCodigo = '';
+            _colegiatura.clear();
+          });
+        },
+        icono: Icons.account_balance_outlined,
+      ),
       if (_colegioCodigo.isNotEmpty) ...[
         _campo(
           _colegiatura,
@@ -480,13 +483,9 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
     Map<String, String> opciones,
     ValueChanged<String> cambiar, {
     required IconData icono,
-  }) => DropdownButtonFormField<String>(
-    isDense: false,
+  }) => SelectorCatalogo(
     key: ValueKey('$etiqueta:$valor'),
     value: valor,
-    isExpanded: true,
-    menuMaxHeight: 360,
-    itemHeight: 72,
     decoration: InputDecoration(
       labelText: etiqueta,
       filled: true,
@@ -497,14 +496,6 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
         borderSide: BorderSide.none,
       ),
     ),
-    selectedItemBuilder: (context) => opciones.values
-        .map(
-          (nombre) => Align(
-            alignment: Alignment.centerLeft,
-            child: Text(nombre, maxLines: 1, overflow: TextOverflow.ellipsis),
-          ),
-        )
-        .toList(),
     items: opciones.entries
         .map(
           (e) => DropdownMenuItem(
@@ -632,11 +623,8 @@ class _UsuarioFormularioViewState extends State<UsuarioFormularioView> {
   );
 
   /// Lista desplegable de roles. Se bloquea al editar la cuenta propia.
-  Widget _selectorRol() => DropdownButtonFormField<String>(
-    itemHeight: null,
-    isDense: false,
+  Widget _selectorRol() => SelectorCatalogo(
     value: _rol,
-    isExpanded: true,
     validator: UsuarioValidadores.rol,
     decoration: InputDecoration(
       labelText: 'Rol de permisos',

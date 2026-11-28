@@ -1,3 +1,4 @@
+import '../../../../core/widgets/opcion_multiple.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import 'catalogo_estilo.dart';
@@ -189,15 +190,12 @@ class _SelectorAreasDialogState extends State<_SelectorAreasDialog> {
                       final marcada = _seleccion.contains(area.key);
                       final disponible =
                           !widget.inactivas.contains(area.key) || marcada;
-                      return CheckboxListTile(
-                        contentPadding: EdgeInsets.zero,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        activeColor: CatalogoEstilo.rojo,
-                        title: Text(
+                      return OpcionMultiple(
+                        tituloWidget: Text(
                           area.value,
                           style: const TextStyle(fontSize: 14),
                         ),
-                        value: marcada,
+                        seleccionada: marcada,
                         onChanged: disponible
                             ? (valor) => setState(() {
                                 valor == true

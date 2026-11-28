@@ -1,3 +1,4 @@
+import '../../../../core/widgets/selector_catalogo.dart';
 import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
@@ -738,11 +739,8 @@ class _CrearSolicitudAbastecimientoViewState
     IconData icono,
     ValueChanged<String> cambiar,
     bool bloqueado,
-  ) => DropdownButtonFormField<String>(
-    itemHeight: null,
-    isDense: false,
+  ) => SelectorCatalogo(
     value: valor,
-    isExpanded: true,
     decoration: InputDecoration(
       labelText: etiqueta,
       prefixIcon: Icon(icono, color: _color),

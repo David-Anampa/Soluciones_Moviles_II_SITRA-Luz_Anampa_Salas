@@ -1,3 +1,5 @@
+import '../../../../core/widgets/opcion_multiple.dart';
+import '../../../../core/widgets/selector_catalogo.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/tema_area.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
@@ -65,8 +67,9 @@ class _SelectorKitFichaDialogState extends State<SelectorKitFichaDialog> {
     Navigator.of(context).pop(
       SeleccionKitResultado(
         kit: kit,
-        conservarExistentes:
-            widget.fichaYaTieneItems ? _conservarExistentes : false,
+        conservarExistentes: widget.fichaYaTieneItems
+            ? _conservarExistentes
+            : false,
         confirmarFaltante: _confirmarFaltante,
       ),
     );
@@ -95,9 +98,8 @@ class _SelectorKitFichaDialogState extends State<SelectorKitFichaDialog> {
                 tipo: TipoMensaje.advertencia,
               )
             else ...[
-              DropdownButtonFormField<String>(
+              SelectorCatalogo(
                 value: kit?.id,
-                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Plantilla de kit activa del área',
                   prefixIcon: Icon(Icons.medical_services_rounded),
@@ -116,8 +118,9 @@ class _SelectorKitFichaDialogState extends State<SelectorKitFichaDialog> {
                     .toList(),
                 onChanged: (id) {
                   if (id == null) return;
-                  final encontrado = widget.kitsDisponibles
-                      .firstWhere((k) => k.id == id);
+                  final encontrado = widget.kitsDisponibles.firstWhere(
+                    (k) => k.id == id,
+                  );
                   setState(() {
                     _seleccionado = encontrado;
                     _confirmarFaltante = false;
@@ -177,10 +180,11 @@ class _SelectorKitFichaDialogState extends State<SelectorKitFichaDialog> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: (ok
-                                      ? const Color(0xFF2E7D32)
-                                      : const Color(0xFFC62828))
-                                  .withValues(alpha: 0.12),
+                              color:
+                                  (ok
+                                          ? const Color(0xFF2E7D32)
+                                          : const Color(0xFFC62828))
+                                      .withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
@@ -206,34 +210,34 @@ class _SelectorKitFichaDialogState extends State<SelectorKitFichaDialog> {
                     'Puedes ajustar sus cantidades en la ficha o confirmar la solicitud con faltante.',
                     tipo: TipoMensaje.advertencia,
                   ),
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    value: _confirmarFaltante,
+                  OpcionMultiple(
+                    seleccionada: _confirmarFaltante,
                     onChanged: (v) =>
                         setState(() => _confirmarFaltante = v ?? false),
-                    title: const Text(
+                    tituloWidget: const Text(
                       'Confirmar copia del kit aun con stock parcial en Farmacia',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                    compacta: true,
                   ),
                 ],
                 if (widget.fichaYaTieneItems) ...[
                   const SizedBox(height: 8),
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    value: _conservarExistentes,
+                  OpcionMultiple(
+                    seleccionada: _conservarExistentes,
                     onChanged: (v) =>
                         setState(() => _conservarExistentes = v ?? true),
-                    title: const Text(
+                    tituloWidget: const Text(
                       'Conservar los ítems que ya había agregado a la ficha',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                    compacta: true,
                   ),
                 ],
               ],

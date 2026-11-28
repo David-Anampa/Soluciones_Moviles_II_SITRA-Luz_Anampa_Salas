@@ -1,3 +1,4 @@
+import '../../../../core/widgets/selector_catalogo.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import '../../../fichas/data/repositories/fichas_repository.dart';
@@ -168,10 +169,9 @@ class _KardexProductoViewState extends State<KardexProductoView> {
                             ),
                         ],
                       ),
-                      DropdownButtonFormField<String>(
+                      SelectorCatalogo(
                         key: ValueKey(_lote),
-                        initialValue: _lote,
-                        isExpanded: true,
+                        value: _lote,
                         decoration: const InputDecoration(
                           labelText: 'Filtrar por lote',
                           prefixIcon: Icon(Icons.inventory_2_outlined),

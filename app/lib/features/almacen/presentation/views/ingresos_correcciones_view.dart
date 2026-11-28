@@ -1,3 +1,4 @@
+import '../../../../core/widgets/selector_catalogo.dart';
 import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
@@ -364,11 +365,8 @@ class _CorreccionState extends State<_CorreccionIngreso> {
                           },
                         ),
                         if (delta < 0)
-                          DropdownButtonFormField<String>(
-                            itemHeight: null,
-                            isDense: false,
-                            initialValue: _ubicacion,
-                            isExpanded: true,
+                          SelectorCatalogo(
+                            value: _ubicacion,
                             decoration: const InputDecoration(
                               labelText: 'Ubicación física que se corrige',
                               prefixIcon: Icon(Icons.place_outlined),

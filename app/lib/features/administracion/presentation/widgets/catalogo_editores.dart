@@ -1,3 +1,5 @@
+import '../../../../core/widgets/opcion_multiple.dart';
+import '../../../../core/widgets/selector_catalogo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
@@ -288,11 +290,8 @@ class _FinanciamientoEditorState extends State<FinanciamientoEditor> {
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              itemHeight: null,
-              isDense: false,
+            SelectorCatalogo(
               value: _tipo,
-              isExpanded: true,
               decoration: const InputDecoration(labelText: 'Tipo *'),
               items: const [
                 DropdownMenuItem(value: 'SEGURO', child: Text('Seguro')),
@@ -437,22 +436,16 @@ class _FinanciamientoEditorState extends State<FinanciamientoEditor> {
                       : const Color(0xFFF7F7F7),
                   borderRadius: BorderRadius.circular(12),
                   clipBehavior: Clip.antiAlias,
-                  child: CheckboxListTile(
-                    value: incluido,
-                    activeColor: CatalogoEstilo.rojo,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
-                    ),
-                    title: Text(
+                  child: OpcionMultiple(
+                    seleccionada: incluido,
+                    tituloWidget: Text(
                       m.nombre,
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    subtitle: Text(
+                    subtitulo: Text(
                       '${m.presentacion}${m.activo ? '' : ' · Inactivo'}\n'
                       '${precio == null ? 'Kairos sin registrar' : 'Kairos S/ ${precio.toStringAsFixed(2)}'}'
                       '${incluido && total != null ? ' · Con descuento S/ ${total.toStringAsFixed(2)}' : ''}',

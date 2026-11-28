@@ -1,3 +1,4 @@
+import '../../../../core/widgets/selector_catalogo.dart';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -1044,11 +1045,8 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Clasificación MEDICAMENTO vs DISPOSITIVO_MEDICO
-                        DropdownButtonFormField<String>(
-                          itemHeight: null,
-                          isDense: false,
+                        SelectorCatalogo(
                           value: _categoria,
-                          isExpanded: true,
                           decoration: const InputDecoration(
                             labelText: 'Categoría en Catálogo *',
                             prefixIcon: Icon(Icons.category_outlined),
@@ -1136,11 +1134,8 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                         AccionesAdaptables(
                           anchoMinimo: 160,
                           acciones: [
-                            DropdownButtonFormField<String>(
-                              itemHeight: null,
-                              isDense: false,
+                            SelectorCatalogo(
                               value: _presentacion,
-                              isExpanded: true,
                               decoration: InputDecoration(
                                 labelText:
                                     'Presentación (${EstandarizadorNombreFarmaceutico.abreviarPresentacion(_presentacion)})',
@@ -1251,11 +1246,8 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                                   ? 'Ingresa el principio activo'
                                   : null,
                             ),
-                            DropdownButtonFormField<String>(
-                              itemHeight: null,
-                              isDense: false,
+                            SelectorCatalogo(
                               value: _unidadPresentacion,
-                              isExpanded: true,
                               decoration: const InputDecoration(
                                 labelText: 'Unidad de Dispensación',
                               ),
@@ -1665,11 +1657,8 @@ class _RegistroMedicamentoViewState extends State<RegistroMedicamentoView> {
                                 prefixIcon: Icon(Icons.receipt_long_rounded),
                               ),
                             ),
-                            DropdownButtonFormField<String>(
-                              itemHeight: null,
-                              isDense: false,
+                            SelectorCatalogo(
                               value: _justificacion,
-                              isExpanded: true,
                               decoration: const InputDecoration(
                                 labelText: 'Justificación',
                               ),

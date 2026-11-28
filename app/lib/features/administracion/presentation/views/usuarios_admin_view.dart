@@ -1,3 +1,4 @@
+import '../../../../core/widgets/selector_catalogo.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -610,11 +611,8 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
         ),
         child: Column(
           children: [
-            DropdownButtonFormField<String>(
-              itemHeight: null,
-              isDense: false,
+            SelectorCatalogo(
               value: _rol,
-              isExpanded: true,
               decoration: const InputDecoration(labelText: 'Rol'),
               items: [
                 const DropdownMenuItem(
@@ -636,11 +634,8 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
               },
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              itemHeight: null,
-              isDense: false,
+            SelectorCatalogo(
               value: _area,
-              isExpanded: true,
               decoration: const InputDecoration(labelText: 'Área asignada'),
               items: [
                 const DropdownMenuItem(
@@ -659,11 +654,8 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
               },
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              itemHeight: null,
-              isDense: false,
+            SelectorCatalogo(
               value: _orden,
-              isExpanded: true,
               decoration: const InputDecoration(labelText: 'Ordenar por'),
               items: const [
                 DropdownMenuItem(value: 'NOMBRE', child: Text('Nombre: A–Z')),

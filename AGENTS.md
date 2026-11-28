@@ -14,7 +14,9 @@ formularios, filtros, modales y vistas compartidas.
   durante cambios visuales. Documentar cualquier cambio de alcance necesario.
 - Uniformar combobox y checkbox con los componentes compartidos y el color del
   módulo: `SelectorCatalogo` y `OpcionMultiple`. Más de cuatro opciones en un
-  combobox deben permitir búsqueda. Revisar también formularios y modales.
+  combobox abren modal con búsqueda. Los filtros editables conservan sugerencias
+  en el campo. Checkbox de selección usan tarjetas; confirmaciones, recuadro
+  suave. El pastel depende del módulo. Revisar también formularios y modales.
 - Mantener espacio suficiente, texto legible y desplazamiento en celulares.
 - Ejecutar `flutter analyze --no-pub` desde `app` para cambios de Flutter. Las
   pruebas funcionales las realiza el usuario salvo que autorice otras pruebas.
