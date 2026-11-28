@@ -35,6 +35,12 @@ mayúsculas o espacios. Migración aplicada; no cambia áreas ni stock.
 Ver [guía y pruebas manuales pendientes](../supabase/GUIA_PROCEDENCIAS_COMPARTIDAS_2026_11_27.md).
 No se marca HU-003 aceptada por esta ampliación.
 
+**Gestión administrativa del 27/11:** acciones uniformes, detalles con conteos por
+área y eliminación protegida en Usuarios, Profesionales, Áreas y Financiamientos.
+Migración aplicada sin ejecutar eliminaciones. Usuarios solo sin uso ni inicio
+de sesión; auditoría preservada. Ver [guía y revisión pendiente](../supabase/GUIA_ACCIONES_GESTION_2026_11_27.md).
+No acredita aceptación funcional de HU-003 ni de la gestión de usuarios.
+
 ## 1. Alcance y forma de interpretar este documento
 
 Revisión estática del código y SQL de `Sprint-08`, commit base `40d65bb`.

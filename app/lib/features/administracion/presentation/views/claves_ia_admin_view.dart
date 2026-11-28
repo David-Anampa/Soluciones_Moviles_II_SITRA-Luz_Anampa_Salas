@@ -1,3 +1,4 @@
+import '../../../../core/widgets/accion_gestion.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -60,16 +61,12 @@ ThemeData _temaClaves(BuildContext context) {
   );
 }
 
-Widget _accionIcono(String etiqueta, IconData icono, VoidCallback? onPressed) =>
-    IconButton.filledTonal(
-      tooltip: etiqueta,
-      onPressed: onPressed,
-      icon: Icon(icono),
-      style: IconButton.styleFrom(
-        backgroundColor: CatalogoEstilo.pastel,
-        foregroundColor: CatalogoEstilo.rojo,
-      ),
-    );
+Widget _accionIcono(
+  BuildContext context,
+  String etiqueta,
+  IconData icono,
+  VoidCallback? onPressed,
+) => AccionGestion(ayuda: etiqueta, icono: icono, onPressed: onPressed);
 
 class _ComprobacionClaveDialog extends StatefulWidget {
   const _ComprobacionClaveDialog();
@@ -169,6 +166,7 @@ class _ComprobacionClaveDialogState extends State<_ComprobacionClaveDialog> {
           ),
           const SizedBox(height: 16),
           _accionIcono(
+            context,
             'Cerrar',
             Icons.close_rounded,
             () => Navigator.of(context).pop(),
@@ -372,21 +370,25 @@ class _ClavesIaAdminViewState extends State<ClavesIaAdminView> {
               children: [
                 if (!clave.activa)
                   _accionIcono(
+                    context,
                     'Usar clave',
                     Icons.check_circle_rounded,
                     () => Navigator.pop(ctx, 'ACTIVAR'),
                   ),
                 _accionIcono(
+                  context,
                   'Editar clave',
                   Icons.edit_rounded,
                   () => Navigator.pop(ctx, 'EDITAR'),
                 ),
                 _accionIcono(
+                  context,
                   'Eliminar clave',
                   Icons.delete_outline_rounded,
                   () => Navigator.pop(ctx, 'ELIMINAR'),
                 ),
                 _accionIcono(
+                  context,
                   'Cerrar',
                   Icons.close_rounded,
                   () => Navigator.pop(ctx),
@@ -751,6 +753,7 @@ class _FormularioClaveState extends State<_FormularioClave> {
           alignment: WrapAlignment.end,
           children: [
             _accionIcono(
+              context,
               'Cancelar',
               Icons.close_rounded,
               _guardando ? null : () => Navigator.pop(context),

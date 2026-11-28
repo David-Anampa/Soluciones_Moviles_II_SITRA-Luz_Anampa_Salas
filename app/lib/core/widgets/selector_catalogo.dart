@@ -74,8 +74,25 @@ class SelectorCatalogo extends StatelessWidget {
       decoration: decoration.copyWith(
         enabled: activo,
         filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        fillColor: activo && seleccion != null
+            ? color.withValues(alpha: .07)
+            : Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: color, width: 1),
+        ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 18,
@@ -115,9 +132,7 @@ class SelectorCatalogo extends StatelessWidget {
           tooltip: decoration.labelText ?? 'Seleccionar',
           color: Colors.white,
           surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           constraints: BoxConstraints(
             minWidth: math.min(
               limits.maxWidth,
@@ -134,14 +149,18 @@ class SelectorCatalogo extends StatelessWidget {
               PopupMenuItem<int>(
                 value: i,
                 enabled: opciones[i].enabled,
+                padding: EdgeInsets.zero,
                 child: Container(
                   decoration: BoxDecoration(
                     color: opciones[i].value == value
                         ? color.withValues(alpha: .08)
                         : null,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
                       Expanded(
@@ -178,7 +197,7 @@ class SelectorCatalogo extends StatelessWidget {
       button: true,
       enabled: activo,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         onTap: !activo
             ? null
             : () async {
@@ -269,10 +288,13 @@ class _BuscadorCatalogoState extends State<_BuscadorCatalogo> {
                 selectedTileColor: color.withValues(alpha: .08),
                 selectedColor: color,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 enabled: o.enabled,
-                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 title: Text(
                   widget.etiqueta(o),
                   softWrap: true,

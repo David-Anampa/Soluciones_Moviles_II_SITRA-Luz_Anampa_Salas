@@ -1,3 +1,6 @@
+import '../../../../core/widgets/accion_gestion.dart';
+import '../../data/gestion_registros_repository.dart';
+import '../widgets/detalle_registro_gestion.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/diseno_adaptable.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +22,8 @@ class CatalogosAdminView extends StatefulWidget {
 
 class _CatalogosAdminViewState extends State<CatalogosAdminView> {
   final _repository = CatalogosRepository();
+  final _gestion = GestionRegistrosRepository();
+  Map<String, dynamic> _relaciones = {};
   final _busqueda = TextEditingController();
   List<AreaCatalogo> _areas = [];
   List<FinanciamientoCatalogo> _financiamientos = [];
@@ -56,9 +61,11 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
         _repository.areas(),
         _repository.financiamientos(),
         _repository.medicamentos(),
+        _gestion.cargar(),
       ]);
       if (!mounted || revision != _revision) return;
       setState(() {
+        _relaciones = result[3] as Map<String, dynamic>;
         _areas = result[0] as List<AreaCatalogo>;
         _financiamientos = result[1] as List<FinanciamientoCatalogo>;
         _medicamentos = result[2] as List<MedicamentoCobertura>;
@@ -124,6 +131,16 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
           destructivo: true,
         );
         if (confirmado != true || !mounted) return;
+      }
+      if (!eliminar) {
+        final confirmado = await MensajesApp.confirmar(
+          context,
+          titulo: activo ? 'Desactivar registro' : 'Activar registro',
+          mensaje:
+              '${activo ? '¿Desactivar' : '¿Activar'} «$nombre»? El historial se conserva.',
+          accion: activo ? 'Desactivar' : 'Activar',
+        );
+        if (!confirmado || !mounted) return;
       }
       if (eliminar) {
         await _repository.eliminar(entidad, id);
@@ -489,6 +506,8 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
 
   /// Adapta los datos de un área y enlaza sus acciones con el componente común.
   Widget _tarjetaArea(AreaCatalogo a) => _tarjeta(
+    entidad: 'AREA',
+    id: a.id,
     nombre: a.nombre,
     subtitulo: a.codigo,
     descripcion: a.descripcion,
@@ -519,6 +538,8 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
   /// Adapta tipo, porcentaje y número de medicamentos incluidos a una tarjeta.
   /// El icono distingue Seguro de Convenio sin cambiar las reglas de escritura.
   Widget _tarjetaFinanciamiento(FinanciamientoCatalogo f) => _tarjeta(
+    entidad: 'FINANCIAMIENTO',
+    id: f.id,
     nombre: f.nombre,
     subtitulo: f.tipo == 'SEGURO' ? 'Seguro' : 'Convenio',
     descripcion: f.descripcion,
@@ -549,6 +570,8 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
   /// Compone el registro con el control de estado junto al nombre, sin etiqueta.
   /// La fila inferior reparte el ancho entre Editar y Eliminar; no hace consultas.
   Widget _tarjeta({
+    required String entidad,
+    required String id,
     required String nombre,
     required String subtitulo,
     required String descripcion,
@@ -568,7 +591,13 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
       principal: tema?.principal ?? CatalogoEstilo.rojo,
       pastel: tema?.suave ?? CatalogoEstilo.pastel,
       diseno: diseno,
-      onTap: _operando ? null : editar,
+      onTap: _operando
+          ? null
+          : () => _detalleGestion(entidad, id, nombre, {
+              'Código / tipo': subtitulo,
+              'Descripción': descripcion,
+              'Detalle': detalle,
+            }),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -624,19 +653,13 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Semantics(
-                  toggled: activo,
-                  child: SizedBox(
-                    width: 48,
-                    child: _botonAccion(
-                      activo
-                          ? 'Habilitado · Toca para deshabilitar'
-                          : 'Deshabilitado · Toca para habilitar',
-                      icono,
-                      activo ? const Color(0xFF2E7D32) : CatalogoEstilo.rojo,
-                      estado,
-                    ),
-                  ),
+                AccionGestion(
+                  ayuda: activo ? 'Desactivar registro' : 'Activar registro',
+                  icono: activo
+                      ? Icons.check_circle_outline_rounded
+                      : Icons.block_rounded,
+                  activa: activo,
+                  onPressed: _operando ? null : estado,
                 ),
               ],
             ),
@@ -717,19 +740,51 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
             const Divider(color: Color(0xFFEEEEEE)),
             const SizedBox(height: 6),
             AccionesAdaptables(
-              anchoMinimo: 150,
+              anchoMinimo: 70,
               acciones: [
-                _botonAccion(
-                  'Editar',
-                  Icons.edit_outlined,
-                  tema?.principal ?? CatalogoEstilo.rojo,
-                  editar,
+                AccionGestion(
+                  ayuda: 'Ver detalle',
+                  icono: Icons.visibility_outlined,
+                  onPressed: _operando
+                      ? null
+                      : () => _detalleGestion(entidad, id, nombre, {
+                          'Código / tipo': subtitulo,
+                          'Descripción': descripcion,
+                          'Detalle': detalle,
+                        }),
                 ),
-                _botonAccion(
-                  'Eliminar',
-                  Icons.delete_outline_rounded,
-                  CatalogoEstilo.rojo,
-                  eliminar,
+                AccionGestion(
+                  ayuda: 'Editar registro',
+                  icono: Icons.edit_outlined,
+                  onPressed: _operando ? null : editar,
+                ),
+                AccionGestion(
+                  ayuda:
+                      GestionRegistrosRepository.permite(
+                        _relaciones,
+                        entidad,
+                        id,
+                      )
+                      ? 'Eliminar registro'
+                      : GestionRegistrosRepository.motivo(
+                          _relaciones,
+                          entidad,
+                          id,
+                        ),
+                  icono: Icons.delete_outline_rounded,
+                  onPressed:
+                      _operando ||
+                          !GestionRegistrosRepository.permite(
+                            _relaciones,
+                            entidad,
+                            id,
+                          )
+                      ? null
+                      : () => _detalleGestion(entidad, id, nombre, {
+                          'Código / tipo': subtitulo,
+                          'Descripción': descripcion,
+                          'Detalle': detalle,
+                        }, eliminar: true),
                 ),
               ],
             ),
@@ -739,38 +794,24 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
     ),
   );
 
-  /// Dibuja un botón de icono con tooltip, borde, hover y objetivo táctil de 48 px.
-  /// Durante una operación queda deshabilitado para evitar solicitudes repetidas.
-  Widget _botonAccion(
-    String tooltip,
-    IconData icono,
-    Color color,
-    VoidCallback accion,
-  ) => Tooltip(
-    message: tooltip,
-    child: OutlinedButton(
-      onPressed: _operando ? null : accion,
-      style:
-          OutlinedButton.styleFrom(
-            foregroundColor: color,
-            backgroundColor: Colors.white,
-            side: BorderSide(color: color.withOpacity(.20)),
-            minimumSize: const Size(0, 48),
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ).copyWith(
-            overlayColor: WidgetStateProperty.resolveWith(
-              (states) =>
-                  states.contains(WidgetState.hovered) ||
-                      states.contains(WidgetState.pressed) ||
-                      states.contains(WidgetState.focused)
-                  ? color.withOpacity(.10)
-                  : null,
-            ),
-          ),
-      child: Icon(icono, size: 23, semanticLabel: tooltip),
-    ),
-  );
+  Future<void> _detalleGestion(
+    String entidad,
+    String id,
+    String nombre,
+    Map<String, String> datos, {
+    bool eliminar = false,
+  }) async {
+    final borrado = await mostrarRegistroGestion(
+      context,
+      entidad: entidad,
+      id: id,
+      nombre: nombre,
+      datos: datos,
+      eliminar: eliminar,
+    );
+    if (borrado && mounted) {
+      _mensaje('Registro eliminado; auditoría conservada.');
+      await _cargar();
+    }
+  }
 }

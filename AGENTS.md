@@ -17,6 +17,10 @@ formularios, filtros, modales y vistas compartidas.
   combobox abren modal con búsqueda. Los filtros editables conservan sugerencias
   en el campo. Checkbox de selección usan tarjetas; confirmaciones, recuadro
   suave. El pastel depende del módulo. Revisar también formularios y modales.
+- En gestión administrativa usar `AccionGestion`: ojo, lápiz, papelera y estado
+  junto al nombre, colores del módulo y sin etiqueta Activo duplicada. Papelera
+  bloqueada según vínculos del servidor; detalle/confirmación muestran cantidades
+  por tipo y área, nunca registros clínicos individuales.
 - Mantener espacio suficiente, texto legible y desplazamiento en celulares.
 - Ejecutar `flutter analyze --no-pub` desde `app` para cambios de Flutter. Las
   pruebas funcionales las realiza el usuario salvo que autorice otras pruebas.

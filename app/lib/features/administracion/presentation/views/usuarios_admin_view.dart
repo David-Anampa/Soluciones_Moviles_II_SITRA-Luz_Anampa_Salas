@@ -1,3 +1,6 @@
+import '../../../../core/widgets/accion_gestion.dart';
+import '../../data/gestion_registros_repository.dart';
+import '../widgets/detalle_registro_gestion.dart';
 import '../../../../core/widgets/selector_catalogo.dart';
 import 'dart:async';
 
@@ -22,6 +25,8 @@ class UsuariosAdminView extends StatefulWidget {
 
 class _UsuariosAdminViewState extends State<UsuariosAdminView> {
   final _repository = UsuariosRepository();
+  final _gestion = GestionRegistrosRepository();
+  Map<String, dynamic> _relaciones = {};
   final _buscador = TextEditingController();
   List<UsuarioAdministrativo> _usuarios = [];
   List<AreaUsuario> _areas = [];
@@ -61,8 +66,10 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
     });
     try {
       final datos = await _repository.cargar();
+      final relaciones = await _gestion.cargar();
       if (!mounted || revision != _revision) return;
       setState(() {
+        _relaciones = relaciones;
         _usuarios = datos.usuarios;
         _areas = datos.areas;
         _estructuraPendiente = datos.estructuraPendiente;
@@ -802,6 +809,29 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                   tema.principal,
                   () => _editar(u),
                 ),
+                AccionGestion(
+                  ayuda:
+                      GestionRegistrosRepository.permite(
+                        _relaciones,
+                        'USUARIO',
+                        u.id,
+                      )
+                      ? 'Eliminar usuario'
+                      : GestionRegistrosRepository.motivo(
+                          _relaciones,
+                          'USUARIO',
+                          u.id,
+                        ),
+                  icono: Icons.delete_outline_rounded,
+                  onPressed:
+                      !GestionRegistrosRepository.permite(
+                        _relaciones,
+                        'USUARIO',
+                        u.id,
+                      )
+                      ? null
+                      : () => _eliminarUsuario(u),
+                ),
               ],
             ),
           ],
@@ -817,22 +847,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
     IconData icono,
     Color color,
     VoidCallback? alPresionar,
-  ) => Tooltip(
-    message: ayuda,
-    child: OutlinedButton(
-      onPressed: alPresionar,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: color,
-        backgroundColor: Colors.white,
-        overlayColor: color.withValues(alpha: .10),
-        side: BorderSide(color: color.withValues(alpha: .25)),
-        minimumSize: const Size(48, 48),
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      child: Icon(icono, size: 22, semanticLabel: ayuda),
-    ),
-  );
+  ) => AccionGestion(ayuda: ayuda, icono: icono, onPressed: alPresionar);
 
   /// Botón de habilitación: verde si el usuario está habilitado, rojo si no.
   /// Se bloquea en la cuenta propia y mientras otro cambio de estado está en curso.
@@ -844,11 +859,13 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
         : u.activo
         ? 'Deshabilitar usuario'
         : 'Habilitar usuario';
-    return _accion(
-      ayuda,
-      u.activo ? Icons.person_rounded : Icons.person_off_rounded,
-      u.activo ? const Color(0xFF2E7D32) : CatalogoEstilo.rojo,
-      propia || ocupado ? null : () => _alternarEstado(u),
+    return AccionGestion(
+      ayuda: ayuda,
+      icono: u.activo
+          ? Icons.check_circle_outline_rounded
+          : Icons.block_rounded,
+      activa: u.activo,
+      onPressed: propia || ocupado ? null : () => _alternarEstado(u),
     );
   }
 
@@ -870,23 +887,6 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
         ),
       ),
     ],
-  );
-
-  /// Muestra una etiqueta informativa de habilitación, sin acción de cambio.
-  Widget _etiquetaEstado(bool activo) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-    decoration: BoxDecoration(
-      color: activo ? const Color(0xFFEDF7EF) : const Color(0xFFEEEEEE),
-      borderRadius: BorderRadius.circular(8),
-    ),
-    child: Text(
-      activo ? 'Habilitado' : 'Deshabilitado',
-      style: TextStyle(
-        fontSize: 10,
-        fontWeight: FontWeight.w600,
-        color: activo ? const Color(0xFF2E7D32) : const Color(0xFF66666E),
-      ),
-    ),
   );
 
   /// Construye una etiqueta compacta de rol o área para las tarjetas y el detalle.
@@ -921,6 +921,21 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
 
   /// Abre un panel inferior desplazable con los datos del usuario ya cargado.
   /// No realiza otra consulta ni muestra contraseñas; los valores ausentes se indican.
+  Future<void> _eliminarUsuario(UsuarioAdministrativo u) async {
+    final borrado = await mostrarRegistroGestion(
+      context,
+      entidad: 'USUARIO',
+      id: u.id,
+      nombre: u.nombreCompleto,
+      datos: {'Correo': u.correo, 'Rol': u.rolVisible},
+      eliminar: true,
+    );
+    if (borrado && mounted) {
+      _mensaje('Cuenta eliminada; auditoría conservada.');
+      await _cargar();
+    }
+  }
+
   void _detalle(UsuarioAdministrativo u) {
     showModalBottomSheet<void>(
       useSafeArea: true,
@@ -1006,7 +1021,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                                   spacing: 8,
                                   runSpacing: 8,
                                   children: [
-                                    _etiquetaEstado(u.activo),
+                                    _accionEstado(u),
                                     Text(
                                       u.rolVisible,
                                       style: const TextStyle(fontSize: 13),
@@ -1018,6 +1033,11 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                           ),
                         ],
                       ),
+                    ),
+                    const SizedBox(height: 16),
+                    ResumenRelacionesGestion(
+                      datos: (_relaciones['USUARIO:${u.id}'] as Map?)
+                          ?.cast<String, dynamic>(),
                     ),
                     const SizedBox(height: 16),
                     _seccionDetalle('Cuenta', Icons.alternate_email_rounded, [

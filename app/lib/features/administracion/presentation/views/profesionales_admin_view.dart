@@ -1,3 +1,6 @@
+import '../../../../core/widgets/accion_gestion.dart';
+import '../../data/gestion_registros_repository.dart';
+import '../widgets/detalle_registro_gestion.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -22,6 +25,8 @@ class ProfesionalesAdminView extends StatefulWidget {
 
 class _ProfesionalesAdminViewState extends State<ProfesionalesAdminView> {
   final _repo = ProfesionalesRepository();
+  final _gestion = GestionRegistrosRepository();
+  Map<String, dynamic> _relaciones = {};
   final _buscar = TextEditingController();
   List<Map<String, dynamic>> _personas = [], _colegios = [], _areas = [];
   String _filtro = 'TODOS';
@@ -41,8 +46,10 @@ class _ProfesionalesAdminViewState extends State<ProfesionalesAdminView> {
     });
     try {
       final datos = await _repo.cargar();
+      final relaciones = await _gestion.cargar();
       if (!mounted) return;
       setState(() {
+        _relaciones = relaciones;
         _personas = _filas(datos['profesionales']);
         _colegios = _filas(datos['colegios']);
         _areas = _filas(datos['areas']);
@@ -98,6 +105,31 @@ class _ProfesionalesAdminViewState extends State<ProfesionalesAdminView> {
       }
     } finally {
       if (mounted) setState(() => _operando = false);
+    }
+  }
+
+  Future<void> _detalle(Map<String, dynamic> p, {bool eliminar = false}) async {
+    final borrado = await mostrarRegistroGestion(
+      context,
+      entidad: 'PROFESIONAL',
+      id: p['id'] as String,
+      nombre: p['nombre'] as String,
+      eliminar: eliminar,
+      datos: {
+        'Colegio': _colegio(p),
+        'Colegiatura':
+            '${p['numero_colegiatura'] ?? p['colegiatura'] ?? 'Pendiente'}',
+        'Áreas': (p['areas'] as List)
+            .map((a) => _nombreArea(a as String))
+            .join(', '),
+      },
+    );
+    if (borrado && mounted) {
+      MensajesApp.mostrar(
+        context,
+        'Profesional eliminado; auditoría conservada.',
+      );
+      await _cargar();
     }
   }
 
@@ -251,6 +283,19 @@ class _ProfesionalesAdminViewState extends State<ProfesionalesAdminView> {
                                         ),
                                       ),
                                     ),
+                                    const SizedBox(width: 8),
+                                    AccionGestion(
+                                      ayuda: p['activo'] == true
+                                          ? 'Desactivar profesional'
+                                          : 'Activar profesional',
+                                      icono: p['activo'] == true
+                                          ? Icons.check_circle_outline_rounded
+                                          : Icons.block_rounded,
+                                      activa: p['activo'] == true,
+                                      onPressed: _operando
+                                          ? null
+                                          : () => _estado(p),
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 12),
@@ -264,13 +309,6 @@ class _ProfesionalesAdminViewState extends State<ProfesionalesAdminView> {
                                   spacing: 8,
                                   runSpacing: 8,
                                   children: [
-                                    Chip(
-                                      label: Text(
-                                        p['activo'] == true
-                                            ? 'Activo'
-                                            : 'Inactivo',
-                                      ),
-                                    ),
                                     for (final codigo in (p['areas'] as List))
                                       Chip(
                                         label: Text(
@@ -292,28 +330,45 @@ class _ProfesionalesAdminViewState extends State<ProfesionalesAdminView> {
                                   ),
                                 const SizedBox(height: 12),
                                 AccionesAdaptables(
+                                  anchoMinimo: 70,
                                   acciones: [
-                                    OutlinedButton.icon(
+                                    AccionGestion(
+                                      ayuda: 'Ver detalle',
+                                      icono: Icons.visibility_outlined,
+                                      onPressed: _operando
+                                          ? null
+                                          : () => _detalle(p),
+                                    ),
+                                    AccionGestion(
+                                      ayuda: 'Editar profesional',
+                                      icono: Icons.edit_outlined,
                                       onPressed: _operando
                                           ? null
                                           : () => _editar(p),
-                                      icon: const Icon(Icons.edit_outlined),
-                                      label: const Text('Editar'),
                                     ),
-                                    OutlinedButton.icon(
-                                      onPressed: _operando
+                                    AccionGestion(
+                                      ayuda:
+                                          GestionRegistrosRepository.permite(
+                                            _relaciones,
+                                            'PROFESIONAL',
+                                            p['id'] as String,
+                                          )
+                                          ? 'Eliminar profesional'
+                                          : GestionRegistrosRepository.motivo(
+                                              _relaciones,
+                                              'PROFESIONAL',
+                                              p['id'] as String,
+                                            ),
+                                      icono: Icons.delete_outline_rounded,
+                                      onPressed:
+                                          _operando ||
+                                              !GestionRegistrosRepository.permite(
+                                                _relaciones,
+                                                'PROFESIONAL',
+                                                p['id'] as String,
+                                              )
                                           ? null
-                                          : () => _estado(p),
-                                      icon: Icon(
-                                        p['activo'] == true
-                                            ? Icons.person_off_outlined
-                                            : Icons.person_outline_rounded,
-                                      ),
-                                      label: Text(
-                                        p['activo'] == true
-                                            ? 'Desactivar'
-                                            : 'Activar',
-                                      ),
+                                          : () => _detalle(p, eliminar: true),
                                     ),
                                   ],
                                 ),

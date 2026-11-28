@@ -26,21 +26,14 @@ class OpcionMultiple extends StatelessWidget {
 
   Widget _contenido(BuildContext context) {
     final color = Theme.of(context).colorScheme.primary;
-    final borde = BorderRadius.circular(12);
+    final borde = BorderRadius.circular(8);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
         color: seleccionada || compacta
             ? color.withValues(alpha: .07)
             : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: borde,
-          side: BorderSide(
-            color: seleccionada
-                ? color.withValues(alpha: .55)
-                : const Color(0xFFE5E7EB),
-          ),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: borde),
         clipBehavior: Clip.antiAlias,
         child: CheckboxListTile(
           value: seleccionada,

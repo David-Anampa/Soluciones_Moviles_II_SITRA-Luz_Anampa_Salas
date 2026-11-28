@@ -1,0 +1,124 @@
+begin;
+-- Conteo de uso real. Asignaciones de configuración y auditoría administrativa
+-- se conservan como instantáneas; no constituyen uso clínico por sí solas.
+create or replace function public.referencias_gestion_admin(p_entidad text,p_id uuid)
+returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
+declare tabla text; fila jsonb; fk record; valor text; n bigint; refs jsonb:='[]'; motivo text; audits bigint; desglose jsonb;
+begin
+ if public.sitra_rol_actual() is distinct from 'ADMINISTRADOR' then raise exception 'Solo Administración puede consultar relaciones' using errcode='42501'; end if;
+ tabla:=case p_entidad when 'AREA' then 'areas' when 'FINANCIAMIENTO' then 'financiamientos' when 'PROFESIONAL' then 'doctores' when 'USUARIO' then 'profiles' end;
+ if tabla is null then raise exception 'Tipo de registro inválido'; end if;
+ execute format('select to_jsonb(t) from public.%I t where id=$1',tabla) into fila using p_id;
+ if fila is null then raise exception 'El registro ya no existe'; end if;
+ -- Una misma fila cuenta una sola vez aunque vincule varios roles (solicitante/receptor…).
+ for fk in
+  select c.conrelid::regclass as origen, string_agg(format('t.%I = %L::%s',a.attname,fila->>b.attname,format_type(a.atttypid,null)),' OR ') as condicion
+  from pg_constraint c join pg_attribute a on a.attrelid=c.conrelid and a.attnum=c.conkey[1]
+  join pg_attribute b on b.attrelid=c.confrelid and b.attnum=c.confkey[1]
+  join pg_class t on t.oid=c.conrelid join pg_namespace ns on ns.oid=t.relnamespace
+  where c.contype='f' and c.confrelid=('public.'||tabla)::regclass and ns.nspname='public'
+   and array_length(c.conkey,1)=1
+   and not (tabla='doctores' and c.conrelid='public.doctor_areas'::regclass)
+   and not (tabla='financiamientos' and c.conrelid='public.financiamiento_medicamentos'::regclass)
+   and not (tabla='profiles' and c.conrelid='public.profile_areas'::regclass)
+  group by c.conrelid
+ loop
+  execute format('select count(*) from %s t where %s',fk.origen,fk.condicion) into n;
+  if n>0 then
+   execute format('select coalesce(jsonb_agg(to_jsonb(g)),''[]''::jsonb) from (
+     select a.nombre as area,count(distinct t.ctid) as cantidad from %s t
+     cross join lateral (select distinct x.valor from (values
+       (to_jsonb(t)->>''area_origen''),(to_jsonb(t)->>''area_destino''),
+       (to_jsonb(t)->>''area_codigo''),(to_jsonb(t)->>''area_id'')) x(valor) where x.valor is not null) x
+     join public.areas a on a.codigo=x.valor or a.id::text=x.valor
+     where %s group by a.id,a.nombre order by a.nombre) g',fk.origen,fk.condicion) into desglose;
+   refs:=refs||jsonb_build_array(jsonb_build_object('tabla',fk.origen::text,'cantidad',n,'areas',desglose));
+  end if;
+ end loop;
+ if p_entidad='AREA' then
+  if fila->>'codigo' in ('FARMACIA','ALMACEN') then motivo:='Área esencial para el abastecimiento'; end if;
+  select count(*) into n from public.dispensaciones where area_origen=fila->>'codigo';
+  if n>0 then refs:=refs||jsonb_build_array(jsonb_build_object('tabla','fichas del área','cantidad',n)); end if;
+  select count(*) into n from public.kits where area_destino=fila->>'codigo';
+  if n>0 then refs:=refs||jsonb_build_array(jsonb_build_object('tabla','kits del área','cantidad',n)); end if;
+  select count(*) into n from public.profiles p where exists(select 1 from unnest(p.areas_asignadas) x where lower(btrim(x)) in(lower(fila->>'codigo'),lower(fila->>'codigo_interno'),lower(fila->>'nombre')));
+  -- profile_areas ya está contado; este agregado refleja asignaciones históricas sin fila puente.
+  if n>0 and not exists(select 1 from jsonb_array_elements(refs) x where x->>'tabla'='profile_areas') then refs:=refs||jsonb_build_array(jsonb_build_object('tabla','usuarios asignados','cantidad',n)); end if;
+ end if;
+ if p_entidad='AREA' then
+  select coalesce(jsonb_agg(case when x ? 'areas' then x else x||jsonb_build_object('areas',jsonb_build_array(jsonb_build_object('area',fila->>'nombre','cantidad',x->'cantidad'))) end),'[]'::jsonb) into refs from jsonb_array_elements(refs) x;
+ end if;
+ select count(*) into audits from public.auditoria_trazabilidad where entidad_referencia_id=p_id and tabla_referencia=tabla and (tipo_evento like 'CATALOGO_%' or tipo_evento like 'PROFESIONAL_%' or tipo_evento like 'USUARIO_%' or tipo_evento like 'GESTION_%');
+ select count(*) into n from public.auditoria_trazabilidad where entidad_referencia_id=p_id and tabla_referencia=tabla
+  and tipo_evento not like 'CATALOGO_%' and tipo_evento not like 'PROFESIONAL_%' and tipo_evento not like 'USUARIO_%' and tipo_evento not like 'GESTION_%';
+ if n>0 then refs:=refs||jsonb_build_array(jsonb_build_object('tabla','auditoría operativa','cantidad',n)); end if;
+ if p_entidad='USUARIO' then
+  if p_id=auth.uid() then motivo:='No puedes eliminar tu propia cuenta'; end if;
+  if exists(select 1 from auth.users where id=p_id and last_sign_in_at is not null) then motivo:='La cuenta ya inició sesión; corresponde deshabilitarla'; end if;
+  if fila->>'rol'='ADMINISTRADOR' and (fila->>'activo')::boolean and (select count(*) from public.profiles where rol='ADMINISTRADOR' and activo)<2 then motivo:='Debe conservarse al menos un administrador activo'; end if;
+  select count(*) into n from storage.objects where owner_id=p_id::text;
+  if n>0 then refs:=refs||jsonb_build_array(jsonb_build_object('tabla','archivos del usuario','cantidad',n)); end if;
+ end if;
+ if jsonb_array_length(refs)>0 and motivo is null then motivo:='Tiene registros relacionados. Desactívalo para conservar el historial'; end if;
+ return jsonb_build_object('puede_eliminar',motivo is null,'motivo',motivo,'relaciones',refs,'auditoria_conservada',coalesce(audits,0),'version',fila->>'updated_at');
+end; $$;
+
+create or replace function public.relaciones_gestion_admin()
+returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
+declare r record; resultado jsonb:='{}';
+begin
+ if public.sitra_rol_actual() is distinct from 'ADMINISTRADOR' then raise exception 'Solo Administración puede consultar relaciones' using errcode='42501'; end if;
+ for r in select 'AREA' entidad,id from public.areas union all select 'FINANCIAMIENTO',id from public.financiamientos union all select 'PROFESIONAL',id from public.doctores union all select 'USUARIO',id from public.profiles
+ loop resultado:=resultado||jsonb_build_object(r.entidad||':'||r.id,public.referencias_gestion_admin(r.entidad,r.id)); end loop;
+ return resultado;
+end; $$;
+
+create or replace function public.eliminar_registro_gestion_admin(p_entidad text,p_id uuid,p_version text)
+returns void language plpgsql security definer set search_path=public,pg_temp as $$
+declare tabla text; antes jsonb; estado jsonb;
+begin
+ if public.sitra_rol_actual() is distinct from 'ADMINISTRADOR' then raise exception 'Solo Administración puede eliminar registros' using errcode='42501'; end if;
+ perform pg_advisory_xact_lock(12012,1);
+ tabla:=case p_entidad when 'AREA' then 'areas' when 'FINANCIAMIENTO' then 'financiamientos' when 'PROFESIONAL' then 'doctores' when 'USUARIO' then 'profiles' end;
+ if tabla is null then raise exception 'Tipo de registro inválido'; end if;
+ if p_entidad='AREA' then lock table public.kits,public.dispensaciones in share mode; end if;
+ if p_entidad='USUARIO' then perform 1 from auth.users where id=p_id for update; end if;
+ execute format('select to_jsonb(t) from public.%I t where id=$1 for update',tabla) into antes using p_id;
+ if antes is null then raise exception 'El registro ya no existe. Actualiza la lista'; end if;
+ if (antes->>'updated_at')::timestamptz is distinct from p_version::timestamptz then raise exception 'El registro cambió. Actualiza y revisa los datos antes de eliminar'; end if;
+ estado:=public.referencias_gestion_admin(p_entidad,p_id);
+ if not (estado->>'puede_eliminar')::boolean then raise exception '%',estado->>'motivo'; end if;
+ -- Auditar antes de borrar: se conserva identidad, instantánea y actor.
+ insert into public.auditoria_trazabilidad(tipo_evento,entidad_referencia_id,tabla_referencia,usuario_id,estado_anterior,estado_nuevo,descripcion)
+ values('GESTION_ELIMINAR',p_id,tabla,auth.uid(),antes,estado,'Eliminación administrativa de registro sin uso; historial conservado');
+ if p_entidad='USUARIO' then
+  delete from auth.users where id=p_id;
+  if exists(select 1 from public.profiles where id=p_id) then raise exception 'No se confirmó la eliminación de la cuenta y su perfil'; end if;
+ elsif p_entidad='PROFESIONAL' then
+  delete from public.doctor_areas where doctor_id=p_id;
+  delete from public.doctores where id=p_id;
+ elsif p_entidad='AREA' or p_entidad='FINANCIAMIENTO' then
+  perform public.administrar_catalogo_hu012(p_entidad,'ELIMINAR',p_id);
+ end if;
+end; $$;
+-- La vía previa de catálogo también debe respetar el mismo bloqueo de historial.
+create or replace function public.proteger_borrado_gestion()
+returns trigger language plpgsql security definer set search_path=public,pg_temp as $$
+declare e text; estado jsonb;
+begin
+ e:=case tg_table_name when 'areas' then 'AREA' when 'financiamientos' then 'FINANCIAMIENTO' when 'doctores' then 'PROFESIONAL' end;
+ estado:=public.referencias_gestion_admin(e,old.id);
+ if not (estado->>'puede_eliminar')::boolean then raise exception '%',estado->>'motivo'; end if;
+ return old;
+end; $$;
+drop trigger if exists proteger_borrado_gestion on public.areas;
+create trigger proteger_borrado_gestion before delete on public.areas for each row execute function public.proteger_borrado_gestion();
+drop trigger if exists proteger_borrado_gestion on public.financiamientos;
+create trigger proteger_borrado_gestion before delete on public.financiamientos for each row execute function public.proteger_borrado_gestion();
+drop trigger if exists proteger_borrado_gestion on public.doctores;
+create trigger proteger_borrado_gestion before delete on public.doctores for each row execute function public.proteger_borrado_gestion();
+revoke all on function public.referencias_gestion_admin(text,uuid),public.relaciones_gestion_admin(),public.eliminar_registro_gestion_admin(text,uuid,text),public.proteger_borrado_gestion() from public,anon;
+revoke all on function public.proteger_borrado_gestion() from authenticated;
+grant execute on function public.referencias_gestion_admin(text,uuid),public.relaciones_gestion_admin(),public.eliminar_registro_gestion_admin(text,uuid,text) to authenticated;
+notify pgrst,'reload schema';
+commit;

@@ -194,3 +194,41 @@ según módulo, manteniendo fluidez, datos y comportamiento.
   callbacks originales y estados deshabilitados. No hay migración SQL para esto.
 - Verificación: análisis estático Flutter; revisión visual y funcional con el
   usuario pendiente. No cerrar historias por la unificación visual.
+
+
+## Refinamiento de selección — 27/11/2026
+
+Sustituye los contornos marcados de las tarjetas de selección anteriores:
+- Fondo pastel del módulo cubriendo toda la opción seleccionada, sin contorno.
+- Esquinas discretas de 8 px en opciones de menú, resultados y tarjetas checkbox.
+- Campo combobox seleccionado también en pastel, sin borde en reposo; conserva
+  borde de foco fino y errores visibles. No cambiar tipografía ni área táctil.
+- Mantener la casilla y marca como señal adicional al color.
+- Aplicado en los dos componentes compartidos; los colores se derivan del módulo.
+
+
+## Acciones de gestión — acuerdo del 27/11/2026
+
+El usuario eligió el patrón de **Usuarios**, sustituyendo la propuesta de botones
+Editar sólidos: acciones de icono en blanco/pastel, borde discreto, redondez de
+8 px, objetivo táctil de 48 px y tooltip. `AccionGestion` deriva su color del
+módulo abierto. No usar el color decorativo de la tarjeta para estas acciones.
+
+- Ver detalle (ojo), Editar (lápiz) y Eliminar (papelera) en la misma fila.
+- Activar/desactivar junto al nombre: check/bloqueo, pastel del módulo cuando
+  está activo. Quitar etiquetas Activo/Inactivo repetidas, sin ocultar el estado.
+- Papelera gris deshabilitada si existen vínculos protegidos o falta información.
+  Ver detalle explica el bloqueo y muestra **cantidades por tipo y por área**;
+  nunca listas de fichas ni pacientes. Una operación puede intervenir en dos áreas.
+- Eliminación con modal adaptado al módulo, conteos actuales, Cancelar y Eliminar.
+  El servidor vuelve a comprobar vínculos, permiso y versión antes de escribir.
+- Usuarios: nueva excepción autorizada, puede eliminarse una cuenta nunca usada,
+  sin inicio de sesión ni vínculos operativos; nunca la propia ni el último admin.
+  Se elimina cuenta y perfil en la misma transacción y se conserva auditoría.
+- Auditoría administrativa de creación/edición se conserva como instantánea y no
+  cuenta por sí sola como uso clínico. Auditoría operativa y referencias sí bloquean.
+- Aplicado a Usuarios, Profesionales, Áreas, Seguros y Convenios. Claves de IA usa
+  los mismos botones; su borrado/rotación sigue su flujo seguro específico.
+- Kits y medicamentos tienen gestiones operativas propias (variantes, ítems,
+  stock, borradores); no añadirles borrado de registros clínicos por analogía.
+  Este acuerdo no certifica una revisión visual completa de esas pantallas.
