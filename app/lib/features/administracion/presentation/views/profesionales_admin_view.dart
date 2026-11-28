@@ -288,9 +288,7 @@ class _ProfesionalesAdminViewState extends State<ProfesionalesAdminView> {
                                       ayuda: p['activo'] == true
                                           ? 'Desactivar profesional'
                                           : 'Activar profesional',
-                                      icono: p['activo'] == true
-                                          ? Icons.check_circle_outline_rounded
-                                          : Icons.block_rounded,
+                                      icono: Icons.medical_services_outlined,
                                       activa: p['activo'] == true,
                                       onPressed: _operando
                                           ? null

@@ -861,9 +861,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
         : 'Habilitar usuario';
     return AccionGestion(
       ayuda: ayuda,
-      icono: u.activo
-          ? Icons.check_circle_outline_rounded
-          : Icons.block_rounded,
+      icono: u.activo ? Icons.person_rounded : Icons.person_off_rounded,
       activa: u.activo,
       onPressed: propia || ocupado ? null : () => _alternarEstado(u),
     );

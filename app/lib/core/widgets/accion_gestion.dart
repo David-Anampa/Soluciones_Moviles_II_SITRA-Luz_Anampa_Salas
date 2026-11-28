@@ -42,7 +42,33 @@ class AccionGestion extends StatelessWidget {
             ),
             overlayColor: color.withValues(alpha: .10),
           ),
-          child: Icon(icono, size: 22, semanticLabel: ayuda),
+          child: Semantics(
+            label: ayuda,
+            child: SizedBox(
+              width: 26,
+              height: 26,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Icon(icono, size: 22),
+                  if (activa == false && icono != Icons.person_off_rounded)
+                    Positioned(
+                      right: -3,
+                      bottom: -3,
+                      child: Container(
+                        padding: const EdgeInsets.all(1),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.block_rounded, size: 12),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

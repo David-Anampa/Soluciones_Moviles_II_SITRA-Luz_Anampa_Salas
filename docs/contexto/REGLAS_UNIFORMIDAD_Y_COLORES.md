@@ -232,3 +232,10 @@ módulo abierto. No usar el color decorativo de la tarjeta para estas acciones.
 - Kits y medicamentos tienen gestiones operativas propias (variantes, ítems,
   stock, borradores); no añadirles borrado de registros clínicos por analogía.
   Este acuerdo no certifica una revisión visual completa de esas pantallas.
+
+
+Refinamiento de iconos de estado: mantener la identidad del registro (usuario /
+usuario deshabilitado, profesional sanitario, edificio de área, escudo de seguro,
+convenio). Esto sustituye los check/bloqueo genéricos del acuerdo anterior. Estado
+activo con pastel; inactivo con indicador de bloqueo y tooltip. Sin etiqueta
+Activo repetida y sin colores fijos verde/rojo para indicar disponibilidad.

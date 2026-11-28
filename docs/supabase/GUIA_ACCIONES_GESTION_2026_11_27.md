@@ -67,3 +67,22 @@ Un trigger protege también la vía previa de eliminación de catálogos.
 5. Para usuarios, verificar cuenta propia/último admin/inicio de sesión bloqueados.
 6. Cambiar un registro desde otra sesión antes de confirmar: versión nueva impide
    borrar datos distintos de los revisados. No marcar historias completas sin resultados.
+
+
+## Auditoría explícita de eliminación
+
+La migración `migracion_auditoria_eliminacion_detallada_2026_11_27.sql` amplía
+el evento GESTION_ELIMINAR sin borrar ni reescribir eventos anteriores.
+`descripcion` identifica por nombre al administrador, la acción «eliminó», el
+tipo/nombre/UUID del registro, cantidad de vínculos operativos, nombres de áreas,
+cantidades de configuración (asignaciones/cobertura) y auditoría previa conservada.
+`detalles_extra` conserva esos datos estructurados, incluida identidad del actor
+al momento de actuar, para que renombrar después no cambie quién ejecutó la acción.
+La fecha/hora sigue en `fecha` y el estado previo en `estado_anterior`.
+
+Con las reglas actuales, toda eliminación autorizada tiene cero vínculos
+operativos: si existen movimientos se bloquea. Puede haber asignaciones de áreas,
+cobertura y auditoría administrativa previas; sus cantidades y ubicaciones se
+registran por separado. No confundirlas con movimientos clínicos ni habilitar
+el borrado de estos para obtener un conteo mayor. No se ejecutaron eliminaciones
+para validar esta ampliación.

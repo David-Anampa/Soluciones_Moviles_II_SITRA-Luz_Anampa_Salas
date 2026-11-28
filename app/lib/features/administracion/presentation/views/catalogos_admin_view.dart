@@ -655,9 +655,7 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
                 const SizedBox(width: 8),
                 AccionGestion(
                   ayuda: activo ? 'Desactivar registro' : 'Activar registro',
-                  icono: activo
-                      ? Icons.check_circle_outline_rounded
-                      : Icons.block_rounded,
+                  icono: icono,
                   activa: activo,
                   onPressed: _operando ? null : estado,
                 ),
