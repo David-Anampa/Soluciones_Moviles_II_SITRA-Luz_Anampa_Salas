@@ -1,3 +1,4 @@
+import '../../../../core/theme/paleta_administracion.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -9,7 +10,7 @@ import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 
 class AdminDashboardView extends StatelessWidget {
   const AdminDashboardView({super.key});
-  static const _red = Color(0xFFC62828);
+  static const _red = PaletaAdministracion.principal;
   static const _modules = [
     _Module(
       'Gestionar usuarios',
@@ -47,12 +48,13 @@ class AdminDashboardView extends StatelessWidget {
   ) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      CabeceraMenu(titulo: titulo, icono: icono),
+      CabeceraMenu(titulo: titulo, icono: icono, color: _red),
       const SizedBox(height: 16),
       CuadriculaPanel(
         children: [
           for (final module in modules)
             BotonModulo(
+              color: _red,
               nombre: module.name,
               icono: module.icon,
               onTap: () => context.go(module.route),
@@ -69,6 +71,7 @@ class AdminDashboardView extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: SitraAppBar(
         alto: DisenoAdaptable.altoCabecera(context),
+        colorModulo: _red,
         title: 'Menú de administración',
         subtitle: 'Acceso a los módulos de SITRA-Luz',
       ),
@@ -83,7 +86,7 @@ class AdminDashboardView extends StatelessWidget {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [_red, Color(0xFFE05252)],
+                      colors: PaletaAdministracion.degradado,
                     ),
                     borderRadius: BorderRadius.circular(18),
                   ),

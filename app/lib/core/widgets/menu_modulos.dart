@@ -133,10 +133,7 @@ class CabeceraMenu extends StatelessWidget {
       gradient: LinearGradient(
         colors: color == PaletaAdministracion.principal
             ? PaletaAdministracion.degradado
-            : [
-                Color.lerp(color, Colors.black, .26)!,
-                Color.lerp(color, Colors.black, .12)!,
-              ],
+            : [color, Color.lerp(color, Colors.black, .08)!],
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
       ),

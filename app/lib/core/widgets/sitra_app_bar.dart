@@ -31,7 +31,7 @@ class SitraAppBar extends StatelessWidget implements PreferredSizeWidget {
     if (role == null) return AppColors.primary;
     switch (role) {
       case UserRole.administrador:
-        return const Color(0xFFC62828);
+        return AppColors.adminColor;
       case UserRole.jefaturaFarmacia:
         return AppColors.jefaturaColor;
       case UserRole.farmacia:

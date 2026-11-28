@@ -1,3 +1,4 @@
+import 'paleta_administracion.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -20,7 +21,7 @@ class AppColors {
   static const Color surfaceVariant = Color(0xFFEEF2FA);
 
   // Estados / roles
-  static const Color adminColor = Color(0xFF6A1B9A);      // Morado — Admin
+  static const Color adminColor = PaletaAdministracion.principal; // Rojo oscuro — Administración
   static const Color jefaturaColor = Color(0xFF1A3A6B);   // Azul — Jefatura
   static const Color farmaciaColor = Color(0xFF00796B);   // Verde — Farmacia
   static const Color almacenColor = Color(0xFFE65100);    // Naranja — Almacén

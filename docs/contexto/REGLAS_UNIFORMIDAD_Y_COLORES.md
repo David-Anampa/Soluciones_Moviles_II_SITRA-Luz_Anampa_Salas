@@ -12,14 +12,13 @@ no certifica que todas las pantallas heredadas ya lo cumplan.
 | Enfermería | Rojo `#C62828` | Sus vistas y la consulta/gestión compartida de kits. |
 | Almacén | Naranja `#E65100` | Identidad de Almacén; misma estructura visual que Farmacia. |
 | Jefatura de Farmacia | Azul `#1A3A6B` | Identidad de supervisión. |
-| Administración | Rojo `#C62828` | Menú y gestión administrativa acordados con el usuario. |
+| Administración | Rojo oscuro `#A32020` | Menú y pantallas administrativas; mismo tono en iconos, encabezados y botones. |
 
 Usar tonos suaves derivados del principal para fondos, y tonos oscuros legibles
 para iconos/textos sobre pastel. Las cabeceras de color usan letras e iconos
 blancos. Las tarjetas de contenido conservan fondo blanco y bordes suaves.
 
-**Deuda heredada:** `AppColors.adminColor` todavía declara morado y
-`AppColors.primary`/el fallback de `TemaPedidos.colorRol` son azules. No tomar esos
+**Fallback heredado:** `AppColors.primary`/el fallback de `TemaPedidos.colorRol` son azules. No tomar esos
 fallbacks como una nueva decisión del usuario para Administración o Farmacia.
 No cambiar toda la paleta global indiscriminadamente para corregir una pantalla.
 
@@ -291,8 +290,27 @@ formularios, catálogos de áreas/financiamientos, Profesionales, Claves de IA y
 sus selectores/modales. Cabeceras administrativas usan el mismo tono base que
 los botones, sin oscurecerlo otra vez con el degradado genérico de otros módulos.
 
-No cambia el menú principal de Administración ni los colores de Farmacia,
-Enfermería, Almacén o Jefatura. Las tarjetas conservan sus paletas y las acciones
+Ampliación posterior aprobada: el menú de Administración también usa esta paleta.
+Se conservan los colores principales de Farmacia, Enfermería, Almacén y Jefatura. Las tarjetas conservan sus paletas y las acciones
 que reciben `colorTarjeta` siguen esa identidad; esta es una excepción deliberada
 respecto al rojo oscuro de la pantalla. Se conserva la apariencia del toggle.
 Este acuerdo sustituye los tonos rojos vivos de los encabezados/botones internos.
+
+
+## Revisión de menús y tonos por rol — 27/11/2026
+
+- Administración: menú principal, bienvenida, iconos, franjas y barra superior
+  usan #A32020, igual que sus vistas. `AppColors.adminColor` y `colorRol` ya
+  apuntan a esa paleta; no queda morado como identidad administrativa.
+- Almacén: se corrigieron los nueve botones que heredaban rojo; naranja #E65100.
+  Gestión de inventario cambia cabecera y refresco rojos a naranja.
+- Farmacia: menú verde #00796B y botones ya explícitos; se fija también su barra.
+- Enfermería: rojo #C62828 explícito en barra y botones, para no depender de defaults.
+- Jefatura: menú, botones y barra ya usaban azul #1A3A6B; se conservan.
+- Las franjas compartidas parten del mismo tono base de los controles y degradan
+  solo 8% a oscuro. Antes oscurecían 26%/12%, produciendo diferencias mayores.
+- Los banners de bienvenida pueden degradar a un tono más oscuro intencionalmente.
+  No confundir colores semánticos de error/stock/estado ni las paletas de tarjetas
+  con inconsistencias del color del rol. Se conserva la excepción del detalle clínico.
+- Revisión estática de menús y vistas principales; no equivale a haber comprobado
+  visualmente todas las rutas o modales heredados de la aplicación.

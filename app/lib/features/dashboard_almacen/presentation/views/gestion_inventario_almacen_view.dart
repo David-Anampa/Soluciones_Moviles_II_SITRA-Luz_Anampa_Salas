@@ -1,3 +1,4 @@
+import '../../../../core/theme/tema_pedidos.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -53,7 +54,12 @@ class _GestionInventarioAlmacenViewState
   ).push(MaterialPageRoute(builder: (_) => const RegistroMedicamentoView()));
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Theme(
+    data: TemaPedidos.aplicar(context, 'ALMACEN'),
+    child: Builder(builder: _contenido),
+  );
+
+  Widget _contenido(BuildContext context) {
     final almacenVM = context.watch<AlmacenViewModel>();
     final state = almacenVM.state;
     final List<StockAlmacenEntity> itemsFiltrados = state is AlmacenLoaded
@@ -106,7 +112,7 @@ class _GestionInventarioAlmacenViewState
           'Gestión de inventario',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
-        backgroundColor: const Color(0xFFC62828),
+        backgroundColor: AppColors.almacenColor,
         foregroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.white),
         actionsIconTheme: const IconThemeData(color: Colors.white),
@@ -125,7 +131,7 @@ class _GestionInventarioAlmacenViewState
         child: ContenidoAdaptable(
           padding: EdgeInsets.zero,
           child: RefreshIndicator(
-            color: const Color(0xFFC62828),
+            color: AppColors.almacenColor,
             onRefresh: almacenVM.cargarInventario,
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),

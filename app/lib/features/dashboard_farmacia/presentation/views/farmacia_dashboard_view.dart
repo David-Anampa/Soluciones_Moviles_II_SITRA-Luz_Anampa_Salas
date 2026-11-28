@@ -112,6 +112,7 @@ class _FarmaciaDashboardViewState extends State<FarmaciaDashboardView> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: SitraAppBar(
+        colorModulo: AppColors.farmaciaColor,
         alto: DisenoAdaptable.altoCabecera(context),
         title: 'Farmacia Clínica',
         subtitle: 'Dispensación y Reposición Inter-Áreas',

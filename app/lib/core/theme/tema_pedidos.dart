@@ -39,7 +39,7 @@ class TemaPedidos {
   }
 
   static Color colorRol(String rol) => switch (rol.toUpperCase()) {
-    'ADMINISTRADOR' => const Color(0xFFC62828),
+    'ADMINISTRADOR' => PaletaAdministracion.principal,
     'ALMACEN' => AppColors.almacenColor,
     'FARMACIA' => AppColors.farmaciaColor,
     'JEFATURA_FARMACIA' => AppColors.jefaturaColor,

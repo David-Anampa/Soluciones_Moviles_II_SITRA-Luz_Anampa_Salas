@@ -87,6 +87,7 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: SitraAppBar(
+        colorModulo: AppColors.almacenColor,
         alto: DisenoAdaptable.altoCabecera(context),
         title: 'Almacén General',
         subtitle: 'Recepción, Lotes y Cadena de Frío',
@@ -270,16 +271,19 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                   CuadriculaPanel(
                     children: [
                       BotonModulo(
+                        color: AppColors.almacenColor,
                         nombre: 'Registrar medicamento',
                         icono: Icons.medication_outlined,
                         onTap: _abrirRegistroMedicamento,
                       ),
                       BotonModulo(
+                        color: AppColors.almacenColor,
                         nombre: 'Escanear medicamento',
                         icono: Icons.qr_code_scanner_rounded,
                         onTap: _abrirEscanerCamara,
                       ),
                       BotonModulo(
+                        color: AppColors.almacenColor,
                         nombre: 'Ingresar lote',
                         icono: Icons.playlist_add_rounded,
                         onTap: state is AlmacenLoaded
@@ -287,21 +291,25 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                             : null,
                       ),
                       BotonModulo(
+                        color: AppColors.almacenColor,
                         nombre: 'Atender solicitudes de Farmacia',
                         icono: Icons.inventory_2_outlined,
                         onTap: _abrirSolicitudesAbastecimiento,
                       ),
                       BotonModulo(
+                        color: AppColors.almacenColor,
                         nombre: 'Enviar a Farmacia',
                         icono: Icons.local_shipping_outlined,
                         onTap: _abrirEnvioFarmacia,
                       ),
                       BotonModulo(
+                        color: AppColors.almacenColor,
                         nombre: 'Consultar existencias',
                         icono: Icons.warehouse_outlined,
                         onTap: _abrirStockUbicaciones,
                       ),
                       BotonModulo(
+                        color: AppColors.almacenColor,
                         nombre: 'Ingresos y correcciones',
                         icono: Icons.receipt_long_outlined,
                         onTap: () async {
@@ -315,6 +323,7 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                         },
                       ),
                       BotonModulo(
+                        color: AppColors.almacenColor,
                         nombre: 'Resolver diferencias',
                         icono: Icons.fact_check_outlined,
                         onTap: () => Navigator.of(context).push(
@@ -325,6 +334,7 @@ class _AlmacenDashboardViewState extends State<AlmacenDashboardView> {
                         ),
                       ),
                       BotonModulo(
+                        color: AppColors.almacenColor,
                         nombre: 'Gestionar inventario',
                         icono: Icons.inventory_outlined,
                         onTap: () => Navigator.of(context).push(

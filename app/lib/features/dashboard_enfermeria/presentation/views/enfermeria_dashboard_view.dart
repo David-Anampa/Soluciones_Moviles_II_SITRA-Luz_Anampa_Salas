@@ -109,6 +109,7 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: SitraAppBar(
+        colorModulo: AppColors.enfermeriaColor,
         alto: DisenoAdaptable.altoCabecera(context),
         title: 'Enfermería & Pisos',
         subtitle: 'Pedidos y trazabilidad del servicio',
@@ -302,21 +303,25 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
                   CuadriculaPanel(
                     children: [
                       BotonModulo(
+                        color: AppColors.enfermeriaColor,
                         nombre: 'Registrar pedido',
                         icono: Icons.assignment_add,
                         onTap: _abrirNuevaFicha,
                       ),
                       BotonModulo(
+                        color: AppColors.enfermeriaColor,
                         nombre: 'Consultar y recibir pedidos',
                         icono: Icons.fact_check_rounded,
                         onTap: () => _abrirListadoFichas(),
                       ),
                       BotonModulo(
+                        color: AppColors.enfermeriaColor,
                         nombre: 'Gestionar kits del área',
                         icono: Icons.medical_services_outlined,
                         onTap: () => context.push('/kits?vista=ENFERMERIA'),
                       ),
                       BotonModulo(
+                        color: AppColors.enfermeriaColor,
                         nombre: 'Consultar existencias',
                         icono: Icons.warehouse_outlined,
                         onTap: () => Navigator.of(context).push(
