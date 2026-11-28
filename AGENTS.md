@@ -18,9 +18,13 @@ formularios, filtros, modales y vistas compartidas.
   en el campo. Checkbox de selección usan tarjetas; confirmaciones, recuadro
   suave. El pastel depende del módulo. Revisar también formularios y modales.
 - En gestión administrativa usar `AccionGestion`: ojo, lápiz, papelera y estado
-  junto al nombre, colores del módulo y sin etiqueta Activo duplicada. Papelera
+  junto al nombre y sin etiqueta Activo duplicada. Sus botones toman el color
+  de su tarjeta: editar/ver en pastel con icono fuerte; estado en interruptor
+  (activo del color de la tarjeta, inactivo gris, perilla blanca); eliminar en sólido
+  con icono blanco, deshabilitado en gris. Papelera
   bloqueada según vínculos del servidor; detalle/confirmación muestran cantidades
-  por tipo y área, nunca registros clínicos individuales.
+  por tipo y área, nunca registros clínicos individuales. Excepción: ocultar
+  ese resumen en Ver detalle de Usuarios; mantenerlo en confirmación y auditoría.
 - Mantener espacio suficiente, texto legible y desplazamiento en celulares.
 - Ejecutar `flutter analyze --no-pub` desde `app` para cambios de Flutter. Las
   pruebas funcionales las realiza el usuario salvo que autorice otras pruebas.

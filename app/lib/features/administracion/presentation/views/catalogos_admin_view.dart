@@ -654,6 +654,7 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
                 ),
                 const SizedBox(width: 8),
                 AccionGestion(
+                  colorTarjeta: tema?.principal ?? CatalogoEstilo.rojo,
                   ayuda: activo ? 'Desactivar registro' : 'Activar registro',
                   icono: icono,
                   activa: activo,
@@ -741,6 +742,7 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
               anchoMinimo: 70,
               acciones: [
                 AccionGestion(
+                  colorTarjeta: tema?.principal ?? CatalogoEstilo.rojo,
                   ayuda: 'Ver detalle',
                   icono: Icons.visibility_outlined,
                   onPressed: _operando
@@ -752,11 +754,13 @@ class _CatalogosAdminViewState extends State<CatalogosAdminView> {
                         }),
                 ),
                 AccionGestion(
+                  colorTarjeta: tema?.principal ?? CatalogoEstilo.rojo,
                   ayuda: 'Editar registro',
                   icono: Icons.edit_outlined,
                   onPressed: _operando ? null : editar,
                 ),
                 AccionGestion(
+                  colorTarjeta: tema?.principal ?? CatalogoEstilo.rojo,
                   ayuda:
                       GestionRegistrosRepository.permite(
                         _relaciones,

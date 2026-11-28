@@ -210,9 +210,12 @@ Sustituye los contornos marcados de las tarjetas de selección anteriores:
 ## Acciones de gestión — acuerdo del 27/11/2026
 
 El usuario eligió el patrón de **Usuarios**, sustituyendo la propuesta de botones
-Editar sólidos: acciones de icono en blanco/pastel, borde discreto, redondez de
-8 px, objetivo táctil de 48 px y tooltip. `AccionGestion` deriva su color del
-módulo abierto. No usar el color decorativo de la tarjeta para estas acciones.
+Editar sólidos: acciones de icono, redondez de 8 px, objetivo táctil de 48 px y
+tooltip. **Acuerdo corregido por el usuario:** `AccionGestion` toma el color de
+su tarjeta; solo usa el módulo como fallback cuando no hay paleta de tarjeta.
+Editar, Ver detalle y Estado: fondo pastel e icono fuerte. Eliminar: fondo fuerte
+e icono blanco. Sin fondos blancos ni bordes marcados. Deshabilitados en gris.
+Este acuerdo sustituye la elección previa de color del módulo para toda acción.
 
 - Ver detalle (ojo), Editar (lápiz) y Eliminar (papelera) en la misma fila.
 - Activar/desactivar junto al nombre: check/bloqueo, pastel del módulo cuando
@@ -239,3 +242,34 @@ usuario deshabilitado, profesional sanitario, edificio de área, escudo de segur
 convenio). Esto sustituye los check/bloqueo genéricos del acuerdo anterior. Estado
 activo con pastel; inactivo con indicador de bloqueo y tooltip. Sin etiqueta
 Activo repetida y sin colores fijos verde/rojo para indicar disponibilidad.
+
+
+Las tarjetas de Usuarios conservan su paleta por rol; Áreas su tema propio;
+Seguros y Convenios sus respectivas paletas. Los botones deben recibir esa misma
+paleta explícitamente. Profesionales y Claves de IA mantienen rojo administrativo.
+No modificar nuevamente esta jerarquía de colores sin un nuevo acuerdo.
+
+
+## Estado como interruptor — 27/11/2026
+
+Sustituye los botones de icono de activar/desactivar y las insignias de bloqueo
+anteriores. Referencia visual más reciente: cápsula de 80 × 40 px con perilla
+blanca de 32 px completamente dentro (margen de 4 px), ✓ activo y × inactivo.
+Pista del tono fuerte de la tarjeta al activar, gris al desactivar. Animación
+suave de 180 ms, respetando reducción de movimiento. Mantener 48 px
+de área táctil, accesibilidad, tooltip, confirmación y bloqueo durante operaciones.
+Aplica a Usuarios, Profesionales, Áreas, Seguros y Convenios mediante el componente
+compartido. No cambia los iconos identificativos del registro ni sus permisos.
+Por instrucción posterior del usuario, ocultar el resumen de vínculos de
+«Ver detalle» de Usuarios. Conservar conteos en la confirmación de eliminación,
+bloqueos, tooltip y auditoría. No volver a añadirlo al detalle personal.
+El interruptor muestra el tono fuerte de la tarjeta si está activo, incluso si
+no puede accionarse (por ejemplo, cuenta propia); gris significa inactivo.
+La restricción de interacción se conserva y se explica en el tooltip.
+
+
+Gestionar usuarios: las secciones Equipo y accesos, Buscar y filtrar y Usuarios
+registrados usan `CabeceraMenu` con degradado rojo, icono/texto blanco y separación
+vertical. Buscador blanco con etiqueta, iconos rojos y foco del módulo; filtros
+con iconos de rol/área/orden y botón pastel. Se conserva el color de cada tarjeta
+y sus acciones, sin modificar búsqueda, filtros, permisos ni auditoría.

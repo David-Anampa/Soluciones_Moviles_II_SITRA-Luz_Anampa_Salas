@@ -1,3 +1,5 @@
+import '../../../../core/theme/tema_pedidos.dart';
+import '../../../../core/widgets/menu_modulos.dart';
 import '../../../../core/widgets/accion_gestion.dart';
 import '../../data/gestion_registros_repository.dart';
 import '../widgets/detalle_registro_gestion.dart';
@@ -246,7 +248,11 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
   Widget build(BuildContext context) {
     final lista = _filtrados;
     return Theme(
-      data: CatalogoEstilo.tema(context),
+      data: TemaPedidos.aplicar(
+        context,
+        'ADMINISTRADOR',
+        base: CatalogoEstilo.tema(context),
+      ),
       child: Scaffold(
         backgroundColor: CatalogoEstilo.fondo,
         floatingActionButton: _cargando || _error != null
@@ -316,23 +322,11 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
-                                        'Equipo y accesos',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w700,
-                                          color: CatalogoEstilo.texto,
-                                        ),
+                                      const CabeceraMenu(
+                                        titulo: 'Equipo y accesos',
+                                        icono: Icons.groups_outlined,
                                       ),
-                                      const SizedBox(height: 6),
-                                      const Text(
-                                        'Consulta al personal, sus roles y áreas asignadas.',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          height: 1.5,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 18),
+                                      const SizedBox(height: 16),
                                       IntrinsicHeight(
                                         child: Row(
                                           crossAxisAlignment:
@@ -372,10 +366,16 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                                         ),
                                       ),
                                       const SizedBox(height: 18),
+                                      const CabeceraMenu(
+                                        titulo: 'Buscar y filtrar',
+                                        icono: Icons.manage_search_rounded,
+                                      ),
+                                      const SizedBox(height: 16),
                                       TextField(
                                         controller: _buscador,
                                         onChanged: (_) => setState(() {}),
                                         decoration: InputDecoration(
+                                          labelText: 'Buscar usuario',
                                           hintText:
                                               'Buscar nombre, usuario o correo',
                                           prefixIcon: const Icon(
@@ -426,6 +426,8 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                                               style: OutlinedButton.styleFrom(
                                                 foregroundColor:
                                                     CatalogoEstilo.rojo,
+                                                backgroundColor:
+                                                    CatalogoEstilo.pastel,
                                                 side: const BorderSide(
                                                   color: Color(0xFFEBCBCB),
                                                 ),
@@ -468,6 +470,11 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                                           'Los perfiles actuales están disponibles. Aplica la actualización de estructura de usuarios para disponer de usuario, nombres y apellidos separados.',
                                         ),
                                       ],
+                                      const SizedBox(height: 20),
+                                      const CabeceraMenu(
+                                        titulo: 'Usuarios registrados',
+                                        icono: Icons.badge_outlined,
+                                      ),
                                       const SizedBox(height: 16),
                                       if (lista.isEmpty) _sinResultados(),
                                     ],
@@ -620,7 +627,10 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
           children: [
             SelectorCatalogo(
               value: _rol,
-              decoration: const InputDecoration(labelText: 'Rol'),
+              decoration: const InputDecoration(
+                labelText: 'Rol',
+                prefixIcon: Icon(Icons.admin_panel_settings_outlined),
+              ),
               items: [
                 const DropdownMenuItem(
                   value: 'TODOS',
@@ -643,7 +653,10 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
             const SizedBox(height: 16),
             SelectorCatalogo(
               value: _area,
-              decoration: const InputDecoration(labelText: 'Área asignada'),
+              decoration: const InputDecoration(
+                labelText: 'Área asignada',
+                prefixIcon: Icon(Icons.apartment_rounded),
+              ),
               items: [
                 const DropdownMenuItem(
                   value: 'TODAS',
@@ -663,7 +676,10 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
             const SizedBox(height: 16),
             SelectorCatalogo(
               value: _orden,
-              decoration: const InputDecoration(labelText: 'Ordenar por'),
+              decoration: const InputDecoration(
+                labelText: 'Ordenar por',
+                prefixIcon: Icon(Icons.sort_rounded),
+              ),
               items: const [
                 DropdownMenuItem(value: 'NOMBRE', child: Text('Nombre: A–Z')),
                 DropdownMenuItem(value: 'INVERSO', child: Text('Nombre: Z–A')),
@@ -740,13 +756,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  SizedBox(
-                    width: 48,
-                    child: Semantics(
-                      toggled: u.activo,
-                      child: _accionEstado(u),
-                    ),
-                  ),
+                  _accionEstado(u),
                 ],
               ),
             ),
@@ -810,6 +820,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                   () => _editar(u),
                 ),
                 AccionGestion(
+                  colorTarjeta: tema.principal,
                   ayuda:
                       GestionRegistrosRepository.permite(
                         _relaciones,
@@ -847,9 +858,14 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
     IconData icono,
     Color color,
     VoidCallback? alPresionar,
-  ) => AccionGestion(ayuda: ayuda, icono: icono, onPressed: alPresionar);
+  ) => AccionGestion(
+    ayuda: ayuda,
+    icono: icono,
+    colorTarjeta: color,
+    onPressed: alPresionar,
+  );
 
-  /// Botón de habilitación: verde si el usuario está habilitado, rojo si no.
+  /// Interruptor con perilla interior e identidad cromática de la tarjeta.
   /// Se bloquea en la cuenta propia y mientras otro cambio de estado está en curso.
   Widget _accionEstado(UsuarioAdministrativo u) {
     final propia = u.id == _repository.idSesion;
@@ -860,6 +876,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
         ? 'Deshabilitar usuario'
         : 'Habilitar usuario';
     return AccionGestion(
+      colorTarjeta: PaletaTarjeta.usuario(u.rol).principal,
       ayuda: ayuda,
       icono: u.activo ? Icons.person_rounded : Icons.person_off_rounded,
       activa: u.activo,
@@ -1031,11 +1048,6 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    ResumenRelacionesGestion(
-                      datos: (_relaciones['USUARIO:${u.id}'] as Map?)
-                          ?.cast<String, dynamic>(),
                     ),
                     const SizedBox(height: 16),
                     _seccionDetalle('Cuenta', Icons.alternate_email_rounded, [
