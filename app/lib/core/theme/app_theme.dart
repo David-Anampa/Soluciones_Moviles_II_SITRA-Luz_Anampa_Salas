@@ -25,7 +25,9 @@ class AppColors {
   static const Color jefaturaColor = Color(0xFF1A3A6B);   // Azul — Jefatura
   static const Color farmaciaColor = Color(0xFF00796B);   // Verde — Farmacia
   static const Color almacenColor = Color(0xFFE65100);    // Naranja — Almacén
-  static const Color enfermeriaColor = Color(0xFFC62828); // Rojo — Enfermería
+  static const Color enfermeriaColor = Color(0xFF0277BD); // Celeste — Enfermería
+  static const Color enfermeriaSuave = Color(0xFFE8F5FC);
+  static const Color enfermeriaOscuro = Color(0xFF015A8F);
 
   // Semánticos
   static const Color success = Color(0xFF2E7D32);

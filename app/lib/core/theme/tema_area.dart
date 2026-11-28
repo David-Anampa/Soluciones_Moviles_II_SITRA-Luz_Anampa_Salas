@@ -1,3 +1,4 @@
+import 'app_theme.dart';
 import 'package:flutter/material.dart';
 
 /// Identidad de un área. Los códigos son persistentes; los mensajes usan otra paleta.
@@ -5,6 +6,14 @@ class TemaArea {
   final String codigo, nombre;
   final Color principal, suave;
   const TemaArea(this.codigo, this.nombre, this.principal, this.suave);
+
+  /// Identidad visual del rol, independiente de los colores de las áreas clínicas.
+  static const enfermeria = TemaArea(
+    'CELESTE',
+    'Enfermería',
+    AppColors.enfermeriaColor,
+    AppColors.enfermeriaSuave,
+  );
 
   static const opciones = [
     TemaArea(

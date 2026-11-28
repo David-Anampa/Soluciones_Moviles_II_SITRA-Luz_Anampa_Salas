@@ -69,7 +69,7 @@ class _KitFormularioViewState extends State<KitFormularioView> {
         Color(0xFFEAF7F5),
       );
     }
-    if (rol == 'ENFERMERIA') return TemaArea.opciones.first;
+    if (rol == 'ENFERMERIA') return TemaArea.enfermeria;
 
     for (final area in _areas) {
       if (area.codigo == _areaSeleccionada) {

@@ -68,6 +68,9 @@ class _FichaDetalleAtencionViewState extends State<FichaDetalleAtencionView> {
       .toList(growable: false);
 
   TemaArea get _temaFicha {
+    if (TemaPedidos.rolActual(context) == 'ENFERMERIA') {
+      return TemaArea.enfermeria;
+    }
     final color = _ficha?.areaTemaColor ?? 'AZUL';
     return TemaArea.desde(color);
   }

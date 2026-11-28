@@ -167,6 +167,7 @@ class _NotificacionesViewState extends State<NotificacionesView> {
   Widget build(BuildContext context) {
     final user = context.watch<AuthViewModel>().currentUser;
     final color = switch (user?.rol.dbValue) {
+      'ENFERMERIA' => AppColors.enfermeriaColor,
       'ALMACEN' => AppColors.almacenColor,
       'FARMACIA' => AppColors.farmaciaColor,
       'JEFATURA_FARMACIA' => AppColors.jefaturaColor,

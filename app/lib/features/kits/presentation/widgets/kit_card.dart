@@ -403,13 +403,10 @@ class _KitCardState extends State<KitCard> {
     Color? fondo,
   }) {
     final destructivo = icono == Icons.delete_outline_rounded;
-    final edicion = icono == Icons.edit_outlined;
-    final tinta = destructivo
-        ? Colors.white
-        : color ?? (edicion ? const Color(0xFFC62828) : widget.tema.principal);
+    final tinta = destructivo ? Colors.white : color ?? widget.tema.principal;
     final superficie = destructivo
         ? const Color(0xFFC62828)
-        : fondo ?? (edicion ? const Color(0xFFFFF0F0) : widget.tema.suave);
+        : fondo ?? widget.tema.suave;
     return Tooltip(
       message: etiqueta,
       child: OutlinedButton(

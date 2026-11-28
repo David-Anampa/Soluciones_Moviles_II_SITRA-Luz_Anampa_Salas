@@ -133,7 +133,10 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [AppColors.enfermeriaColor, Color(0xFF880E4F)],
+                        colors: [
+                          AppColors.enfermeriaColor,
+                          AppColors.enfermeriaOscuro,
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -278,7 +281,7 @@ class _EnfermeriaDashboardViewState extends State<EnfermeriaDashboardView> {
                         value: '$_fichasListasRecojo',
                         subtitle: 'Confirmar recepción en Farmacia',
                         icon: Icons.fact_check_outlined,
-                        color: const Color(0xFF4A148C),
+                        color: AppColors.enfermeriaColor,
                       ),
                       _buildMetricCard(
                         title: 'Fichas entregadas',

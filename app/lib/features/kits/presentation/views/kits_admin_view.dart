@@ -46,7 +46,7 @@ class _KitsAdminViewState extends State<KitsAdminView> {
         Color(0xFFEAF7F5),
       );
     }
-    if (rol == 'ENFERMERIA') return TemaArea.opciones.first;
+    if (rol == 'ENFERMERIA') return TemaArea.enfermeria;
     if (rol == 'JEFATURA_FARMACIA') {
       return const TemaArea(
         'AZUL',

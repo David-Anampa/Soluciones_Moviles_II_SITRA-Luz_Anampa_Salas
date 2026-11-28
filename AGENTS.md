@@ -28,6 +28,9 @@ formularios, filtros, modales y vistas compartidas.
 - En Administración (menú y vistas), encabezados, iconos y botones principales
   comparten `PaletaAdministracion` (rojo oscuro); secundarios pastel. Conservar
   las paletas propias de tarjetas y sus acciones, y los colores de otros módulos.
+- Enfermería/Técnico usa celeste (`AppColors.enfermeriaColor`, #0277BD), no
+  rojo ni lavanda; aplicar también a fichas y kits compartidos, conservando
+  colores semánticos y permisos. Ver `TemaArea.enfermeria`.
 - Mantener espacio suficiente, texto legible y desplazamiento en celulares.
 - Ejecutar `flutter analyze --no-pub` desde `app` para cambios de Flutter. Las
   pruebas funcionales las realiza el usuario salvo que autorice otras pruebas.

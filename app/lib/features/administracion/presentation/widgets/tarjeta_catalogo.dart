@@ -32,12 +32,7 @@ class PaletaTarjeta {
       Color(0xFF1B6F96),
       Color(0xFFE6F5FC),
     ),
-    'ENFERMERIA' => const TemaArea(
-      'LAVANDA',
-      'Lavanda',
-      Color(0xFF7145C2),
-      Color(0xFFF1EBFC),
-    ),
+    'ENFERMERIA' => TemaArea.enfermeria,
     'JEFATURA_FARMACIA' => TemaArea.desde('GRIS_AZUL'),
     _ => TemaArea.desde('ROJO'),
   };

@@ -9,7 +9,7 @@ no certifica que todas las pantallas heredadas ya lo cumplan.
 | Módulo | Color principal | Aplicación |
 | --- | --- | --- |
 | Farmacia | Verde `#00796B` | Cabeceras, botones, iconos y selección de filtros; fondos verdes pastel. |
-| Enfermería | Rojo `#C62828` | Sus vistas y la consulta/gestión compartida de kits. |
+| Enfermería / Técnico | Celeste `#0277BD` | Menú, vistas, fichas y kits; pastel `#E8F5FC`, oscuro `#015A8F`. |
 | Almacén | Naranja `#E65100` | Identidad de Almacén; misma estructura visual que Farmacia. |
 | Jefatura de Farmacia | Azul `#1A3A6B` | Identidad de supervisión. |
 | Administración | Rojo oscuro `#A32020` | Menú y pantallas administrativas; mismo tono en iconos, encabezados y botones. |
@@ -27,7 +27,7 @@ No cambiar toda la paleta global indiscriminadamente para corregir una pantalla.
 - Entrar a Farmacia desde Administración debe mostrar verde aunque la identidad
   autenticada siga siendo ADMINISTRADOR.
 - En componentes compartidos, la apariencia sigue el módulo desde el que se
-  accede: kits verde para Farmacia y rojo para Enfermería. No crear copias de los
+  accede: kits verde para Farmacia y celeste para Enfermería. No crear copias de los
   kits ni de sus datos por el color.
 - `TemaPedidos.rolActual(context)` resuelve el ámbito **visual** mediante la ruta
   del módulo y el origen de kits (`/kits?vista=FARMACIA` o `ENFERMERIA`), con la
@@ -46,7 +46,7 @@ al listado general de Farmacia.
 
 **Nueva ficha (27/11):** el formulario completo, sus iconos de campos y los
 selectores de productos/kits usan el color del módulo que registra, nunca el
-tema del área seleccionada. Técnico/Enfermería lo ve rojo; Farmacia verde. El
+tema del área seleccionada. Técnico/Enfermería lo ve celeste; Farmacia verde. El
 selector Otras áreas / Neonatología son dos pestañas anchas con icono, nombre y
 selección marcada; solo se apilan con ancho muy reducido o texto ampliado. Las
 opciones sin área autorizada siguen deshabilitadas. No usar un control vertical
@@ -314,3 +314,23 @@ Este acuerdo sustituye los tonos rojos vivos de los encabezados/botones internos
   con inconsistencias del color del rol. Se conserva la excepción del detalle clínico.
 - Revisión estática de menús y vistas principales; no equivale a haber comprobado
   visualmente todas las rutas o modales heredados de la aplicación.
+
+
+## Enfermería en celeste — nuevo acuerdo del 27/11/2026
+
+Sustituye el rojo y la paleta lavanda de Enfermería mencionados antes en este
+historial. Usar AppColors.enfermeriaColor #0277BD para controles y cabeceras,
+enfermeriaSuave #E8F5FC para fondos y enfermeriaOscuro #015A8F en degradados.
+TemaArea.enfermeria representa el rol; no modifica el catálogo de colores clínicos.
+
+Alcance: bienvenida, franjas y botones del menú; nueva ficha/listado/detalle desde
+Enfermería, selectores y casillas compartidas; kits (consulta, creación, edición,
+variantes y selector de medicamentos), existencias y notificaciones. Las tarjetas
+de usuarios de Enfermería en Administración también pasan de lavanda a celeste,
+incluidos sus botones y toggle. Editar kit toma el tono de su módulo, sin rojo fijo.
+
+Se conservan el rojo de error/anulación/eliminación y los estados de stock. El
+detalle clínico visto por Farmacia conserva la identidad del área solicitante;
+Enfermería ve su propio detalle en celeste. No cambiar áreas, SQL ni permisos.
+Pruebas visuales/funcionales con el usuario pendientes; verificar teclado y rutas
+compartidas, también si Administración abre el módulo de Enfermería.
