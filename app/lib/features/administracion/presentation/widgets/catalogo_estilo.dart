@@ -1,10 +1,11 @@
+import '../../../../core/theme/paleta_administracion.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/tema_area.dart';
 import '../../../../core/widgets/mensajes_app.dart';
 
 class CatalogoEstilo {
-  static const rojo = Color(0xFFC62828);
-  static const pastel = Color(0xFFFFF0F0);
+  static const rojo = PaletaAdministracion.principal;
+  static const pastel = PaletaAdministracion.pastel;
   static const fondo = Color(0xFFF5F5F5);
   static const texto = Color(0xFF262630);
 
@@ -37,6 +38,7 @@ class CatalogoEstilo {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: principal,
+          backgroundColor: area == null ? pastel : null,
           minimumSize: const Size(48, 48),
           side: BorderSide(color: principal.withValues(alpha: .25)),
           overlayColor: principal.withValues(alpha: .08),
@@ -105,6 +107,7 @@ class CatalogoEstilo {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: principal,
+          backgroundColor: area == null ? pastel : null,
           minimumSize: const Size(44, 48),
           textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           overlayColor: principal.withOpacity(.08),

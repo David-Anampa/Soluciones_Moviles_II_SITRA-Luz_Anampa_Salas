@@ -1,3 +1,5 @@
+import '../theme/tema_pedidos.dart';
+import '../theme/paleta_administracion.dart';
 import 'package:flutter/material.dart';
 import 'diseno_adaptable.dart';
 
@@ -99,6 +101,12 @@ class MensajesApp {
     bool destructivo = false,
     String cancelar = 'Cancelar',
   }) async {
+    var administrativo = false;
+    try {
+      administrativo = TemaPedidos.rolActual(context) == 'ADMINISTRADOR';
+    } catch (_) {
+      // Un contexto sin sesión conserva el estilo semántico existente.
+    }
     return await showDialog<bool>(
           context: context,
           builder: (ctx) => DialogoAdaptable(
@@ -150,7 +158,12 @@ class MensajesApp {
                     acciones: [
                       TextButton(
                         style: TextButton.styleFrom(
-                          foregroundColor: const Color(0xFF616161),
+                          foregroundColor: administrativo
+                              ? PaletaAdministracion.principal
+                              : const Color(0xFF616161),
+                          backgroundColor: administrativo
+                              ? PaletaAdministracion.pastel
+                              : null,
                           minimumSize: const Size(48, 48),
                         ),
                         onPressed: () => Navigator.pop(ctx, false),
@@ -158,7 +171,9 @@ class MensajesApp {
                       ),
                       FilledButton(
                         style: FilledButton.styleFrom(
-                          backgroundColor: destructivo
+                          backgroundColor: administrativo
+                              ? PaletaAdministracion.principal
+                              : destructivo
                               ? color(TipoMensaje.error)
                               : color(tipo),
                           foregroundColor: Colors.white,

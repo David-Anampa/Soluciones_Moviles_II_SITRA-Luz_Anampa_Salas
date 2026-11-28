@@ -1,3 +1,4 @@
+import 'paleta_administracion.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
@@ -52,7 +53,10 @@ class TemaPedidos {
     ThemeData? base,
   }) {
     final theme = base ?? Theme.of(context);
-    final color = colorRol(rol);
+    final administrativo = rol.toUpperCase() == 'ADMINISTRADOR';
+    final color = administrativo
+        ? PaletaAdministracion.principal
+        : colorRol(rol);
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(12),
     );
@@ -162,13 +166,21 @@ class TemaPedidos {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: buttons.copyWith(
           foregroundColor: WidgetStatePropertyAll(color),
+          backgroundColor: administrativo
+              ? const WidgetStatePropertyAll(PaletaAdministracion.pastel)
+              : null,
           side: WidgetStatePropertyAll(
             BorderSide(color: color.withValues(alpha: .4)),
           ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: buttons.copyWith(foregroundColor: WidgetStatePropertyAll(color)),
+        style: buttons.copyWith(
+          foregroundColor: WidgetStatePropertyAll(color),
+          backgroundColor: administrativo
+              ? const WidgetStatePropertyAll(PaletaAdministracion.pastel)
+              : null,
+        ),
       ),
     );
   }

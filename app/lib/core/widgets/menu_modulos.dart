@@ -1,3 +1,4 @@
+import '../theme/paleta_administracion.dart';
 import 'package:flutter/material.dart';
 
 /// Filas equilibradas, también cuando hay un número impar de tarjetas.
@@ -130,10 +131,12 @@ class CabeceraMenu extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     decoration: BoxDecoration(
       gradient: LinearGradient(
-        colors: [
-          Color.lerp(color, Colors.black, .26)!,
-          Color.lerp(color, Colors.black, .12)!,
-        ],
+        colors: color == PaletaAdministracion.principal
+            ? PaletaAdministracion.degradado
+            : [
+                Color.lerp(color, Colors.black, .26)!,
+                Color.lerp(color, Colors.black, .12)!,
+              ],
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
       ),

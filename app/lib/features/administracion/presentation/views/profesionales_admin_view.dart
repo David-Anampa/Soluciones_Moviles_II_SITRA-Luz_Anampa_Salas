@@ -1,3 +1,4 @@
+import '../../../../core/theme/paleta_administracion.dart';
 import '../../../../core/widgets/accion_gestion.dart';
 import '../../data/gestion_registros_repository.dart';
 import '../widgets/detalle_registro_gestion.dart';
@@ -183,7 +184,7 @@ class _ProfesionalesAdminViewState extends State<ProfesionalesAdminView> {
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
-          backgroundColor: const Color(0xFFC62828),
+          backgroundColor: PaletaAdministracion.principal,
           foregroundColor: Colors.white,
           onPressed: _cargando || _operando ? null : () => _editar(),
           icon: const Icon(Icons.person_add_alt_1_rounded),

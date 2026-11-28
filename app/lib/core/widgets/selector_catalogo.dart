@@ -311,9 +311,10 @@ class _BuscadorCatalogoState extends State<_BuscadorCatalogo> {
                 child: const Text('Ver más opciones'),
               ),
             const SizedBox(height: 12),
-            OutlinedButton(
+            FilledButton.icon(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
+              icon: const Icon(Icons.close_rounded),
+              label: const Text('Cancelar'),
             ),
           ],
         ),

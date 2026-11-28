@@ -271,5 +271,28 @@ La restricción de interacción se conserva y se explica en el tooltip.
 Gestionar usuarios: las secciones Equipo y accesos, Buscar y filtrar y Usuarios
 registrados usan `CabeceraMenu` con degradado rojo, icono/texto blanco y separación
 vertical. Buscador blanco con etiqueta, iconos rojos y foco del módulo; filtros
-con iconos de rol/área/orden y botón pastel. Se conserva el color de cada tarjeta
+con iconos de rol/área/orden y botón rojo sólido con texto/icono blancos. Se conserva el color de cada tarjeta
 y sus acciones, sin modificar búsqueda, filtros, permisos ni auditoría.
+
+
+En Gestionar usuarios se omite el contador textual «N de N usuarios» por repetir
+el resumen superior. Botón Filtros rojo sólido, texto e icono blancos. Cancelar
+en los modales de `SelectorCatalogo` usa botón sólido del módulo con icono/texto
+blancos (rojo en Administración); no imponer rojo en los demás módulos.
+
+
+## Rojo oscuro para pantallas internas de Administración — 27/11/2026
+
+Acuerdo aprobado: unificar encabezados y botones dentro de los módulos de gestión.
+Usar `PaletaAdministracion`: principal #A32020, pastel #FBECEC y degradado sutil
+#A32020 → #921C1C. Botones principales del mismo rojo oscuro con texto/iconos
+blancos; secundarios pastel con icono/texto oscuro. Aplicado a temas de Usuarios,
+formularios, catálogos de áreas/financiamientos, Profesionales, Claves de IA y
+sus selectores/modales. Cabeceras administrativas usan el mismo tono base que
+los botones, sin oscurecerlo otra vez con el degradado genérico de otros módulos.
+
+No cambia el menú principal de Administración ni los colores de Farmacia,
+Enfermería, Almacén o Jefatura. Las tarjetas conservan sus paletas y las acciones
+que reciben `colorTarjeta` siguen esa identidad; esta es una excepción deliberada
+respecto al rojo oscuro de la pantalla. Se conserva la apariencia del toggle.
+Este acuerdo sustituye los tonos rojos vivos de los encabezados/botones internos.

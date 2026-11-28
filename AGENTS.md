@@ -25,6 +25,9 @@ formularios, filtros, modales y vistas compartidas.
   bloqueada según vínculos del servidor; detalle/confirmación muestran cantidades
   por tipo y área, nunca registros clínicos individuales. Excepción: ocultar
   ese resumen en Ver detalle de Usuarios; mantenerlo en confirmación y auditoría.
+- En pantallas internas de Administración, encabezados y botones principales
+  comparten `PaletaAdministracion` (rojo oscuro); secundarios pastel. Conservar
+  las paletas propias de tarjetas y sus acciones, y los colores de otros módulos.
 - Mantener espacio suficiente, texto legible y desplazamiento en celulares.
 - Ejecutar `flutter analyze --no-pub` desde `app` para cambios de Flutter. Las
   pruebas funcionales las realiza el usuario salvo que autorice otras pruebas.

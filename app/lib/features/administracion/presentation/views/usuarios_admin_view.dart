@@ -323,6 +323,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       const CabeceraMenu(
+                                        color: CatalogoEstilo.rojo,
                                         titulo: 'Equipo y accesos',
                                         icono: Icons.groups_outlined,
                                       ),
@@ -367,6 +368,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                                       ),
                                       const SizedBox(height: 18),
                                       const CabeceraMenu(
+                                        color: CatalogoEstilo.rojo,
                                         titulo: 'Buscar y filtrar',
                                         icono: Icons.manage_search_rounded,
                                       ),
@@ -401,13 +403,6 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                                         crossAxisAlignment:
                                             WrapCrossAlignment.center,
                                         children: [
-                                          Text(
-                                            '${lista.length} de ${_usuarios.length} usuarios',
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
                                           if (_numeroFiltros > 0 ||
                                               _buscador.text.isNotEmpty)
                                             TextButton(
@@ -418,19 +413,15 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                                             message: _filtrosAbiertos
                                                 ? 'Ocultar filtros'
                                                 : 'Filtrar por rol, área y orden',
-                                            child: OutlinedButton.icon(
+                                            child: FilledButton.icon(
                                               onPressed: () => setState(
                                                 () => _filtrosAbiertos =
                                                     !_filtrosAbiertos,
                                               ),
-                                              style: OutlinedButton.styleFrom(
-                                                foregroundColor:
-                                                    CatalogoEstilo.rojo,
+                                              style: FilledButton.styleFrom(
+                                                foregroundColor: Colors.white,
                                                 backgroundColor:
-                                                    CatalogoEstilo.pastel,
-                                                side: const BorderSide(
-                                                  color: Color(0xFFEBCBCB),
-                                                ),
+                                                    CatalogoEstilo.rojo,
                                                 minimumSize: const Size(44, 48),
                                                 shape: RoundedRectangleBorder(
                                                   borderRadius:
@@ -472,6 +463,7 @@ class _UsuariosAdminViewState extends State<UsuariosAdminView> {
                                       ],
                                       const SizedBox(height: 20),
                                       const CabeceraMenu(
+                                        color: CatalogoEstilo.rojo,
                                         titulo: 'Usuarios registrados',
                                         icono: Icons.badge_outlined,
                                       ),

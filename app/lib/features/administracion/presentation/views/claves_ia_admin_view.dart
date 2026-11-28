@@ -44,7 +44,7 @@ ThemeData _temaClaves(BuildContext context) {
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        backgroundColor: Colors.white,
+        backgroundColor: CatalogoEstilo.pastel,
         foregroundColor: CatalogoEstilo.rojo,
         minimumSize: const Size(48, 48),
         side: const BorderSide(color: Color(0xFFE9BBBB)),
