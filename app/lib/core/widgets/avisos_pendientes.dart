@@ -1,3 +1,4 @@
+import '../theme/tema_area.dart';
 import 'menu_modulos.dart';
 import 'tarjeta_pendientes_area.dart';
 import 'package:flutter/material.dart';
@@ -50,6 +51,7 @@ class AvisosPendientes extends StatefulWidget {
 class _AvisosPendientesState extends State<AvisosPendientes>
     with WidgetsBindingObserver {
   List<GrupoPendientes> _grupos = [];
+  Map<String, Color> _coloresAreas = {};
   int _total = 0;
   bool _cargando = false, _error = false, _abriendo = false;
   @override
@@ -92,8 +94,7 @@ class _AvisosPendientesState extends State<AvisosPendientes>
         if (farmacia)
           Supabase.instance.client
               .from('areas')
-              .select('codigo,nombre')
-              .eq('activo', true)
+              .select('codigo,nombre,tema_color,activo')
               .neq('codigo', 'FARMACIA')
               .neq('codigo', 'ALMACEN')
               .order('nombre'),
@@ -105,7 +106,9 @@ class _AvisosPendientesState extends State<AvisosPendientes>
           )
           .toList();
       if (farmacia) {
-        for (final area in consultas[1] as List) {
+        for (final area in (consultas[1] as List).where(
+          (a) => a['activo'] == true,
+        )) {
           if (!grupos.any(
             (g) => g.tipo == 'PEDIDO_CLINICO' && g.areaCodigo == area['codigo'],
           )) {
@@ -131,6 +134,14 @@ class _AvisosPendientesState extends State<AvisosPendientes>
       setState(() {
         _total = (result['total'] as num).toInt();
         _grupos = grupos;
+        if (farmacia) {
+          _coloresAreas = {
+            for (final a in consultas[1] as List)
+              a['codigo'] as String: TemaArea.desde(
+                a['tema_color'] as String? ?? 'ROJO',
+              ).principal,
+          };
+        }
         _error = false;
       });
     } catch (_) {
@@ -200,7 +211,7 @@ class _AvisosPendientesState extends State<AvisosPendientes>
                 ),
               ],
             ),
-            if (_total > 0)
+            if (_total > 0 && !farmacia)
               Padding(
                 padding: const EdgeInsets.only(top: 6, bottom: 8),
                 child: Text(
@@ -233,11 +244,19 @@ class _AvisosPendientesState extends State<AvisosPendientes>
                       nombre: grupo.areaNombre,
                       urgentes: grupo.urgentes,
                       normales: grupo.normales,
-                      color: widget.color,
+                      color: _coloresAreas[grupo.areaCodigo] ?? widget.color,
                       onAbrir: _abriendo || grupo.cantidad == 0
                           ? null
                           : () => _abrir(grupo),
                     ),
+                  TarjetaPendientesArea(
+                    codigo: 'TOTAL_AREAS',
+                    nombre: 'Total de áreas',
+                    urgentes: areas.fold<int>(0, (s, g) => s + g.urgentes),
+                    normales: areas.fold<int>(0, (s, g) => s + g.normales),
+                    color: widget.color,
+                    invertida: true,
+                  ),
                 ],
               ),
             ],

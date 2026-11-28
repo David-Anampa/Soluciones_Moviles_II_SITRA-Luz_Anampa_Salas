@@ -5,6 +5,7 @@ class TarjetaPendientesArea extends StatelessWidget {
   final String codigo, nombre;
   final int urgentes, normales;
   final Color color;
+  final bool invertida;
   final VoidCallback? onAbrir;
   const TarjetaPendientesArea({
     super.key,
@@ -14,9 +15,11 @@ class TarjetaPendientesArea extends StatelessWidget {
     required this.normales,
     required this.color,
     this.onAbrir,
+    this.invertida = false,
   });
 
   IconData get _icono {
+    if (invertida) return Icons.local_pharmacy_rounded;
     final area = codigo.toUpperCase();
     if (area.contains('NEONAT')) return Icons.child_care_rounded;
     if (area.contains('HOSPITAL')) return Icons.bed_rounded;
@@ -36,12 +39,13 @@ class TarjetaPendientesArea extends StatelessWidget {
   Widget build(BuildContext context) {
     final pendientes = urgentes + normales;
     final borde = BorderRadius.circular(16);
+    final tinta = invertida ? Colors.white : color;
     return Semantics(
-      button: pendientes > 0,
-      enabled: onAbrir != null,
+      button: onAbrir != null,
+      enabled: invertida ? null : onAbrir != null,
       label: '$nombre. $urgentes urgentes y $normales normales.',
       child: Material(
-        color: Colors.white,
+        color: invertida ? color : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: borde,
           side: BorderSide(color: color.withValues(alpha: .18)),
@@ -52,7 +56,7 @@ class TarjetaPendientesArea extends StatelessWidget {
           hoverColor: color.withValues(alpha: .04),
           splashColor: color.withValues(alpha: .10),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 216),
+            constraints: const BoxConstraints(minHeight: 178),
             child: Stack(
               children: [
                 Positioned(
@@ -63,7 +67,7 @@ class TarjetaPendientesArea extends StatelessWidget {
                       child: Icon(
                         _icono,
                         size: 102,
-                        color: color.withValues(alpha: .07),
+                        color: tinta.withValues(alpha: invertida ? .16 : .07),
                       ),
                     ),
                   ),
@@ -75,15 +79,32 @@ class TarjetaPendientesArea extends StatelessWidget {
                     children: [
                       ConstrainedBox(
                         constraints: const BoxConstraints(minHeight: 58),
-                        child: Text(
-                          nombre,
-                          softWrap: true,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            height: 1.4,
-                            color: color,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              nombre,
+                              softWrap: true,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                height: 1.4,
+                                color: tinta,
+                              ),
+                            ),
+                            if (invertida) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                '$pendientes',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.1,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -91,7 +112,9 @@ class TarjetaPendientesArea extends StatelessWidget {
                         'Urgentes',
                         urgentes,
                         Icons.bolt_rounded,
-                        urgentes > 0
+                        invertida
+                            ? Colors.white
+                            : urgentes > 0
                             ? const Color(0xFFB3261E)
                             : const Color(0xFF777782),
                       ),
@@ -100,35 +123,7 @@ class TarjetaPendientesArea extends StatelessWidget {
                         'Normales',
                         normales,
                         Icons.assignment_outlined,
-                        color,
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              pendientes > 0
-                                  ? 'Ver solicitudes'
-                                  : 'Sin pendientes',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                height: 1.4,
-                                color: pendientes > 0
-                                    ? color
-                                    : const Color(0xFF777782),
-                              ),
-                            ),
-                          ),
-                          if (pendientes > 0) ...[
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.arrow_forward_rounded,
-                              color: color,
-                              size: 16,
-                            ),
-                          ],
-                        ],
+                        tinta,
                       ),
                     ],
                   ),

@@ -354,3 +354,20 @@ urgentes, total y nombre. No mezclar en las tarjetas clínicas las recepciones d
 Almacén: siguen su aviso y navegación propios. Otros roles conservan sus avisos.
 Sin migración, cambios de estados ni nuevas notificaciones push. Verificación
 estática Flutter; apariencia y recorridos manuales pendientes con el usuario.
+
+
+Refinamiento de pendientes de Farmacia: título Solicitudes pendientes sin total
+general; tarjetas sin texto Ver solicitudes ni pie redundante. Permanecen
+pulsables cuando hay pendientes. El nombre, icono de fondo, borde y conteo normal
+usan el color propio del área (`areas.tema_color`), no verde fijo de Farmacia.
+Urgentes conserva rojo semántico. Se consulta también el color de áreas inactivas
+para no perder identidad de un pendiente histórico; las nuevas tarjetas 0/0 solo
+se crean para áreas activas. Los avisos de otros roles no cambian.
+
+
+Agregar al final de pendientes clínicos una tarjeta Total de áreas con el mismo
+componente/tamaño, en modo inverso: fondo verde de Farmacia, icono tenue blanco,
+texto/números blancos, total general y desglose Urgentes/Normales. Con cinco áreas
+completa seis tarjetas en dos columnas. Suma solo los grupos PEDIDO_CLINICO, sin
+contar recepciones de Almacén ni duplicar los totales. Es informativa, no un nuevo
+botón de navegación. El número de áreas sigue siendo dinámico, no fijado en cinco.
