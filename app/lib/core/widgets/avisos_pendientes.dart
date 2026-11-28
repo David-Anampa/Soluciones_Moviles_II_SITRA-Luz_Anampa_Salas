@@ -1,9 +1,20 @@
+import 'menu_modulos.dart';
+import 'tarjeta_pendientes_area.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class GrupoPendientes {
   final String tipo, areaCodigo, areaNombre, destinoNombre;
   final int cantidad, urgentes;
+  GrupoPendientes({
+    required this.tipo,
+    required this.areaCodigo,
+    required this.areaNombre,
+    this.destinoNombre = '',
+    this.cantidad = 0,
+    this.urgentes = 0,
+  });
+  int get normales => cantidad > urgentes ? cantidad - urgentes : 0;
   GrupoPendientes.fromMap(Map<String, dynamic> m)
     : tipo = m['tipo'] as String,
       areaCodigo = m['area_codigo'] as String,
@@ -72,22 +83,54 @@ class _AvisosPendientesState extends State<AvisosPendientes>
     if (_cargando) return;
     setState(() => _cargando = true);
     try {
-      final result = Map<String, dynamic>.from(
-        await Supabase.instance.client.rpc(
-              'resumen_avisos_home',
-              params: {'p_ambito': widget.ambito},
-            )
-            as Map,
-      );
+      final farmacia = widget.ambito == 'FARMACIA';
+      final consultas = await Future.wait<Object>([
+        Supabase.instance.client.rpc(
+          'resumen_avisos_home',
+          params: {'p_ambito': widget.ambito},
+        ),
+        if (farmacia)
+          Supabase.instance.client
+              .from('areas')
+              .select('codigo,nombre')
+              .eq('activo', true)
+              .neq('codigo', 'FARMACIA')
+              .neq('codigo', 'ALMACEN')
+              .order('nombre'),
+      ]);
+      final result = Map<String, dynamic>.from(consultas[0] as Map);
+      final grupos = (result['grupos'] as List)
+          .map(
+            (m) => GrupoPendientes.fromMap(Map<String, dynamic>.from(m as Map)),
+          )
+          .toList();
+      if (farmacia) {
+        for (final area in consultas[1] as List) {
+          if (!grupos.any(
+            (g) => g.tipo == 'PEDIDO_CLINICO' && g.areaCodigo == area['codigo'],
+          )) {
+            grupos.add(
+              GrupoPendientes(
+                tipo: 'PEDIDO_CLINICO',
+                areaCodigo: area['codigo'] as String,
+                areaNombre: area['nombre'] as String,
+              ),
+            );
+          }
+        }
+        grupos.sort((a, b) {
+          final urgentes = b.urgentes.compareTo(a.urgentes);
+          if (urgentes != 0) return urgentes;
+          final cantidad = b.cantidad.compareTo(a.cantidad);
+          return cantidad != 0
+              ? cantidad
+              : a.areaNombre.compareTo(b.areaNombre);
+        });
+      }
       if (!mounted) return;
       setState(() {
         _total = (result['total'] as num).toInt();
-        _grupos = (result['grupos'] as List)
-            .map(
-              (m) =>
-                  GrupoPendientes.fromMap(Map<String, dynamic>.from(m as Map)),
-            )
-            .toList();
+        _grupos = grupos;
         _error = false;
       });
     } catch (_) {
@@ -112,7 +155,11 @@ class _AvisosPendientesState extends State<AvisosPendientes>
 
   @override
   Widget build(BuildContext context) {
-    if (_total == 0 && !_error) return const SizedBox.shrink();
+    final farmacia = widget.ambito == 'FARMACIA';
+    if (_total == 0 && !_error && (!farmacia || _grupos.isEmpty)) {
+      return const SizedBox.shrink();
+    }
+    final areas = _grupos.where((g) => g.tipo == 'PEDIDO_CLINICO').toList();
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: Container(
@@ -175,7 +222,28 @@ class _AvisosPendientesState extends State<AvisosPendientes>
                       : 'No se pudieron consultar pendientes. Reintentar',
                 ),
               ),
-            for (final grupo in _grupos)
+            if (farmacia && areas.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              CuadriculaPanel(
+                esResumen: true,
+                children: [
+                  for (final grupo in areas)
+                    TarjetaPendientesArea(
+                      codigo: grupo.areaCodigo,
+                      nombre: grupo.areaNombre,
+                      urgentes: grupo.urgentes,
+                      normales: grupo.normales,
+                      color: widget.color,
+                      onAbrir: _abriendo || grupo.cantidad == 0
+                          ? null
+                          : () => _abrir(grupo),
+                    ),
+                ],
+              ),
+            ],
+            for (final grupo in _grupos.where(
+              (g) => !farmacia || g.tipo != 'PEDIDO_CLINICO',
+            ))
               Padding(
                 padding: const EdgeInsets.only(top: 10),
                 child: Column(

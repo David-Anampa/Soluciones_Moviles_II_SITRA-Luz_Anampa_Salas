@@ -334,3 +334,23 @@ detalle clínico visto por Farmacia conserva la identidad del área solicitante;
 Enfermería ve su propio detalle en celeste. No cambiar áreas, SQL ni permisos.
 Pruebas visuales/funcionales con el usuario pendientes; verificar teclado y rutas
 compartidas, también si Administración abre el módulo de Enfermería.
+
+
+## Farmacia: pendientes por área — 27/11/2026
+
+Bajo Solicitudes pendientes, sustituir el listado clínico por tarjetas en dos
+columnas: nombre completo del área, icono grande tenue de fondo y dos conteos
+separados, Urgentes y Normales. Usar verde de Farmacia, con rojo semántico solo
+para urgentes mayores a cero. Nombres de 14 px, altura flexible, sin recortar;
+una columna en ancho muy reducido o texto ampliado, mediante CuadriculaPanel.
+Toda la tarjeta con pendientes abre el mismo filtro por área y estado SOLICITADO.
+
+Fuente: RPC existente resumen_avisos_home, que cuenta solicitudes completas sin
+paginación; Normales = cantidad total menos urgentes (no unidades de stock).
+Complementar con áreas activas del catálogo excluyendo Farmacia/Almacén, para
+mostrar también 0/0 y Sin pendientes, sin botón operativo vacío. Mantener áreas
+con pendientes históricos aunque no estén en ese catálogo activo. Ordenar por
+urgentes, total y nombre. No mezclar en las tarjetas clínicas las recepciones de
+Almacén: siguen su aviso y navegación propios. Otros roles conservan sus avisos.
+Sin migración, cambios de estados ni nuevas notificaciones push. Verificación
+estática Flutter; apariencia y recorridos manuales pendientes con el usuario.
